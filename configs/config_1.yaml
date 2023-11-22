@@ -1,0 +1,44 @@
+# ===========Training===========
+train_image_path: "D:/AOI/ControllerDataset/white/patch-train"
+train_mask_path: "D:/AOI/ControllerDataset/white/patch-train-gt"
+output_path: "D:/AOI/Project/weight/weight.pt"
+num_workers: 2
+pretrained_model: "facebook/sam-vit-base"
+pretrained_weight: "D:/AOI/Project/weight/weight.pt"
+start_epoch: 0
+epoch: 200
+batch_size: 4
+eval_interval: 10
+shuffle: True
+use_points: False
+use_boxes: False
+
+# Augmentation
+random_flip_prob: 0.5
+random_flip_crop: 0.5
+brightness_gain: 0.2
+contrast_gain: 0.2
+saturation_gain: 0.2
+hue_gain: 0.2
+degrees: 45
+translate: 0.1
+scale: 0.9
+shear: 0.
+variance: 0.05
+
+# Optimizer
+lr: 0.00001
+weight_decay: 0.0
+
+# DiceCELoss
+lambda_dice: 1.0
+lambda_ce: 1.0
+
+# ===========Evaluate===========
+val_image_path:  "D:/AOI/ControllerDataset/white/patch-val"
+val_mask_path: "D:/AOI/ControllerDataset/white/patch-val-gt"
+figure_path: "D:/AOI/Result/11_20/patch augmentation"
+store_figure: False
+show: True
+
+
