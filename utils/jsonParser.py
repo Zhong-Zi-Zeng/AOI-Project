@@ -31,22 +31,23 @@ class JsonParser:
             Returns:
                 如果有任何錯誤則返回None, N為瑕疵的數量, M為polygon的數量
 
+                h (int): 圖片的高
+                w (int): 圖片的寬
                 mask (np.ndarray):  0、255的二值化影像 [H, W]
                 classes (list): 這個json檔中包含的瑕疵類別 [N, ]
                 bboxes (list): 每個瑕疵對應的bbox，格式為x, y, w, h [N, 4]
                 polygons (list[np.ndarray]): 每個瑕疵對應的polygon [N, M, 2]
         """
-
-        objects = self.text['Objects']
-        h = int(self.text['Background']['Height'])  # 照片的高
-        w = int(self.text['Background']['Width'])  # 照片的寬
-
-        mask = np.zeros(shape=(h, w))
-        classes = []
-        bboxes = []
-        polygons = []
-
         try:
+            objects = self.text['Objects']
+            h = int(self.text['Background']['Height'])  # 照片的高
+            w = int(self.text['Background']['Width'])  # 照片的寬
+
+            mask = np.zeros(shape=(h, w))
+            classes = []
+            bboxes = []
+            polygons = []
+
             for obj in objects:
                 # Mask
                 polygon = obj['Layers'][0]['Shape']['Points']
@@ -70,4 +71,4 @@ class JsonParser:
             print(e)
             return None
 
-        return mask, classes, bboxes, polygons
+        return h, w, mask, classes, bboxes, polygons
