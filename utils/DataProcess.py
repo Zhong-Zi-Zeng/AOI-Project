@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 import copy
-
 from patchify import patchify
 from pathlib import Path
 from copy import deepcopy
@@ -86,13 +84,6 @@ def divide_to_patch(large_image: np.ndarray[np.uint8 | np.float],
 
     return patches_img
 
-class JsonParser:
-    def __init__(self, json_file_path):
-        with open(json_file_path, 'r') as file:
-            self.text = json.loads(file.read())
-
-    def parse(self) -> list:
-        pass
 
 
 def get_mask(json_file_path: str) -> [np.ndarray[np.float] | None]:
@@ -147,12 +138,12 @@ class DataProcess:
                 self.training_classes = {cls.rstrip(): {'Number': 0, 'Name': []} for cls in self.training_classes}
 
             # 讀取testing classes
-            if self.args.test_classes is not None:
-                self.test_classes = copy.deepcopy(self.training_classes)
+            if self.args.testing_classes is None:
+                self.testing_classes = copy.deepcopy(self.training_classes)
             else:
                 with open(self.args.testing_classes, 'r') as file:
-                    self.test_classes = file.readlines()
-                    self.test_classes = {cls.rstrip(): {'Number': 0, 'Name': []} for cls in self.test_classes}
+                    self.testing_classes = file.readlines()
+                    self.testing_classes = {cls.rstrip(): {'Number': 0, 'Name': []} for cls in self.testing_classes}
 
             self._generate_mode_dir('original')
             self._generate_original()
