@@ -17,11 +17,13 @@ class yoloConverter(BaseConverter):
     def __init__(self,
                  source_dir: str,
                  output_dir: str,
+                 classes_txt: str,
                  patch_size: Optional[int] = None):
 
-        super().__init__(source_dir, output_dir)
+        super().__init__(source_dir, output_dir, classes_txt)
         self.source_dir = source_dir
         self.output_dir = output_dir
+        self.classes_txt = classes_txt
         self.patch_size = patch_size
         self.generate_dir()
 
@@ -32,8 +34,6 @@ class yoloConverter(BaseConverter):
         os.mkdir(os.path.join(self.output_dir, 'train', 'label'))
         os.mkdir(os.path.join(self.output_dir, 'test', 'image'))
         os.mkdir(os.path.join(self.output_dir, 'test', 'label'))
-
-
 
     def generate_original(self):
         for idx, (image_file, json_file) in enumerate(
@@ -55,9 +55,12 @@ class yoloConverter(BaseConverter):
                     # Extract the class label without the '#'
                     class_name = classes[idx][1:]
 
+                    # Find the index of a class label
+                    class_idx = self.classes_name.index(class_name)
+
                     # Add the coordinates of each vertex to a list in YOLO format
                     # class, x1, y1, x2, y2, …(Normalize 0–1)
-                    yolo_coords = [class_name] + normalized_coords.flatten().astype(str).tolist()
+                    yolo_coords = [str(class_idx)] + normalized_coords.flatten().astype(str).tolist()
                     file.write(" ".join(yolo_coords) + "\n")
 
             # <test>
@@ -77,4 +80,5 @@ class yoloConverter(BaseConverter):
     def generate_patch(self):
         pass
 
-a = yoloConverter(source_dir='./source_w', output_dir='./white').generate_original()
+
+a = yoloConverter(source_dir='./source_w', output_dir='./white', classes_txt='classes_w.txt')

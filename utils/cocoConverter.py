@@ -60,7 +60,7 @@ class cocoConverter(BaseConverter):
                     'iscrowd': 0,
                     'image_id': idx,
                     'bbox': bbox,
-                    'category_id': self.classes_name.index(cls),
+                    'category_id': self.classes_name.index(cls.replace('#', '')),
                     'id': anns_count,
                 })
                 anns_count += 1
@@ -74,4 +74,4 @@ class cocoConverter(BaseConverter):
         pass
 
 
-cocoConverter(source_dir='./source', output_dir='./black', classes_txt='./black_class.txt').generate_original()
+cocoConverter(source_dir='./source_w', output_dir='./white', classes_txt='./classes_w.txt').generate_original()

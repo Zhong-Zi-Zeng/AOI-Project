@@ -6,8 +6,10 @@ import os
 
 
 class BaseConverter(ABC):
-    def __init__(self, source_dir: str, output_dir: str, classes_txt: str):
+    def __init__(self, source_dir: str, output_dir: str, classes_txt: str):  # , type: str
         # 生成初始的資料夾
+        os.mkdir(os.path.join(source_dir, 'train'))
+        os.mkdir(os.path.join(source_dir, 'test'))
         os.mkdir(output_dir)
         os.mkdir(os.path.join(output_dir, 'delete'))
 
@@ -16,7 +18,8 @@ class BaseConverter(ABC):
         with open(classes_txt, 'r') as file:
             self.classes_name = [cls.rstrip() for cls in file.readlines()]  # 儲存所有類別名稱
 
-        self._check_file(source_dir, output_dir)  # 檢查檔案
+        self._check_file(output_dir)  # 檢查檔案
+        # self._slice_file(source_dir)  # 拆分檔案
 
     @abstractmethod
     def generate_original(self):
@@ -35,7 +38,7 @@ class BaseConverter(ABC):
            Return:
                 True or False
        """
-        assert os.path.isfile(image_path), 'Can\'t find the file {}.'.format(image_path)
+        # assert os.path.isfile(image_path), 'Can\'t find the file {}.'.format(image_path)
 
         _allow_format = ['.jpg', '.png', '.bmp']
         return Path(image_path).suffix in _allow_format
@@ -49,10 +52,10 @@ class BaseConverter(ABC):
             Return:
                 True or False
         """
-        assert os.path.isfile(json_path), 'Can\'t find the file {}.'.format(json_path)
+        # assert os.path.isfile(json_path), 'Can\'t find the file {}.'.format(json_path)
         return Path(json_path).suffix == '.json'
 
-    def _check_file(self, source_dir: str, output_dir: str):
+    def _check_file(self, source_dir: str):
         """
             對source資料夾下的圖片和json進行配對, 若有問題的檔案則會被移動到
             output_dir/delete 資料夾下
@@ -66,9 +69,6 @@ class BaseConverter(ABC):
 
         image_files_copy = deepcopy(self.image_files_path)
         json_files_copy = deepcopy(self.json_files_path)
-
-        # 紀錄類別數量
-        classes = {}
 
         # 對檔案進行匹配
         for image_file in self.image_files_path:
@@ -89,9 +89,9 @@ class BaseConverter(ABC):
 
         # 把剩下在的檔案移動到delete資料夾下
         for except_image_file in image_files_copy:
-            os.rename(except_image_file, os.path.join(output_dir, 'delete', Path(except_image_file).name))
+            os.rename(except_image_file, os.path.join(source_dir, 'delete', Path(except_image_file).name))
         for except_json_file in json_files_copy:
-            os.rename(except_json_file, os.path.join(output_dir, 'delete', Path(except_json_file).name))
+            os.rename(except_json_file, os.path.join(source_dir, 'delete', Path(except_json_file).name))
 
         # 把最後正確的紀錄下來
         self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
@@ -99,3 +99,22 @@ class BaseConverter(ABC):
 
         self.json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
                                 if self.is_json(os.path.join(source_dir, json_name))]
+
+    def _slice_file(self, source_dir, assign_number: int = 3):
+        test = {cls: {'number': 0, 'file_name': []} for cls in self.classes_name}
+
+        for image_file, json_file in zip(self.image_files_path, self.json_files_path):
+            image_height, image_width, mask, classes, bboxes, polygons = JsonParser(json_file).parse()
+
+            cls = classes[0].replace('#', '')
+            if test[cls]['number'] != assign_number and len(set(classes)) == 1:
+                test[cls]['number'] += 1
+                test[cls]['file_name'].append(image_file)
+
+                # 照片移到source/test資料夾下
+                os.rename(image_file, os.path.join(source_dir, 'test', Path(image_file).name))
+                os.rename(json_file, os.path.join(source_dir, 'test', Path(json_file).name))
+            else:
+                # 照片移到source/train資料夾下
+                os.rename(image_file, os.path.join(source_dir, 'train', Path(image_file).name))
+                os.rename(json_file, os.path.join(source_dir, 'train', Path(json_file).name))
