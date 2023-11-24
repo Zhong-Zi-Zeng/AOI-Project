@@ -6,15 +6,17 @@ import os
 
 
 class BaseConverter(ABC):
-    def __init__(self, source_dir: str, output_dir: str):
+    def __init__(self, source_dir: str, output_dir: str, classes_txt: str):
         # 生成初始的資料夾
         os.mkdir(output_dir)
         os.mkdir(os.path.join(output_dir, 'delete'))
 
         self.image_files_path = None  # 儲存所有正確的image路徑
         self.json_files_path = None  # 儲存所有正確的image路徑
+        with open(classes_txt, 'r') as file:
+            self.classes_name = [cls.rstrip() for cls in file.readlines()]  # 儲存所有類別名稱
 
-        self._check_file(source_dir, output_dir)
+        self._check_file(source_dir, output_dir)  # 檢查檔案
 
     @abstractmethod
     def generate_original(self):

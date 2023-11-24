@@ -40,10 +40,10 @@ class JsonParser:
         """
         try:
             objects = self.text['Objects']
-            h = int(self.text['Background']['Height'])  # 照片的高
-            w = int(self.text['Background']['Width'])  # 照片的寬
+            image_height = int(self.text['Background']['Height'])  # 照片的高
+            image_width = int(self.text['Background']['Width'])  # 照片的寬
 
-            mask = np.zeros(shape=(h, w))
+            mask = np.zeros(shape=(image_height, image_width))
             classes = []
             bboxes = []
             polygons = []
@@ -71,4 +71,4 @@ class JsonParser:
             print(e)
             return None
 
-        return h, w, mask, classes, bboxes, polygons
+        return image_height, image_width, mask, classes, bboxes, polygons
