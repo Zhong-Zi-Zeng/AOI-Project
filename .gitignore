@@ -13,7 +13,7 @@ __pycache__/
 *.json
 *.pt
 *.pth
-./idea
+.idea/
 *.txt
 
 # Distribution / packaging

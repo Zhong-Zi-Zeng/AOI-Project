@@ -5,12 +5,12 @@ import os
 import numpy as np
 
 
-class JsonParser:
+class jsonParser:
     """
         將傳入的json檔路徑進行解析，可取得json檔中想要的資訊
     """
     def __init__(self, json_file_path: str):
-        assert os.path.isfile(json_file_path)
+        assert os.path.isfile(json_file_path), "{} can not find this json file".format(json_file_path)
 
         self.json_file_path = json_file_path
 
@@ -40,6 +40,10 @@ class JsonParser:
         """
         try:
             objects = self.text['Objects']
+            # 如果objects裡長度是0也返回None
+            if len(objects) == 0:
+                return None
+
             image_height = int(self.text['Background']['Height'])  # 照片的高
             image_width = int(self.text['Background']['Width'])  # 照片的寬
 

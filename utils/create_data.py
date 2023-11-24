@@ -1,0 +1,50 @@
+from __future__ import annotations
+from converter import *
+import argparse
+
+
+def get_args_parser():
+    parser = argparse.ArgumentParser('DeformableVit', add_help=False)
+
+    parser.add_argument('--source_dir', type=str,
+                        help="The dataset's path includes image files and json files.")
+    parser.add_argument('--output_dir', type=str,
+                        help="Save the result in this directory.")
+    parser.add_argument('--classes_txt', type=str, required=True,
+                        help='The category of training needs a Txt file.')
+    parser.add_argument('--dataset_type', type=str, choices=['train', 'test'], required=True,
+                        help='For training dataset or testing dataset.')
+    parser.add_argument('--format', type=str, choices=['coco', 'yolo', 'sa'], required=True,
+                        help='Which output format do you want?')
+    parser.add_argument('--patch_size', type=int,
+                        help='The size of the patch needs to be divisible by width and height. '
+                             'If you assign the value, the script will generate a patch dataset')
+
+    return parser
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Dataset process script. '
+                                     ,
+                                     parents=[get_args_parser()])
+    args = parser.parse_args()
+
+    if args.format == 'coco':
+        conv = cocoConverter(source_dir=args.source_dir,
+                             output_dir=args.output_dir,
+                             classes_txt=args.classes_txt,
+                             dataset_type=args.dataset_type,
+                             patch_size=args.patch_size)
+    elif args.format == 'yolo':
+        conv = yoloConverter(source_dir=args.source_dir,
+                             output_dir=args.output_dir,
+                             classes_txt=args.classes_txt,
+                             dataset_type=args.dataset_type,
+                             patch_size=args.patch_size)
+    elif args.format == 'sa':
+        conv = saConverter(source_dir=args.source_dir,
+                           output_dir=args.output_dir,
+                           classes_txt=args.classes_txt,
+                           dataset_type=args.dataset_type,
+                           patch_size=args.patch_size)
+    conv.generate_original()
