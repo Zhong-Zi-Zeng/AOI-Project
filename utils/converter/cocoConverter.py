@@ -56,8 +56,8 @@ class cocoConverter(BaseConverter):
 
             for cls, bbox, polygon in zip(classes, bboxes, polygons):
                 anns.append({
-                    'segmentation': polygon.tolist(),
-                    'area': 0,
+                    'segmentation': np.reshape(polygon, (1, -1)).tolist(),
+                    'area': cv2.contourArea(polygon),
                     'iscrowd': 0,
                     'image_id': idx,
                     'bbox': bbox,
