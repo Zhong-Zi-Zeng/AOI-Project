@@ -24,12 +24,12 @@ class cocoConverter(BaseConverter):
         self.source_dir = source_dir
         self.output_dir = output_dir
         self.patch_size = patch_size
-        self.dataset_type = dataset_type
+        self.dataset_type = 'val' if dataset_type == 'test' else dataset_type
         self._generate_dir()
 
     def _generate_dir(self):
         os.makedirs(os.path.join(self.output_dir, 'train2017'), exist_ok=True)
-        os.makedirs(os.path.join(self.output_dir, 'test2017'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'val2017'), exist_ok=True)
         os.makedirs(os.path.join(self.output_dir, 'annotations'), exist_ok=True)
 
     def generate_original(self):

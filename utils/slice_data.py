@@ -84,6 +84,7 @@ def check_file(source_dir: str):
 
 def slice_file(source_dir: str, assign_number: int, classes_name: list):
     test = {cls: {'number': 0, 'file_name': []} for cls in classes_name}
+    total = {cls: {'number': 0, 'file_name': []} for cls in classes_name}
 
     image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                         if is_image(os.path.join(source_dir, image_name))]
@@ -91,25 +92,35 @@ def slice_file(source_dir: str, assign_number: int, classes_name: list):
     json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
                        if is_json(os.path.join(source_dir, json_name))]
 
-    for image_file, json_file in zip(image_files_path, json_files_path):
-        image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
+    for idx, (old_image_file, old_json_file) in enumerate(zip(image_files_path, json_files_path)):
+        image_height, image_width, mask, classes, bboxes, polygons = jsonParser(old_json_file).parse()
 
+        new_image_file = os.path.join(str(Path(old_image_file).parent), str(idx) + '.jpg')
+
+        # total
+        for cls in set(classes):
+            total[cls.replace('#', '')]['number'] += 1
+            total[cls.replace('#', '')]['file_name'].append(new_image_file)
+
+        # for testing
         cls = classes[0].replace('#', '')
         if test[cls]['number'] != assign_number and len(set(classes)) == 1:
             test[cls]['number'] += 1
-            test[cls]['file_name'].append(image_file)
+            test[cls]['file_name'].append(new_image_file)
 
             # 照片移到source/test資料夾下
-            os.rename(image_file, os.path.join(source_dir, 'test', Path(image_file).name))
-            os.rename(json_file, os.path.join(source_dir, 'test', Path(json_file).name))
+            os.rename(old_image_file, os.path.join(source_dir, 'test', str(idx) + '.jpg'))
+            os.rename(old_json_file, os.path.join(source_dir, 'test', str(idx) + '.json'))
         else:
             # 照片移到source/train資料夾下
-            os.rename(image_file, os.path.join(source_dir, 'train', Path(image_file).name))
-            os.rename(json_file, os.path.join(source_dir, 'train', Path(json_file).name))
+            os.rename(old_image_file, os.path.join(source_dir, 'train', str(idx) + '.jpg'))
+            os.rename(old_json_file, os.path.join(source_dir, 'train', str(idx) + '.json'))
 
     # 把描述檔存在source資料夾下
-    with open(os.path.join(source_dir, 'detail.json'), 'w') as file:
+    with open(os.path.join(source_dir, 'test_detail.json'), 'w') as file:
         json.dump(test, file)
+    with open(os.path.join(source_dir, 'all_detail.json'), 'w') as file:
+        json.dump(total, file)
 
 
 if __name__ == '__main__':
