@@ -14,7 +14,7 @@ def get_args_parser():
                         help='The category of training needs a Txt file.')
     parser.add_argument('--dataset_type', type=str, choices=['train', 'test'], required=True,
                         help='For training dataset or testing dataset.')
-    parser.add_argument('--format', type=str, choices=['coco', 'yolo', 'sa'], required=True,
+    parser.add_argument('--format', type=str, choices=['coco', 'yoloSeg', 'yoloBbox', 'sa'], required=True,
                         help='Which output format do you want?')
     parser.add_argument('--patch_size', type=int,
                         help='The size of the patch needs to be divisible by width and height. '
@@ -35,12 +35,18 @@ if __name__ == '__main__':
                              classes_txt=args.classes_txt,
                              dataset_type=args.dataset_type,
                              patch_size=args.patch_size)
-    elif args.format == 'yolo':
-        conv = yoloConverter(source_dir=args.source_dir,
-                             output_dir=args.output_dir,
-                             classes_txt=args.classes_txt,
-                             dataset_type=args.dataset_type,
-                             patch_size=args.patch_size)
+    elif args.format == 'yoloSeg':
+        conv = yoloSegConverter(source_dir=args.source_dir,
+                                output_dir=args.output_dir,
+                                classes_txt=args.classes_txt,
+                                dataset_type=args.dataset_type,
+                                patch_size=args.patch_size)
+    elif args.format == 'yoloBbox':
+        conv = yoloBboxConverter(source_dir=args.source_dir,
+                                output_dir=args.output_dir,
+                                classes_txt=args.classes_txt,
+                                dataset_type=args.dataset_type,
+                                patch_size=args.patch_size)
     elif args.format == 'sa':
         conv = saConverter(source_dir=args.source_dir,
                            output_dir=args.output_dir,

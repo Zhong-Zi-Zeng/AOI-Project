@@ -13,7 +13,7 @@ import shutil
 from collections import defaultdict
 
 
-class yoloConverter(BaseConverter):
+class yoloSegConverter(BaseConverter):
     def __init__(self,
                  source_dir: str,
                  output_dir: str,
@@ -25,7 +25,7 @@ class yoloConverter(BaseConverter):
         self.output_dir = output_dir
         self.classes_txt = classes_txt
         self.patch_size = patch_size
-        self.dataset_type = dataset_type
+        self.dataset_type = dataset_type    # train or test
         self.generate_dir()
 
     def generate_dir(self):
@@ -40,9 +40,9 @@ class yoloConverter(BaseConverter):
         for idx, (image_file, json_file) in enumerate(
                 tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
             # 解析json
-            image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
+            image_height, image_width, _, classes, _, polygons = jsonParser(json_file).parse()
 
-            # <train>
+            # <train or test>
             # image
             shutil.copy(image_file,
                         os.path.join(self.output_dir, self.dataset_type, 'images', str(idx) + '.jpg'))
@@ -50,8 +50,8 @@ class yoloConverter(BaseConverter):
             # label
             with open(os.path.join(self.output_dir, self.dataset_type, 'labels', str(idx) + '.txt'), 'w') as file:
                 for idx, polygon in enumerate(polygons):
-                    # Normalize the coordinates to be between 0-1
-                    normalized_coords = polygon / np.array([image_width, image_height])
+                    # Normalize polygon to be between 0-1
+                    normalized_polygon = polygon / np.array([image_width, image_height])
 
                     # Extract the class label without the '#'
                     class_name = classes[idx][1:]
@@ -61,7 +61,7 @@ class yoloConverter(BaseConverter):
 
                     # Add the coordinates of each vertex to a list in YOLO format
                     # class, x1, y1, x2, y2, …(Normalize 0–1)
-                    yolo_coords = [str(class_idx)] + normalized_coords.flatten().astype(str).tolist()
+                    yolo_coords = [str(class_idx)] + normalized_polygon.flatten().astype(str).tolist()
                     file.write(" ".join(yolo_coords) + "\n")
 
     def generate_patch(self):
