@@ -60,6 +60,12 @@ class yoloBboxConverter(BaseConverter):
             # label
             with open(os.path.join(self.output_dir, 'labels', self.dataset_type, str(idx) + '.txt'), 'w') as file:
                 for idx, bbox in enumerate(bboxes):
+                    # Normalize
+                    bbox[0] /= image_width
+                    bbox[1] /= image_height
+                    bbox[2] /= image_width
+                    bbox[3] /= image_height
+
                     # Extract the class label without the '#'
                     class_name = classes[idx][1:]
 

@@ -67,10 +67,6 @@ class jsonParser:
                 # bboxes
                 x, y, w, h = cv2.boundingRect(polygon)
 
-                x /= image_width
-                y /= image_height
-                w /= image_width
-                h /= image_height
                 bboxes.append([x, y, w, h])
 
         except KeyError as key:
