@@ -44,11 +44,12 @@ class yoloSegConverter(BaseConverter):
 
             # <train or test>
             # image
+            image_name = Path(image_file).stem
             shutil.copy(image_file,
-                        os.path.join(self.output_dir, self.dataset_type, 'images', str(idx) + '.jpg'))
+                        os.path.join(self.output_dir, self.dataset_type, 'images', image_name + '.jpg'))
 
             # label
-            with open(os.path.join(self.output_dir, self.dataset_type, 'labels', str(idx) + '.txt'), 'w') as file:
+            with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
                 for idx, polygon in enumerate(polygons):
                     # Normalize polygon to be between 0-1
                     normalized_polygon = polygon / np.array([image_width, image_height])

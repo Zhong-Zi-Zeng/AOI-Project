@@ -47,18 +47,19 @@ class yoloBboxConverter(BaseConverter):
 
             # <images & labels train> or <images & labels val>
             # image
+            image_name = Path(image_file).stem
             shutil.copy(image_file,
-                        os.path.join(self.output_dir, 'images', self.dataset_type, str(idx) + '.jpg'))
+                        os.path.join(self.output_dir, 'images', self.dataset_type, image_name + '.jpg'))
 
             # 存所有train or val圖片的路徑
-            image_paths.append(os.path.join(self.output_dir, 'images', self.dataset_type, str(idx) + '.jpg'))
+            image_paths.append(os.path.join(self.output_dir, 'images', self.dataset_type, image_name + '.jpg'))
             # train_list.txt or val_list.txt
             with open(os.path.join(self.output_dir, self.dataset_type + '_list.txt'), 'w') as file:
                 file.write('\n'.join(image_paths))
 
 
             # label
-            with open(os.path.join(self.output_dir, 'labels', self.dataset_type, str(idx) + '.txt'), 'w') as file:
+            with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
                 for idx, bbox in enumerate(bboxes):
                     # Normalize
                     bbox[0] /= image_width
