@@ -43,12 +43,13 @@ class cocoConverter(BaseConverter):
             h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # image
+            image_name = Path(image_file).stem
             shutil.copy(image_file,
-                        os.path.join(self.output_dir, self.dataset_type + '2017', str(idx) + '.jpg'))
+                        os.path.join(self.output_dir, self.dataset_type + '2017', image_name + '.jpg'))
 
             # Label
             images.append({
-                'file_name': str(idx) + '.jpg',
+                'file_name': image_name + '.jpg',
                 'height': h,
                 'width': w,
                 'id': idx

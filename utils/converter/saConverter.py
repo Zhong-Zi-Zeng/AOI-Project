@@ -4,6 +4,7 @@ from patchify import patchify
 from tqdm import tqdm
 from .jsonParser import jsonParser
 from typing import Optional
+from pathlib import Path
 import cv2
 import os
 import numpy as np
@@ -56,13 +57,14 @@ class saConverter(BaseConverter):
         for idx, (image_file, json_file) in enumerate(
                 tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
             h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
+            image_name = Path(image_file).stem
 
             # image
             shutil.copy(image_file,
-                        os.path.join(self.output_dir, self.dataset_type, 'image', str(idx) + '.jpg'))
+                        os.path.join(self.output_dir, self.dataset_type, 'image', image_name + '.jpg'))
 
             # label
-            cv2.imwrite(os.path.join(self.output_dir, self.dataset_type, 'label', str(idx) + '.jpg'),
+            cv2.imwrite(os.path.join(self.output_dir, self.dataset_type, 'label', image_name + '.jpg'),
                         mask)
 
     def generate_patch(self):
