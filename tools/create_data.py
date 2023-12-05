@@ -4,7 +4,7 @@ import argparse
 
 
 def get_args_parser():
-    parser = argparse.ArgumentParser('DeformableVit', add_help=False)
+    parser = argparse.ArgumentParser('Dataset process script', add_help=False)
 
     parser.add_argument('--source_dir', type=str,
                         help="The dataset's path includes image files and json files.")
