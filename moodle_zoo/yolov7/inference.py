@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import os
+
 sys.path.append(os.path.join(os.getcwd(), 'moodle_zoo', 'yolov7', 'yolov7_seg'))
 
 from models.common import DetectMultiBackend
@@ -14,6 +15,7 @@ from utils.torch_utils import select_device
 from ..base.baseInference import baseInference
 import numpy as np
 import torch
+
 
 class Yolov7(baseInference):
     def __init__(self,
@@ -39,12 +41,15 @@ class Yolov7(baseInference):
         bs = 1  # batch_size
         self.model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
 
-    def run(self,
-            source: [str | np.ndarray[np.uint8]],
-            conf_thres: float = 0.25,
-            nms_thres: float = 0.5,
-            max_det: int = 1000,
-            line_thickness: int = 3) -> dict:
+    def _run(self,
+             source: [str | np.ndarray[np.uint8]],
+             conf_thres: float = 0.25,
+             nms_thres: float = 0.5,
+             *args,
+             **kwargs) -> dict:
+
+        max_det = kwargs.get('max_det', 1000)
+        line_thickness = kwargs.get('line_thickness', 3)
 
         with self.dt[0]:
             # ------------------------------Pre-process (Start)----------------------------
@@ -85,6 +90,7 @@ class Yolov7(baseInference):
             # ----------------------------Post-process (Start)----------------------------
             # For eval
             class_list = []
+            score_list = []
             bbox_list = []
             polygon_list = []
 
@@ -112,6 +118,7 @@ class Yolov7(baseInference):
                     # Record result
                     for j, (*xyxy, conf, cls) in enumerate(reversed(det[:, :6])):
                         cls = int(cls.cpu())
+                        conf = float(conf.cpu())
 
                         x = xyxy[0].cpu().numpy()
                         y = xyxy[1].cpu().numpy()
@@ -120,6 +127,7 @@ class Yolov7(baseInference):
 
                         bbox_list.append(list(map(int, [x, y, w, h])))
                         class_list.append(cls)
+                        score_list.append(conf)
                         polygon_list.append(segments[j])
 
                         # Draw bounding box
@@ -133,6 +141,7 @@ class Yolov7(baseInference):
         return {"result_image": result_image,
                 "class_list": class_list,
                 "bbox_list": bbox_list,
+                "score_list": score_list,
                 "polygon_list": polygon_list}
 
 
