@@ -89,6 +89,9 @@ data_file:
 ```
 python ./tools/evaluation.py -c {yolov7_seg.yaml這個檔案的路徑(建議用絕對路徑)}
 ```
+Baseline:
+![image](https://github.com/Zhong-Zi-Zeng/AOI-Project/assets/102845636/b4178e48-fe9c-4f60-a670-5630024a1434)
+
 
 
 
