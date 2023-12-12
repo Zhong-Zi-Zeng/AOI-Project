@@ -1,1 +1,1 @@
-from .inference import Yolov7Seg
+from .yolov7_seg import Yolov7Seg

@@ -370,19 +370,19 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
-                results, maps, _ = validate.run(data_dict,
-                                                batch_size=batch_size // WORLD_SIZE * 2,
-                                                imgsz=imgsz,
-                                                half=amp,
-                                                model=ema.ema,
-                                                single_cls=single_cls,
-                                                dataloader=val_loader,
-                                                save_dir=save_dir,
-                                                plots=False,
-                                                callbacks=callbacks,
-                                                compute_loss=compute_loss,
-                                                mask_downsample_ratio=mask_ratio,
-                                                overlap=overlap)
+                results, maps, _ = validate.predict(data_dict,
+                                                    batch_size=batch_size // WORLD_SIZE * 2,
+                                                    imgsz=imgsz,
+                                                    half=amp,
+                                                    model=ema.ema,
+                                                    single_cls=single_cls,
+                                                    dataloader=val_loader,
+                                                    save_dir=save_dir,
+                                                    plots=False,
+                                                    callbacks=callbacks,
+                                                    compute_loss=compute_loss,
+                                                    mask_downsample_ratio=mask_ratio,
+                                                    overlap=overlap)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
@@ -439,7 +439,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                 strip_optimizer(f)  # strip optimizers
                 if f is best:
                     LOGGER.info(f'\nValidating {f}...')
-                    results, _, _ = validate.run(
+                    results, _, _ = validate.predict(
                         data_dict,
                         batch_size=batch_size // WORLD_SIZE * 2,
                         imgsz=imgsz,

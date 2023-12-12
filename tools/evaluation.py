@@ -3,13 +3,12 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.getcwd()))
+from engine.builder import Builder
 from typing import Optional
 from PIL import Image, ImageDraw
-from moodle_zoo import Yolov7
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
-from pathlib import Path
-from moodle_zoo.base.baseInference import baseInference
+from model_zoo.base.BaseModel import BaseModel
 from tqdm import tqdm
 import pycocotools.mask as ms
 import json
@@ -18,6 +17,14 @@ import argparse
 import openpyxl
 import cv2
 
+
+def get_args_parser():
+    parser = argparse.ArgumentParser('Model evaluation script.', add_help=False)
+
+    parser.add_argument('--config', '-c', type=str, required=True,
+                        help='The path of config.')
+
+    return parser
 
 class Writer:
     def __init__(self,
@@ -29,8 +36,6 @@ class Writer:
                                "Image Size",
                                "Inference Time(ms) ↓",
                                "NMS(ms) ↓",
-                               "Memory(MB) ↓",
-                               "Training (hours) ↓",
                                "mAP_0.5(Box) ↑",
                                "mAP_0.5:0.95(Box) ↑",
                                "mAR_0.5:0.95(Box) ↑",
@@ -42,19 +47,17 @@ class Writer:
             'Each class(mask, mAP)': {'titles': ["Optimizer", "Image Size"] + class_names},
             'Each class(mask, mAR)': {'titles': ["Optimizer", "Image Size"] + class_names}
         }
-
-        self.wb = self._create_or_load_workbook(excel_path)
         self.excel_path = excel_path
+        self._create_or_load_workbook(excel_path)
 
     def _create_or_load_workbook(self, excel_path: str):
         if not os.path.isfile(excel_path):
-            wb = openpyxl.Workbook()
-            wb.remove(wb.active)
+            self.wb = openpyxl.Workbook()
+            self.wb.remove(self.wb.active)
             self._initial_sheets()
-            wb.save(excel_path)
+            self.wb.save(excel_path)
         else:
-            wb = openpyxl.load_workbook(excel_path)
-        return wb
+            self.wb = openpyxl.load_workbook(excel_path)
 
     def _initial_sheets(self):
         """
@@ -62,15 +65,20 @@ class Writer:
         """
         # create sheet (for instance segmentation)
         for sheet_name, titles in self.default_template.items():
-            if sheet_name not in self.wb.sheetnames:
-                self.wb.create_sheet(sheet_name)
-                self.write_col(data_list=titles['titles'], sheet_name=sheet_name)
+            self.wb.create_sheet(sheet_name)
+            self.write_col(data_list=titles['titles'], sheet_name=sheet_name, row=1)
 
         self.wb.save(self.excel_path)
 
-    def write_col(self, data_list: list[str | float | int], sheet_name: str):
+    def write_col(self,
+                  data_list: list[str | float | int],
+                  sheet_name: str,
+                  row: Optional[int] = None):
         worksheet = self.wb[sheet_name]
-        row = worksheet.max_row
+
+        if row is None:
+            row = worksheet.max_row + 1
+
         for col_idx, value in enumerate(data_list, start=1):
             worksheet.cell(row=row, column=col_idx, value=value)
 
@@ -78,26 +86,19 @@ class Writer:
 
 
 class Evaluator:
-    def __init__(self,
-                 model: baseInference,
-                 coco_root: str,
-                 excel_path: Optional[str] = None,
-                 nms_thres: float = 0.5,
-                 conf_thres: float = 0.001,
-                 output_path: str = './coco_dt.json'):
-
+    def __init__(self, model: BaseModel, cfg: dict):
         self.model = model
-        self.coco_root = coco_root
-        self.output_path = output_path
-        self.nms_thres = nms_thres
-        self.conf_thres = conf_thres
-        self.coco_gt = COCO(os.path.join(coco_root, 'annotations', 'instances_val2017.json'))
+        self.cfg = cfg
+        self.coco_root = cfg["coco_root"]
+        self.nms_thres = cfg["nms_thres"]
+        self.conf_thres = cfg["conf_thres"]
+        self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
 
-        if excel_path:
-            class_ids = self.coco_gt.getCatIds()
-            class_names = self.coco_gt.loadCats(class_ids)
-            class_names = [cls['name'] for cls in class_names]
-            self.writer = Writer(excel_path=excel_path, class_names=class_names)
+        # excel_path = os.path.join(cfg['work_dir'], 'evaluation.xlsx')
+        # class_ids = self.coco_gt.getCatIds()
+        # class_names = self.coco_gt.loadCats(class_ids)
+        # class_names = [cls['name'] for cls in class_names]
+        # self.writer = Writer(excel_path=excel_path, class_names=class_names)
 
     def _generate_det(self):
         """
@@ -114,7 +115,7 @@ class Evaluator:
             height, width = image.shape[:2]
 
             # Inference
-            result = self.model.run(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
+            result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
 
             # Analyze result
             class_list = result['class_list']
@@ -196,6 +197,8 @@ class Evaluator:
         print("%15.3f" * 6 % (all_boxes_result[1], all_boxes_result[0], all_boxes_result[8],
                               all_masks_result[1], all_masks_result[0], all_masks_result[8]))
 
+        # TODO: Record value
+
         # Evaluate per class
         cats = self.coco_gt.loadCats(self.coco_gt.getCatIds())
         class_name = [cat['name'] for cat in cats]
@@ -209,20 +212,31 @@ class Evaluator:
             print(("%25s" + " %15.3f" * 4) % (name, box_result[1], box_result[8],
                                               mask_result[1], mask_result[8]))
 
+            # TODO: Record value
+
         # Print process time
         for key, value in self.model.timer().items():
             print(f"{key:15s} {value:4.3f}", end=' | ')
 
 
 if __name__ == "__main__":
-    yolov7 = Yolov7(
-        weights=r"\\DESKTOP-PPOB8AK\share\AOI_result\Instance Segmentation\yolov7\1024_SGD_202312061402\weights\best.pt",
-        data=r"D:\Heng_shared\yolov7-segmentation\data\hyps\hyp.scratch-high.yaml",
-        imgsz=(1024, 1024)
-    )
+    parser = argparse.ArgumentParser('Model evaluation script.',
+                                     parents=[get_args_parser()])
+    args = parser.parse_args()
 
-    evaluator = Evaluator(model=yolov7,
-                          excel_path='./test.xlsx',
-                          coco_root=r"D:\Heng_shared\coco")
+    # Create builder
+    builder = Builder(config_path=r"D:\Heng_shared\AOI-Project\configs\yolov7_seg.yaml")
 
+    # Build config
+    cfg = builder.build_config()
+
+    # Create work dir
+    root = os.getcwd()
+    os.makedirs(os.path.join(root, 'work_dirs', cfg['name']), exist_ok=True)
+
+    # Build model
+    model = builder.build_model(cfg)
+
+    # Build evaluator
+    evaluator = Evaluator(model=model, cfg=cfg)
     evaluator.eval()

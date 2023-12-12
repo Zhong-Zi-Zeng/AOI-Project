@@ -1,6 +1,5 @@
 from model_zoo.base.BaseModel import BaseModel
 import yaml
-import os
 import importlib
 import os
 

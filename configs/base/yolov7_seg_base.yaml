@@ -1,10 +1,11 @@
+name: 'Yolov7Seg'
+
 # ===========Data file===========
 data_file:
   # Dataset
   download: bash ./scripts/get_coco.sh
   train: ./coco/train2017.txt
   val: ./coco/val2017.txt
-  test: ./coco/test-dev2017.txt
 
   # number of classes
   nc: 80
@@ -20,7 +21,14 @@ data_file:
            'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
            'hair drier', 'toothbrush' ]
 
-# ===========Hyperparameter file===========
+# ===========Hyperparameter and file===========
+optimizer: 'Adam'
+weight: 'yolov5s-seg.pt'
+epochs: 300
+batch_size: 16
+imgsz: [640, 640]
+device: '' # 'cuda device, i.e. 0 or 0,1,2,3 or cpu'
+
 hyp_file:
   lr0: 0.01  # initial learning rate (SGD=1E-2, Adam=1E-3)
   lrf: 0.1  # final OneCycleLR learning rate (lr0 * lrf)
@@ -191,15 +199,5 @@ model:
 
       [ [ 102, 103, 104 ], 1, ISegment, [ nc, anchors, 32, 256 ] ],  # Detect(P3, P4, P5)
     ]
-
-
-# ===========Evaluation setting===========
-evaluation:
-  weight: './weight.pth'
-  nms_thres: 0.5
-  conf_thres: 0.001
-  imgsz: 640
-  source: './data/coco'
-
 
 

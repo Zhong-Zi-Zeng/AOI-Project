@@ -18,37 +18,35 @@ import yaml
 
 
 class Yolov7Seg(BaseModel):
-    def __init__(self,
-                 cfg: dict,
-                 device: str = '',
-                 ):
-        """
-            Args:
-                weights: 模型的權重檔
-                data: custom.yaml
-                imgsz: 輸入圖片大小
-        """
-        super().__init__()
+    def __init__(self, cfg: dict):
+        super().__init__(cfg)
+
+        self.cfg = cfg
+
         # Save data file
-        data_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'data.yaml')
-        with open(data_file_path, 'w') as file:
+        self.data_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'data.yaml')
+        with open(self.data_file_path, 'w') as file:
             yaml.dump(cfg['data_file'], file)
 
         # Save hyperparameter file
-        hyp_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'hpy.yaml')
-        with open(hyp_file_path, 'w') as file:
+        self.hyp_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'hpy.yaml')
+        with open(self.hyp_file_path, 'w') as file:
             yaml.dump(cfg['hyp_file'], file)
 
+    def _load_model(self):
         # Load model
-        self.device = select_device(device)
-        self.model = DetectMultiBackend(cfg['weight'], device=self.device, dnn=False, data=data, fp16=False)
+        self.device = select_device('')
+        self.model = DetectMultiBackend(self.cfg['weight'],
+                                        device=self.device,
+                                        dnn=False,
+                                        data=self.data_file_path,
+                                        fp16=False)
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
-        self.imgsz = check_img_size(cfg['imgsz'], s=stride)  # check image size
+        self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
 
         # Run inference
         bs = 1  # batch_size
-        self.model.warmup(imgsz=(1 if pt else bs, 3, *cfg['imgsz']))  # warmup
-
+        self.model.warmup(imgsz=(1 if pt else bs, 3, *self.cfg['imgsz']))  # warmup
 
     def _predict(self,
                  source: [str | np.ndarray[np.uint8]],
@@ -56,6 +54,9 @@ class Yolov7Seg(BaseModel):
                  nms_thres: float = 0.5,
                  *args,
                  **kwargs) -> dict:
+
+        if not hasattr(self, 'model'):
+            self._load_model()
 
         max_det = kwargs.get('max_det', 1000)
         line_thickness = kwargs.get('line_thickness', 3)
@@ -154,10 +155,3 @@ class Yolov7Seg(BaseModel):
                 "polygon_list": polygon_list}
     def train(self):
         pass
-
-def build(weight, data_file_path, imgsz):
-    return Yolov7Seg(
-        weights=weight,
-        data=data_file_path,
-        imgsz=imgsz
-    )

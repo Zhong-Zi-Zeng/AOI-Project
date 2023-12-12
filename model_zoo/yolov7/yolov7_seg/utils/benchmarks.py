@@ -72,11 +72,11 @@ def run(
             if f == '-':
                 w = weights  # PyTorch format
             else:
-                w = export.run(weights=weights, imgsz=[imgsz], include=[f], device=device, half=half)[-1]  # all others
+                w = export.predict(weights=weights, imgsz=[imgsz], include=[f], device=device, half=half)[-1]  # all others
             assert suffix in str(w), 'export failed'
 
             # Validate
-            result = val.run(data, w, batch_size, imgsz, plots=False, device=device, task='benchmark', half=half)
+            result = val.predict(data, w, batch_size, imgsz, plots=False, device=device, task='benchmark', half=half)
             metrics = result[0]  # metrics (mp, mr, map50, map, *losses(box, obj, cls))
             speeds = result[2]  # times (preprocess, inference, postprocess)
             y.append([name, round(file_size(w), 1), round(metrics[3], 4), round(speeds[1], 2)])  # MB, mAP, t_inference
@@ -115,7 +115,7 @@ def test(
     for i, (name, f, suffix, gpu) in export.export_formats().iterrows():  # index, (name, file, suffix, gpu-capable)
         try:
             w = weights if f == '-' else \
-                export.run(weights=weights, imgsz=[imgsz], include=[f], device=device, half=half)[-1]  # weights
+                export.predict(weights=weights, imgsz=[imgsz], include=[f], device=device, half=half)[-1]  # weights
             assert suffix in str(w), 'export failed'
             y.append([name, True])
         except Exception:

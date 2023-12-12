@@ -24,8 +24,7 @@ def get_args_parser():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Dataset process script. '
-                                     ,
+    parser = argparse.ArgumentParser('Dataset process script. ',
                                      parents=[get_args_parser()])
     args = parser.parse_args()
 
