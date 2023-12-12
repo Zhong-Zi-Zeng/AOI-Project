@@ -32,12 +32,14 @@ class baseInference(ABC):
         # 紀錄處理時間
         self.dt = (Profile(), Profile(), Profile(), Profile())
 
-
     def timer(self) -> dict:
         """
             返回每個階段的執行時間
         """
-        timer_name = ['total_process', 'pre-process', 'inference', 'nms']
+        timer_name = ['Total process time(ms):',
+                      'Preprocess time(ms):',
+                      'Inference time(ms):',
+                      'NMS time(ms):']
         return {name: time.dt * 1000 for time, name in zip(self.dt, timer_name)}
 
     def run(self,

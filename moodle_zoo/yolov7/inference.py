@@ -125,7 +125,7 @@ class Yolov7(baseInference):
                         w = xyxy[2].cpu().numpy() - x
                         h = xyxy[3].cpu().numpy() - y
 
-                        bbox_list.append(list(map(int, [x, y, w, h])))
+                        bbox_list.append(list(map(float, [x, y, w, h])))
                         class_list.append(cls)
                         score_list.append(conf)
                         polygon_list.append(segments[j])
