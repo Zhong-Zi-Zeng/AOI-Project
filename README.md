@@ -83,10 +83,6 @@ coco_root: "D:/Heng_shared/AOI-Project/tools/coco" # 剛剛生成coco dataset的
 weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_Adam_202312061402/weights/best.pt" # yolov7的weight路徑
 imgsz: [1024, 1024] # 圖像大小
 
-# ===========Data file===========
-data_file:
-  train: /home/miislab-server/Heng/Heng_shared/yoloSeg/train # yolo的dataset路徑
-  val: /home/miislab-server/Heng/Heng_shared/yoloSeg/test # yolo的dataset路徑
 ```
 
 ## Step5:
