@@ -1,0 +1,15 @@
+# COCO 2017 dataset http://cocodataset.org
+
+# download command/URL (optional)
+download: bash ./scripts/get_coco.sh
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: /home/miislab-server/Heng/Heng_shared/yoloSeg/train  # 118287 images
+val: /home/miislab-server/Heng/Heng_shared/yoloSeg/test  # 5000 images
+
+
+# number of classes
+nc: 16
+
+# class names
+names: [ "Border", "black_Marks", "Bright_Marks", "Pass", "Dirty", "Friction", "Black_point", "Buttom_scratches", "Small_scratches", "AnotherColor", "Severe_scratches", "Glossy", "ReturnPoint", "Assembly", "Scractches_Blackbackground", "Buttom_Friction"]

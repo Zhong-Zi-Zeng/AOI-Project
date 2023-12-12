@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union, Any, Dict
 from abc import ABC, abstractmethod
+import os
 import numpy as np
 import time
 import torch
@@ -27,10 +28,19 @@ class Profile(contextlib.ContextDecorator):
         return time.time()
 
 
-class baseInference(ABC):
-    def __init__(self):
+class BaseModel(ABC):
+    def __init__(self, cfg: dict):
+        self.cfg = cfg
+        self._create_work_dir()
+
         # 紀錄處理時間
         self.dt = (Profile(), Profile(), Profile(), Profile())
+
+    def _create_work_dir(self):
+        """
+            創建work dir
+        """
+        os.makedirs(self.cfg['work_dir'], exist_ok=True)
 
     def timer(self) -> dict:
         """
@@ -42,13 +52,17 @@ class baseInference(ABC):
                       'NMS time(ms):']
         return {name: time.dt * 1000 for time, name in zip(self.dt, timer_name)}
 
-    def run(self,
-            source: Union[str | np.ndarray[np.uint8]],
-            conf_thres: float = 0.25,
-            nms_thres: float = 0.5,
-            *args: Any,
-            **kwargs: Any):
-        result = self._run(source, conf_thres, nms_thres, *args, **kwargs)
+    @abstractmethod
+    def train(self):
+        pass
+
+    def predict(self,
+                source: Union[str | np.ndarray[np.uint8]],
+                conf_thres: float = 0.25,
+                nms_thres: float = 0.5,
+                *args: Any,
+                **kwargs: Any):
+        result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
         default_key = {'result_image', 'class_list', 'score_list', 'bbox_list', 'polygon_list'}
 
         if set(result.keys()) == set(default_key):
@@ -57,13 +71,13 @@ class baseInference(ABC):
             raise ValueError("You must return the same key with default keys.")
 
     @abstractmethod
-    def _run(self,
-             source: Union[str | np.ndarray[np.uint8]],
-             conf_thres: float = 0.25,
-             nms_thres: float = 0.5,
-             *args: Any,
-             **kwargs: Any
-             ) -> dict:
+    def _predict(self,
+                 source: Union[str | np.ndarray[np.uint8]],
+                 conf_thres: float = 0.25,
+                 nms_thres: float = 0.5,
+                 *args: Any,
+                 **kwargs: Any
+                 ) -> dict:
         """
         需再4個階段中插入Profile去計時，
         Example:

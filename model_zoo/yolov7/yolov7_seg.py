@@ -1,9 +1,8 @@
 from __future__ import annotations
-
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'moodle_zoo', 'yolov7', 'yolov7_seg'))
+sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7', 'yolov7_seg'))
 
 from models.common import DetectMultiBackend
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
@@ -12,41 +11,52 @@ from utils.plots import Annotator, colors
 from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
-from ..base.baseInference import baseInference
+from ..base.BaseModel import BaseModel
 import numpy as np
 import torch
+import yaml
 
 
-class Yolov7(baseInference):
-    def __init__(self,
-                 weights: str,
-                 data: str,
-                 imgsz: tuple[int, int] = (640, 640),
-                 device: str = '',
-                 ):
-        """
-            Args:
-                weights: 模型的權重檔
-                data: custom.yaml
-                imgsz: 輸入圖片大小
-        """
-        super().__init__()
+class Yolov7Seg(BaseModel):
+    def __init__(self, cfg: dict):
+        super().__init__(cfg)
+
+        self.cfg = cfg
+
+        # Save data file
+        self.data_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'data.yaml')
+        with open(self.data_file_path, 'w') as file:
+            yaml.dump(cfg['data_file'], file)
+
+        # Save hyperparameter file
+        self.hyp_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'hpy.yaml')
+        with open(self.hyp_file_path, 'w') as file:
+            yaml.dump(cfg['hyp_file'], file)
+
+    def _load_model(self):
         # Load model
-        self.device = select_device(device)
-        self.model = DetectMultiBackend(weights, device=self.device, dnn=False, data=data, fp16=False)
+        self.device = select_device('')
+        self.model = DetectMultiBackend(self.cfg['weight'],
+                                        device=self.device,
+                                        dnn=False,
+                                        data=self.data_file_path,
+                                        fp16=False)
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
-        self.imgsz = check_img_size(imgsz, s=stride)  # check image size
+        self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
 
         # Run inference
         bs = 1  # batch_size
-        self.model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
+        self.model.warmup(imgsz=(1 if pt else bs, 3, *self.cfg['imgsz']))  # warmup
 
-    def _run(self,
-             source: [str | np.ndarray[np.uint8]],
-             conf_thres: float = 0.25,
-             nms_thres: float = 0.5,
-             *args,
-             **kwargs) -> dict:
+    def _predict(self,
+                 source: [str | np.ndarray[np.uint8]],
+                 conf_thres: float = 0.25,
+                 nms_thres: float = 0.5,
+                 *args,
+                 **kwargs) -> dict:
+
+        if not hasattr(self, 'model'):
+            self._load_model()
 
         max_det = kwargs.get('max_det', 1000)
         line_thickness = kwargs.get('line_thickness', 3)
@@ -143,15 +153,5 @@ class Yolov7(baseInference):
                 "bbox_list": bbox_list,
                 "score_list": score_list,
                 "polygon_list": polygon_list}
-
-
-if __name__ == '__main__':
-    yolov7 = Yolov7(
-        weights=r"\\DESKTOP-PPOB8AK\share\AOI_result\Instance Segmentation\yolov7\1024_SGD_202312061402\weights\best.pt",
-        data=r"D:\Heng_shared\yolov7-segmentation\data\custom.yaml",
-        imgsz=(1024, 1024)
-    )
-
-    yolov7.run(source=r"C:\Users\鐘子恒\Desktop\Side-Project\AOI_Project\tools\coco\train2017\2.jpg")
-
-    print(yolov7.timer())
+    def train(self):
+        pass

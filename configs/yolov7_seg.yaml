@@ -1,4 +1,19 @@
-_base_: ['./base/yolov7_seg_base.yaml']
+_base_: ['./base/yolov7_seg_base.yaml',
+         './base/default_setting.yaml']
+
+# ===========Default setting===========
+work_dir: './work_dirs/Yolov7Seg'
+coco_root: "D:/Heng_shared/AOI-Project/tools/coco"
+nms_thres: 0.5
+conf_thres: 0.001
+
+# ===========Hyperparameter and file===========
+optimizer: 'Adam'
+weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_Adam_202312061402/weights/best.pt"
+epochs: 50
+batch_size: 8
+imgsz: [1024, 1024]
+
 
 # ===========Data file===========
 data_file:
@@ -9,31 +24,4 @@ data_file:
   nc: 16
 
   # class names
-  names: [ "Border", "black_Marks", "Bright_Marks", "Pass", "Dirty", "Friction", "Black_point", "Buttom_scratches", "Small_scratches", "AnotherColor", "Severe_scratches", "Glossy", "ReturnPoint", "Assembly", "Scractches_Blackbackground", "Buttom_Friction" ]
-
-# ===========Hyperparameter file===========
-hyp_file:
-  lr0: 0.001  # initial learning rate (SGD=1E-2, Adam=1E-3)
-  lrf: 0.1  # final OneCycleLR learning rate (lr0 * lrf)
-  fl_gamma: 0.0  # focal loss gamma (efficientDet default gamma=1.5)
-  hsv_h: 0.  # image HSV-Hue augmentation (fraction)
-  hsv_s: 0.  # image HSV-Saturation augmentation (fraction)
-  hsv_v: 0.  # image HSV-Value augmentation (fraction)
-  degrees: 0.0  # image rotation (+/- deg)
-  translate: 0.  # image translation (+/- fraction)
-  scale: 1.  # image scale (+/- gain)
-  shear: 0.0  # image shear (+/- deg)
-  perspective: 0.0  # image perspective (+/- fraction), range 0-0.001
-  flipud: 0.0  # image flip up-down (probability)
-  fliplr: 0.  # image flip left-right (probability)
-  mosaic: 0.  # image mosaic (probability)
-  mixup: 0.  # image mixup (probability)
-  copy_paste: 0.  # segment copy-paste (probability)
-
-# ===========Evaluation setting===========
-evaluation:
-  weight: ''
-  nms_thres: 0.5
-  conf_thres: 0.001
-  imgsz: 1024
-  source: "D:/Heng_shared/coco"
+  names: ["Border", "black_Marks", "Bright_Marks", "Pass", "Dirty", "Friction", "Black_point", "Buttom_scratches", "Small_scratches", "AnotherColor", "Severe_scratches", "Glossy", "ReturnPoint", "Assembly", "Scractches_Blackbackground", "Buttom_Friction" ]
