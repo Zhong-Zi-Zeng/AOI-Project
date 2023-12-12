@@ -50,4 +50,10 @@ python create_data.py \
 --dataset_type test
 --format coco
 ```
+# 評估工具使用
+## Step1: 先安裝numpy(一定要這個版本)
+```
+pip install update numpy==1.20.3
+```
+
 
