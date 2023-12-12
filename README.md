@@ -51,9 +51,45 @@ python create_data.py \
 --format coco
 ```
 # 評估工具使用
-## Step1: 先安裝numpy(一定要這個版本)
+## Step1: 
+先安裝numpy(一定要這個版本)
 ```
 pip install update numpy==1.20.3
 ```
+
+## Step2: 
+安裝pycocotools
+```
+pip install git+https://github.com/Zhong-Zi-Zeng/cocoapi.git#subdirectory=PythonAPI
+```
+## Step3: 
+這邊要進到AOI-Project這個資料下
+
+## Step4: 
+利用[數據集處理](https://github.com/Zhong-Zi-Zeng/AOI-Project/edit/main/README.md#%E6%95%B8%E6%93%9A%E9%9B%86%E8%99%95%E7%90%86)去生成coco資料格式的dataset
+## Step5: 
+打開configs/yolov7_seg.yaml檔案，這邊需要去更改對應檔案的位置(只列出需要更改的地方)
+```yaml
+# ===========Default setting===========
+work_dir: './work_dirs/Yolov7Seg' 
+coco_root: "D:/Heng_shared/AOI-Project/tools/coco" # 剛剛生成coco dataset的路徑
+
+# ===========Hyperparameter and file===========
+weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_Adam_202312061402/weights/best.pt" # yolov7的weight路徑
+imgsz: [1024, 1024] # 圖像大小
+
+# ===========Data file===========
+data_file:
+  train: /home/miislab-server/Heng/Heng_shared/yoloSeg/train # yolo的dataset路徑
+  val: /home/miislab-server/Heng/Heng_shared/yoloSeg/test # yolo的dataset路徑
+```
+
+## Step6:
+開始評估，最後會顯示評估數據
+```
+python ./tools/evaluation.py -c {yolov7_seg.yaml這個檔案的路徑(建議用絕對路徑)}
+```
+
+
 
 
