@@ -143,7 +143,7 @@ class Evaluator:
                 })
 
         # Save
-        with open('./result.json', 'w') as file:
+        with open(os.path.join(self.cfg['work_dir'], 'result.json'), 'w') as file:
             json.dump(detected_result, file)
 
     def _coco_eval(self,
@@ -186,7 +186,7 @@ class Evaluator:
         self._generate_det()
 
         # Load json
-        predicted_json = self.coco_gt.loadRes('./result.json')
+        predicted_json = self.coco_gt.loadRes(os.path.join(self.cfg['work_dir'], 'result.json'))
 
         # Evaluate all classes
         all_boxes_result = self._coco_eval(predicted_json, task='bbox')
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=r"D:\Heng_shared\AOI-Project\configs\yolov7_seg.yaml")
+    builder = Builder(config_path=args.config)
 
     # Build config
     cfg = builder.build_config()
