@@ -225,7 +225,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=r"D:\Heng_shared\AOI-Project\configs\yolov7_seg.yaml")
+    builder = Builder(config_path=args.config)
 
     # Build config
     cfg = builder.build_config()

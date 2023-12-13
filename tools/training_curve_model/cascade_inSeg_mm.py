@@ -5,11 +5,11 @@ from .baseModel import BaseModel
 
 # class cascade_inSeg_mm(BaseModel):
 #     def __init__(self,
-#                  result_dir: str,
-#                  output_dir: str):
-#         super().__init__(result_dir, output_dir)
-#         self.result_dir = result_dir
-#         self.output_dir = output_dir
+#                  result_path: str,
+#                  output_path: str):
+#         super().__init__(result_path, output_path)
+#         self.result_path = result_path
+#         self.output_path = output_path
 #
 #     def generate_curve(self):
 #

@@ -3,13 +3,13 @@ _base_: ['./base/yolov7_seg_base.yaml',
 
 # ===========Default setting===========
 work_dir: './work_dirs/Yolov7Seg'
-coco_root: "D:/Heng_shared/AOI-Project/tools/coco"
+coco_root: "C:/Users/Yeh/Desktop/AOI-Project/coco"
 nms_thres: 0.5
 conf_thres: 0.001
 
 # ===========Hyperparameter and file===========
 optimizer: 'Adam'
-weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_Adam_202312061402/weights/best.pt"
+weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_SGD_202312061402/weights/best.pt"
 epochs: 50
 batch_size: 8
 imgsz: [1024, 1024]
