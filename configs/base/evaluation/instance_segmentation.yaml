@@ -1,0 +1,24 @@
+nms_thres: 0.5
+conf_thres: 0.001
+task: "instance_segmentation"
+sheet_names:
+  - "All"
+  - "Each class(box, mAP)"
+  - "Each class(box, mAR)"
+  - "Each class(mask, mAP)"
+  - "Each class(mask, mAR)"
+
+metrics:
+  - "Inference Time(ms)"
+  - "NMS Time(ms)"
+  - "mAP_0.5(Box)"
+  - "mAP_0.5:0.95(Box)"
+  - "mAR_0.5:0.95(Box)"
+  - "mAP_0.5(Mask)"
+  - "mAP_0.5:0.95(Mask)"
+  - "mAR_0.5:0.95(Mask)"
+
+common:
+  - "Optimizer"
+  - "Image Size"
+  - "Use Patch"

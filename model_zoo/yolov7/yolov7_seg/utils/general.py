@@ -1109,7 +1109,7 @@ def print_mutation(results, hyp, save_dir, bucket, prefix=colorstr('evolve: ')):
 
 def apply_classifier(x, model, img, im0):
     # Apply a second stage classifier to YOLO outputs
-    # Example model = torchvision.models.__dict__['efficientnet_b0'](pretrained=True).to(device).eval()
+    # Example model = torchvision.models.__dict__['efficientnet_b0'](pretrained=True).to(device).evaluation()
     im0 = [im0] if isinstance(im0, np.ndarray) else im0
     for i, d in enumerate(x):  # per image
         if d is not None and len(d):

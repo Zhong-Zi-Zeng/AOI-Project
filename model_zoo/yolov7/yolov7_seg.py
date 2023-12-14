@@ -12,6 +12,7 @@ from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
 from ..base.BaseModel import BaseModel
+from engine.general import (get_work_dir_path, load_yaml, save_yaml)
 import numpy as np
 import torch
 import yaml
@@ -20,18 +21,23 @@ import yaml
 class Yolov7Seg(BaseModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg)
-
         self.cfg = cfg
+        self._config_transform()
 
-        # Save data file
-        self.data_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'data.yaml')
-        with open(self.data_file_path, 'w') as file:
-            yaml.dump(cfg['data_file'], file)
+    def _config_transform(self):
+        # Update data file
+        data_file = load_yaml(self.cfg['data_file'])
+        data_file['train'] = self.cfg['train_txt']
+        data_file['val'] = self.cfg['val_txt']
+        data_file['nc'] = self.cfg['number_of_class']
+        data_file['names'] = self.cfg['class_names']
+        save_yaml(os.path.join(get_work_dir_path(self.cfg), 'data.yaml'), data_file)
 
-        # Save hyperparameter file
-        self.hyp_file_path = os.path.join(os.getcwd(), 'work_dirs', cfg['name'], 'hpy.yaml')
-        with open(self.hyp_file_path, 'w') as file:
-            yaml.dump(cfg['hyp_file'], file)
+        # Update hyp file
+        hyp_file = load_yaml(self.cfg['hyp_file'])
+        hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
+        hyp_file['lrf'] = self.cfg['lr']
+        save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
     def _load_model(self):
         # Load model
@@ -39,7 +45,7 @@ class Yolov7Seg(BaseModel):
         self.model = DetectMultiBackend(self.cfg['weight'],
                                         device=self.device,
                                         dnn=False,
-                                        data=self.data_file_path,
+                                        data=os.path.join(get_work_dir_path(self.cfg), 'data.yaml'),
                                         fp16=False)
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
         self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
@@ -98,7 +104,7 @@ class Yolov7Seg(BaseModel):
             # ----------------------------NMS-process (End)----------------------------
 
             # ----------------------------Post-process (Start)----------------------------
-            # For eval
+            # For evaluation
             class_list = []
             score_list = []
             bbox_list = []
@@ -153,5 +159,6 @@ class Yolov7Seg(BaseModel):
                 "bbox_list": bbox_list,
                 "score_list": score_list,
                 "polygon_list": polygon_list}
+
     def train(self):
         pass

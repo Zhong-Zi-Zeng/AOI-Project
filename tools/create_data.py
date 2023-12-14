@@ -52,4 +52,6 @@ if __name__ == '__main__':
                            classes_txt=args.classes_txt,
                            dataset_type=args.dataset_type,
                            patch_size=args.patch_size)
+    else:
+        raise ValueError("Can not find the converter of {}.".format(args.format))
     conv.generate_original()

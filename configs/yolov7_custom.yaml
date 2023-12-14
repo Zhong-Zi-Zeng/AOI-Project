@@ -1,0 +1,45 @@
+_base_: [ "./base/model/yolov7_seg_base.yaml",
+          "./base/evaluation/instance_segmentation.yaml",
+          "./base/dataset.yaml",
+          "./base/hyp.yaml"]
+
+# ===========Model===========
+train_txt: ""
+val_txt: ""
+data_file: "D:/Heng_shared/AOI-Project/model_zoo/yolov7/yolov7_seg/data/custom.yaml"
+hyp_file: "D:/Heng_shared/AOI-Project/model_zoo/yolov7/yolov7_seg/data/hyps/hyp.scratch-high.yaml"
+
+# ===========Dataset===========
+number_of_class: 16
+coco_root: "../coco"
+class_names:
+  - "Border"
+  - "black_Marks"
+  - "Bright_Marks"
+  - "Pass"
+  - "Dirty"
+  - "Friction"
+  - "Black_point"
+  - "Buttom_scratches"
+  - "Small_scratches"
+  - "AnotherColor"
+  - "Severe_scratches"
+  - "Glossy"
+  - "ReturnPoint"
+  - "Assembly"
+  - "Scractches_Blackbackground"
+  - "Buttom_Friction"
+
+
+# ===========Hyperparameter===========
+optimizer: "AdamW" # Adam、AdamW、SGD
+weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_AdamW_202312061844/weights/best.pt"
+start_epoch: 0
+end_epoch: 50
+lr: 0.01
+start_factor: 0.3
+batch_size: 8
+imgsz: [1024, 1024]
+
+
+

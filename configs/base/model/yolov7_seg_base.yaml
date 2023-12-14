@@ -1,0 +1,8 @@
+model_name: 'Yolov7Seg'
+work_dir_name: 'Yolov7Seg'
+
+train_txt: './coco/train2017.txt'
+val_txt: './coco/val2017.txt'
+data_file: './data/coco.yaml'
+hyp_file: './data/hyps/hyp.scratch-high.yaml'
+

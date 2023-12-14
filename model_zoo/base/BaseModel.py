@@ -10,7 +10,8 @@ import contextlib
 
 class Profile(contextlib.ContextDecorator):
     # YOLOv5 Profile class. Usage: @Profile() decorator or 'with Profile():' context manager
-    def __init__(self, t=0.0):
+    def __init__(self, name: str, t=0.0):
+        self.name = name
         self.t = t
         self.cuda = torch.cuda.is_available()
 
@@ -20,7 +21,7 @@ class Profile(contextlib.ContextDecorator):
 
     def __exit__(self, type, value, traceback):
         self.dt = self.time() - self.start  # delta-time
-        self.t += self.dt  # accumulate dt
+        self.t += self.dt * 1000  # accumulate dt
 
     def time(self):
         if self.cuda:
@@ -31,29 +32,30 @@ class Profile(contextlib.ContextDecorator):
 class BaseModel(ABC):
     def __init__(self, cfg: dict):
         self.cfg = cfg
-        self._create_work_dir()
 
         # 紀錄處理時間
-        self.dt = (Profile(), Profile(), Profile(), Profile())
+        self.dt = (Profile(name='Total process time(ms):'),
+                   Profile(name='Preprocess Time(ms):'),
+                   Profile(name='Inference Time(ms):'),
+                   Profile(name='NMS Time(ms):'))
 
-    def _create_work_dir(self):
-        """
-            創建work dir
-        """
-        os.makedirs(self.cfg['work_dir'], exist_ok=True)
-
-    def timer(self) -> dict:
+    def get_timer(self) -> tuple:
         """
             返回每個階段的執行時間
         """
-        timer_name = ['Total process time(ms):',
-                      'Preprocess time(ms):',
-                      'Inference time(ms):',
-                      'NMS time(ms):']
-        return {name: time.dt * 1000 for time, name in zip(self.dt, timer_name)}
+        return self.dt
+
+    def _config_transform(self):
+        """
+            將輸入的config轉換到各自需要的格式
+        """
+        pass
 
     @abstractmethod
     def train(self):
+        """
+            Run每個model自己的training command
+        """
         pass
 
     def predict(self,
@@ -79,7 +81,8 @@ class BaseModel(ABC):
                  **kwargs: Any
                  ) -> dict:
         """
-        需再4個階段中插入Profile去計時，
+        1. Inference時會用到
+        2. 需再4個階段中插入Profile去計時
         Example:
         >>>with self.dt[0]:
         >>>        # Pre-process (Start)
