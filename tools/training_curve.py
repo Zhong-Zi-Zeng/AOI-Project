@@ -7,9 +7,9 @@ def get_args_parser():
     parser.add_argument('--model_type', type=str, required=True,
                         choices=['yolov7_inSeg', 'cascade_inSeg_mm'],
                         help="Input model type.")
-    parser.add_argument('--result_dir', type=str, required=True,
+    parser.add_argument('--result_path', type=str, required=True,
                         help="Enter the path to the results folder.")
-    parser.add_argument('--output_dir', type=str, required=True,
+    parser.add_argument('--output_path', type=str, required=True,
                         help="Save the training curve in this directory.")
     return parser
 
@@ -20,9 +20,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.model_type == 'yolov7_inSeg':
-        trainCurve = yolov7_inSeg(result_dir=args.result_dir,
-                                  output_dir=args.output_dir)
+        trainCurve = yolov7_inSeg(result_path=args.result_path,
+                                  output_path=args.output_path)
     # elif args.model_type == 'cascade_inSeg_mm':
-    #     trainCurve = cascade_inSeg_mm(result_dir=args.result_dir,
-    #                                   output_dir=args.output_dir)
+    #     trainCurve = cascade_inSeg_mm(result_path=args.result_path,
+    #                                   output_path=args.output_path)
     trainCurve.generate_curve()
