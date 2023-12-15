@@ -86,13 +86,13 @@ imgsz: [1024, 1024] # 這個model是用哪種image_size train出來的
 ## Step5:
 開始評估，最後會顯示評估數據, 預設會自動在works_dir下產生excel和json檔去紀錄評估數據
 ```
-python ./tools/evaluation.py -c {yolov7_seg.yaml這個檔案的路徑(建議用絕對路徑)}
+python ./tools/evaluation.py -c {yolov7_custom.yaml這個檔案的路徑(建議用絕對路徑)}
 ```
 
 如果想要添加已有的excel檔，則可使用下面的方式，會直接將評估數據附加在給定的excel檔下
 
 ```
-python ./tools/evaluation.py -c {yolov7_seg.yaml這個檔案的路徑(建議用絕對路徑)} -e {excel檔案路徑}
+python ./tools/evaluation.py -c {yolov7_custom.yaml這個檔案的路徑(建議用絕對路徑)} -e {excel檔案路徑}
 ```
 
 Baseline:
