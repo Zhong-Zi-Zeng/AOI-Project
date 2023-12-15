@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7', 'yolov7_seg'))
+sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_seg', ''))
 
 from models.common import DetectMultiBackend
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
@@ -11,14 +11,13 @@ from utils.plots import Annotator, colors
 from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
-from ..base.BaseModel import BaseModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml)
+from model_zoo.base.BaseInstanceModel import BaseInstanceModel
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path)
 import numpy as np
 import torch
-import yaml
+import subprocess
 
-
-class Yolov7Seg(BaseModel):
+class Yolov7Seg(BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg)
         self.cfg = cfg
@@ -31,13 +30,22 @@ class Yolov7Seg(BaseModel):
         data_file['val'] = self.cfg['val_txt']
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
+        self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'data.yaml'), data_file)
 
         # Update hyp file
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
         hyp_file['lrf'] = self.cfg['lr']
+
+        self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
+
+        # Update cfg file
+        cfg_file = load_yaml(self.cfg['cfg_file'])
+        cfg_file['nc'] = self.cfg['number_of_class']
+        self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml')
+        save_yaml(os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml'), cfg_file)
 
     def _load_model(self):
         # Load model
@@ -161,4 +169,18 @@ class Yolov7Seg(BaseModel):
                 "polygon_list": polygon_list}
 
     def train(self):
-        pass
+        subprocess.run(['python',
+                        os.path.join(get_model_path(__file__), 'segment', 'train.py'),
+                        '--data', self.cfg['data_file'],
+                        '--cfg', self.cfg['cfg_file'],
+                        '--hyp', self.cfg['hyp_file'],
+                        '--batch', str(self.cfg['batch_size']),
+                        '--weights', self.cfg['pretrained_weight'],
+                        '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
+                        '--project', get_work_dir_path(self.cfg),
+                        '--optimizer', self.cfg['optimizer'],
+                        '--imgsz', str(self.cfg['imgsz'][0]),
+                        '--exist-ok',
+                        '--cos-lr'
+                        ]
+                       )

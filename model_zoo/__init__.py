@@ -1,7 +1,8 @@
 from .mmdetection import *
 from .mmsegmentation import *
-from .yolov7 import Yolov7Seg
+from .base import *
+from .yolov7_seg import Yolov7Seg
 
 __all__ = [
-    'Yolov7Seg',
+    'Yolov7Seg', 'BaseInstanceModel'
 ]

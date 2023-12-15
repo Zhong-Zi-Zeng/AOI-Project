@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Union, Optional
+from pathlib import Path
 import os
 import yaml
 import json
@@ -26,6 +27,16 @@ def save_json(path: str,
     with open(path, 'w') as file:
         json.dump(data, file, indent=indent)
 
+
+def get_model_path(__file__: str) -> str:
+    """
+        將原本指到py檔的路徑往前提一層
+        ex:
+            __file__ = "D://A/hello.py"
+            轉換為
+            __file__ = "D://A"
+    """
+    return str(Path(__file__).parent)
 
 def get_work_dir_path(cfg: dict) -> str:
     """

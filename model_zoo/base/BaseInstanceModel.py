@@ -29,7 +29,7 @@ class Profile(contextlib.ContextDecorator):
         return time.time()
 
 
-class BaseModel(ABC):
+class BaseInstanceModel(ABC):
     def __init__(self, cfg: dict):
         self.cfg = cfg
 
@@ -45,9 +45,17 @@ class BaseModel(ABC):
         """
         return self.dt
 
+    @abstractmethod
     def _config_transform(self):
         """
-            將輸入的config轉換到各自需要的格式
+            將config轉換到各自需要的格式
+        """
+        pass
+
+    @abstractmethod
+    def _load_model(self):
+        """
+            載入model，為後面的inference或是evaluate使用
         """
         pass
 
@@ -57,20 +65,6 @@ class BaseModel(ABC):
             Run每個model自己的training command
         """
         pass
-
-    def predict(self,
-                source: Union[str | np.ndarray[np.uint8]],
-                conf_thres: float = 0.25,
-                nms_thres: float = 0.5,
-                *args: Any,
-                **kwargs: Any):
-        result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
-        default_key = {'result_image', 'class_list', 'score_list', 'bbox_list', 'polygon_list'}
-
-        if set(result.keys()) == set(default_key):
-            return result
-        else:
-            raise ValueError("You must return the same key with default keys.")
 
     @abstractmethod
     def _predict(self,
@@ -116,3 +110,18 @@ class BaseModel(ABC):
             }
         """
         pass
+
+    def predict(self,
+                source: Union[str | np.ndarray[np.uint8]],
+                conf_thres: float = 0.25,
+                nms_thres: float = 0.5,
+                *args: Any,
+                **kwargs: Any) -> dict:
+        result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
+        default_key = {'result_image', 'class_list', 'score_list', 'bbox_list', 'polygon_list'}
+
+        if set(result.keys()) == set(default_key):
+            return result
+        else:
+            raise ValueError("You must return the same key with default keys.")
+

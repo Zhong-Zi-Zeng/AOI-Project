@@ -1,6 +1,5 @@
-from model_zoo.base.BaseModel import BaseModel
+from model_zoo import BaseInstanceModel
 from .general import (get_work_dir_path, get_works_dir_path, load_yaml)
-import yaml
 import importlib
 import os
 
@@ -68,7 +67,7 @@ class Builder:
         return base_config
 
     @staticmethod
-    def build_model(config: dict) -> BaseModel:
+    def build_model(config: dict) -> BaseInstanceModel:
         """
             從給定的config中的"name", 去model_zoo中尋找對應的model
         """

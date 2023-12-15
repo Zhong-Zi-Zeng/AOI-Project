@@ -4,10 +4,8 @@ _base_: [ "./base/model/yolov7_seg_base.yaml",
           "./base/hyp.yaml"]
 
 # ===========Model===========
-train_txt: ""
-val_txt: ""
-data_file: "D:/Heng_shared/AOI-Project/model_zoo/yolov7/yolov7_seg/data/custom.yaml"
-hyp_file: "D:/Heng_shared/AOI-Project/model_zoo/yolov7/yolov7_seg/data/hyps/hyp.scratch-high.yaml"
+train_txt: "D:/Heng_shared/yoloSeg/train"
+val_txt: "D:/Heng_shared/yoloSeg/test"
 
 # ===========Dataset===========
 number_of_class: 16

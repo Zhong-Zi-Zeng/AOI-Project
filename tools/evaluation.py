@@ -8,8 +8,8 @@ from typing import Optional
 from PIL import Image, ImageDraw
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
-from model_zoo.base.BaseModel import BaseModel
-from engine.general import (get_work_dir_path, save_json)
+from model_zoo import BaseInstanceModel
+from engine.general import (get_work_dir_path, save_json, get_model_path)
 from tqdm import tqdm
 import pycocotools.mask as ms
 import pandas as pd
@@ -116,7 +116,7 @@ class Writer:
 
 class Evaluator:
     def __init__(self,
-                 model: BaseModel,
+                 model: BaseInstanceModel,
                  cfg: dict,
                  excel_path: Optional[str] = None):
         self.model = model

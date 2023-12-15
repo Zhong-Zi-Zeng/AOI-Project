@@ -1,8 +1,12 @@
 model_name: 'Yolov7Seg'
 work_dir_name: 'Yolov7Seg'
 
-train_txt: './coco/train2017.txt'
-val_txt: './coco/val2017.txt'
-data_file: './data/coco.yaml'
-hyp_file: './data/hyps/hyp.scratch-high.yaml'
+train_txt: ''
+val_txt: ''
+pretrained_weight: "./model_zoo/yolov7_seg/yolov7-seg.pt"
+data_file: "./model_zoo/yolov7_seg/data/custom.yaml"
+hyp_file: "./model_zoo/yolov7_seg/data/hyps/hyp.scratch-high.yaml"
+cfg_file: "./model_zoo/yolov7_seg/models/segment/yolov7-seg.yaml"
+
+
 
