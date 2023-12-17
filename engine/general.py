@@ -8,13 +8,22 @@ import json
 ROOT = os.getcwd()
 
 
+def load_python(path: str) -> dict:
+    """讀取python檔案，並將其解析成dict"""
+    data = {}
+    with open(path, 'r') as cfg_file:
+        exec(cfg_file.read(), data)
+
+    del data['__builtins__']
+
+    return data
+
 def load_yaml(path: str) -> dict:
     assert os.path.isfile(path), 'Can not find this yaml file {}'.format(path)
 
     with open(path, 'r', encoding="utf-8") as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
     return data
-
 
 def save_yaml(path: str, data: dict):
     with open(path, 'w') as file:

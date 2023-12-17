@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_seg', ''))
+sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_seg'))
 
 from models.common import DetectMultiBackend
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
@@ -21,7 +21,6 @@ class Yolov7Seg(BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg)
         self.cfg = cfg
-        self._config_transform()
 
     def _config_transform(self):
         # Update data file
@@ -37,7 +36,6 @@ class Yolov7Seg(BaseInstanceModel):
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
         hyp_file['lrf'] = self.cfg['lr']
-
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 

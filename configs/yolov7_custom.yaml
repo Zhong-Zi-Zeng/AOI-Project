@@ -1,7 +1,8 @@
-_base_: [ "./base/model/yolov7_seg_base.yaml",
-          "./base/evaluation/instance_segmentation.yaml",
-          "./base/dataset.yaml",
-          "./base/hyp.yaml"]
+_base_: [ "./base/model/yolov7_seg_base.yaml", # model
+          "./base/evaluation/instance_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
+]
 
 # ===========Model===========
 train_txt: "D:/Heng_shared/yoloSeg/train"

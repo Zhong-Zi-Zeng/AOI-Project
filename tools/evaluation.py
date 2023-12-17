@@ -151,14 +151,17 @@ class Evaluator:
             polygon_list = result['polygon_list']
 
             for cls, score, bbox, polygon in zip(class_list, score_list, bbox_list, polygon_list):
-                if len(bbox) == 0 or len(polygon) < 2:
+                if len(bbox) == 0 or (len(polygon) < 2 and type(polygon) == list):
                     continue
 
-                # Convert polygon to RLE format
-                mask = Image.new('L', (width, height), 0)
-                ImageDraw.Draw(mask).polygon(polygon, outline=1, fill=1)
-                rle = ms.encode(np.asfortranarray(np.array(mask)))
-                rle['counts'] = str(rle['counts'], encoding='utf-8')
+                if type(polygon) == list:
+                    # Convert polygon to RLE format
+                    mask = Image.new('L', (width, height), 0)
+                    ImageDraw.Draw(mask).polygon(polygon, outline=1, fill=1)
+                    rle = ms.encode(np.asfortranarray(np.array(mask)))
+                    rle['counts'] = str(rle['counts'], encoding='utf-8')
+                else:
+                    rle = polygon
 
                 # Save predicted bbox result
                 detected_result.append({
@@ -170,7 +173,7 @@ class Evaluator:
                 })
 
         # Save
-        save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result)
+        save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
     def _coco_eval(self,
                    coco_de: COCO,
@@ -244,7 +247,7 @@ class Evaluator:
 
             # Store value
             self.writer.write_col([self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
-                                   round(self.model.get_timer()[2].t, 3), round(self.model.get_timer()[3].t, 3)] +
+                                   round(self.model.get_timer()[2].dt, 3), round(self.model.get_timer()[3].dt, 3)] +
                                   all_boxes_result + all_masks_result, sheet_name=self.cfg['sheet_names'][0])
 
             # Evaluate per class
@@ -273,7 +276,7 @@ class Evaluator:
             # Print process time
             print('\n\n')
             for timer in self.model.get_timer():
-                print(f"{timer.name:15s} {timer.dt:4.3f}", end=' | ')
+                print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
             print('\n\n')
 
 

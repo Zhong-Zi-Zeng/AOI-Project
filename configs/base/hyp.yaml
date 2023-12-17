@@ -7,4 +7,3 @@ lr: 0.01
 start_factor: 0.3
 batch_size: 16
 imgsz: [640, 640]
-

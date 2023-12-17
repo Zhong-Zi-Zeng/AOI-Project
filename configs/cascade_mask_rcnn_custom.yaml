@@ -1,0 +1,37 @@
+_base_: [ "./base/model/cascade_mask_rcnn.yaml", # model
+          "./base/evaluation/instance_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
+]
+
+
+# ===========Dataset===========
+number_of_class: 16
+coco_root: "../coco"
+class_names:
+  - "Border"
+  - "black_Marks"
+  - "Bright_Marks"
+  - "Pass"
+  - "Dirty"
+  - "Friction"
+  - "Black_point"
+  - "Buttom_scratches"
+  - "Small_scratches"
+  - "AnotherColor"
+  - "Severe_scratches"
+  - "Glossy"
+  - "ReturnPoint"
+  - "Assembly"
+  - "Scractches_Blackbackground"
+  - "Buttom_Friction"
+
+# ===========Hyperparameter===========
+optimizer: "SGD" # Adam、AdamW、SGD
+weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/cascade-mask-rcnn/1024_SGD_202312062018/epoch_50.pth"
+start_epoch: 0
+end_epoch: 50
+lr: 0.01
+start_factor: 0.3
+batch_size: 8
+imgsz: [1024, 1024]

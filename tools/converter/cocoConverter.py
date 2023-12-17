@@ -71,7 +71,7 @@ class cocoConverter(BaseConverter):
                   'w') as file:
             json.dump({'images': images,
                        'annotations': anns,
-                       'categories': cats}, file)
+                       'categories': cats}, file, indent=2)
 
     def generate_patch(self):
         pass

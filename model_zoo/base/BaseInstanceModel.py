@@ -20,8 +20,8 @@ class Profile(contextlib.ContextDecorator):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.dt = self.time() - self.start  # delta-time
-        self.t += self.dt * 1000  # accumulate dt
+        self.dt = (self.time() - self.start) * 1000  # delta-time
+        self.t += self.dt  # accumulate dt
 
     def time(self):
         if self.cuda:
@@ -34,16 +34,19 @@ class BaseInstanceModel(ABC):
         self.cfg = cfg
 
         # 紀錄處理時間
-        self.dt = (Profile(name='Total process time(ms):'),
-                   Profile(name='Preprocess Time(ms):'),
-                   Profile(name='Inference Time(ms):'),
-                   Profile(name='NMS Time(ms):'))
+        self.timer = (Profile(name='Total process time(ms):'),
+                      Profile(name='Preprocess Time(ms):'),
+                      Profile(name='Inference Time(ms):'),
+                      Profile(name='NMS Time(ms):'))
+
+        # Update config
+        self._config_transform()
 
     def get_timer(self) -> tuple:
         """
             返回每個階段的執行時間
         """
-        return self.dt
+        return self.timer
 
     @abstractmethod
     def _config_transform(self):
@@ -78,19 +81,19 @@ class BaseInstanceModel(ABC):
         1. Inference時會用到
         2. 需再4個階段中插入Profile去計時
         Example:
-        >>>with self.dt[0]:
+        >>>with self.timer[0]:
         >>>        # Pre-process (Start)
-        >>>        with self.dt[1]:
+        >>>        with self.timer[1]:
         >>>            ...
         >>>        # Pre-process (End)
         >>>
         >>>        # Inference (Start)
-        >>>        with self.dt[2]:
+        >>>        with self.timer[2]:
         >>>            ...
         >>>        # Inference (End)
         >>>
         >>>        # NMS-process (Start)
-        >>>        with self.dt[3]:
+        >>>        with self.timer[3]:
         >>>            ...
         >>>        # NMS-process (End)
 
@@ -106,7 +109,9 @@ class BaseInstanceModel(ABC):
                 class_list (list[int]): (M, ) 檢測到的類別編號，M為檢測到的物體數量
                 score_list (list[float]): (M, ) 每個物體的信心值
                 bbox_list (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
-                polygon_list (list[np.array]): (M, N, 2) 物體的輪廓座標xy，N為polygon數量
+                polygon_list (list[np.array] | list[dict["size":list, "counts": str]]): [(M, N, 2) | (M, )]
+                    (1) 物體的輪廓座標xy，N為polygon數量
+                    (2) RLE編碼格式
             }
         """
         pass
@@ -124,4 +129,3 @@ class BaseInstanceModel(ABC):
             return result
         else:
             raise ValueError("You must return the same key with default keys.")
-
