@@ -25,6 +25,7 @@ from mmdet.structures import DetDataSample
 from mmdet.structures.mask import encode_mask_results, mask2bbox
 from mmdet.utils import ConfigType
 from ..evaluation import get_classes
+from engine.timer import TIMER
 
 try:
     from panopticapi.evaluation import VOID
@@ -91,7 +92,6 @@ class DetInferencer(BaseInferencer):
                  scope: Optional[str] = 'mmdet',
                  palette: str = 'none',
                  show_progress: bool = True,
-                 timer: tuple = None
                  ) -> None:
         # A global counter tracking the number of images processed, for
         # naming of the output images
@@ -103,7 +103,6 @@ class DetInferencer(BaseInferencer):
             model=model, weights=weights, device=device, scope=scope)
         self.model = revert_sync_batchnorm(self.model)
         self.show_progress = show_progress
-        self.timer = timer
 
     def _load_weights_to_model(self, model: nn.Module,
                                checkpoint: Optional[dict],
@@ -390,14 +389,14 @@ class DetInferencer(BaseInferencer):
             for i in range(len(stuff_texts)):
                 ori_inputs[i]['stuff_text'] = stuff_texts[i]
 
-        with self.timer[1]:
+        with TIMER[1]:
             inputs = self.preprocess(
                 ori_inputs, batch_size=batch_size, **preprocess_kwargs)
 
         results_dict = {'predictions': [], 'visualization': []}
         for ori_imgs, data in (track(inputs, description='Inference')
                                if self.show_progress else inputs):
-            with self.timer[2]:
+            with TIMER[2]:
                 preds = self.forward(data, **forward_kwargs)
 
             visualization = self.visualize(
@@ -412,15 +411,14 @@ class DetInferencer(BaseInferencer):
                 img_out_dir=out_dir,
                 **visualize_kwargs)
 
-            with self.timer[3]:
-                results = self.postprocess(
-                    preds,
-                    visualization,
-                    return_datasamples=return_datasamples,
-                    print_result=print_result,
-                    no_save_pred=no_save_pred,
-                    pred_out_dir=out_dir,
-                    **postprocess_kwargs)
+            results = self.postprocess(
+                preds,
+                visualization,
+                return_datasamples=return_datasamples,
+                print_result=print_result,
+                no_save_pred=no_save_pred,
+                pred_out_dir=out_dir,
+                **postprocess_kwargs)
             results_dict['predictions'].extend(results['predictions'])
             if results['visualization'] is not None:
                 results_dict['visualization'].extend(results['visualization'])

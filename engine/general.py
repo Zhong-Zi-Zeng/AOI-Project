@@ -1,12 +1,24 @@
 from __future__ import annotations
 from typing import Union, Optional
 from pathlib import Path
+from PIL import Image, ImageDraw
+import pycocotools.mask as ms
+import numpy as np
 import os
 import yaml
 import json
 
 ROOT = os.getcwd()
 
+
+def polygon_to_rle(polygon: list, height: int, width: int, ) -> dict:
+    """Convert polygon to RLE format"""
+    mask = Image.new('L', (width, height), 0)
+    ImageDraw.Draw(mask).polygon(polygon, outline=1, fill=1)
+    rle = ms.encode(np.asfortranarray(np.array(mask)))
+    rle['counts'] = str(rle['counts'], encoding='utf-8')
+
+    return rle
 
 def load_python(path: str) -> dict:
     """讀取python檔案，並將其解析成dict"""

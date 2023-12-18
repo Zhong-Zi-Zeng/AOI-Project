@@ -12,7 +12,8 @@ from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path)
+from engine.timer import TIMER
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, polygon_to_rle)
 import numpy as np
 import torch
 import subprocess
@@ -73,9 +74,9 @@ class Yolov7Seg(BaseInstanceModel):
         max_det = kwargs.get('max_det', 1000)
         line_thickness = kwargs.get('line_thickness', 3)
 
-        with self.dt[0]:
+        with TIMER[0]:
             # ------------------------------Pre-process (Start)----------------------------
-            with self.dt[1]:
+            with TIMER[1]:
                 # Load image
                 if isinstance(source, str):
                     original_image = cv2.imread(source)
@@ -98,13 +99,13 @@ class Yolov7Seg(BaseInstanceModel):
 
             # ----------------------------Inference (Start))----------------------------
             # Inference
-            with self.dt[2]:
+            with TIMER[2]:
                 pred, out = self.model(im)
                 proto = out[1]
             # ----------------------------Inference (End)----------------------------
 
             # ----------------------------NMS-process (Start)----------------------------
-            with self.dt[3]:
+            with TIMER[3]:
                 pred = non_max_suppression(pred, conf_thres, nms_thres, classes=None, agnostic=False, max_det=max_det,
                                            nm=32)
             # ----------------------------NMS-process (End)----------------------------
@@ -114,7 +115,7 @@ class Yolov7Seg(BaseInstanceModel):
             class_list = []
             score_list = []
             bbox_list = []
-            polygon_list = []
+            rle_list = []
 
             # Process predictions
             annotator = Annotator(original_image, line_width=line_thickness, example=str(self.names))
@@ -127,9 +128,9 @@ class Yolov7Seg(BaseInstanceModel):
                     # Rescale boxes from img_size to im0 size
                     det[:, :4] = scale_coords(im.shape[2:], det[:, :4], original_image.shape).round()
 
-                    # Segments
-                    segments = reversed(masks2segments(masks))
-                    segments = [scale_segments(im.shape[2:], x, original_image.shape).round() for x in segments]
+                    # Polygons
+                    polygons = reversed(masks2segments(masks))
+                    polygons = [scale_segments(im.shape[2:], x, original_image.shape).round() for x in polygons]
 
                     # Mask plotting ----------------------------------------------------------------------------------------
                     mcolors = [colors(int(cls), True) for cls in det[:, 5]]
@@ -139,6 +140,9 @@ class Yolov7Seg(BaseInstanceModel):
 
                     # Record result
                     for j, (*xyxy, conf, cls) in enumerate(reversed(det[:, :6])):
+                        if len(polygons[j]) < 2:
+                            continue
+
                         cls = int(cls.cpu())
                         conf = float(conf.cpu())
 
@@ -150,7 +154,7 @@ class Yolov7Seg(BaseInstanceModel):
                         bbox_list.append(list(map(float, [x, y, w, h])))
                         class_list.append(cls)
                         score_list.append(conf)
-                        polygon_list.append(segments[j])
+                        rle_list.append(polygon_to_rle(polygons[j], self.imgsz[0], self.imgsz[1]))
 
                         # Draw bounding box
                         annotator.box_label(xyxy, self.names[cls], color=colors(cls, True))
@@ -164,7 +168,7 @@ class Yolov7Seg(BaseInstanceModel):
                 "class_list": class_list,
                 "bbox_list": bbox_list,
                 "score_list": score_list,
-                "polygon_list": polygon_list}
+                "rle_list": rle_list}
 
     def train(self):
         subprocess.run(['python',

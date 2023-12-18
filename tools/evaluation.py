@@ -5,15 +5,13 @@ import os
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
-from PIL import Image, ImageDraw
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from model_zoo import BaseInstanceModel
-from engine.general import (get_work_dir_path, save_json, get_model_path)
+from engine.general import (get_work_dir_path, save_json)
+from engine.timer import TIMER
 from tqdm import tqdm
-import pycocotools.mask as ms
 import pandas as pd
-import numpy as np
 import argparse
 import openpyxl
 import cv2
@@ -139,7 +137,6 @@ class Evaluator:
             img_info = self.coco_gt.loadImgs([img_id])[0]
             img_file = img_info['file_name']
             image = cv2.imread(os.path.join(self.coco_root, 'val2017', img_file))
-            height, width = image.shape[:2]
 
             # Inference
             result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
@@ -148,21 +145,9 @@ class Evaluator:
             class_list = result['class_list']
             score_list = result['score_list']
             bbox_list = result['bbox_list']
-            polygon_list = result['polygon_list']
+            rle_list = result['rle_list']
 
-            for cls, score, bbox, polygon in zip(class_list, score_list, bbox_list, polygon_list):
-                if len(bbox) == 0 or (len(polygon) < 2 and type(polygon) == list):
-                    continue
-
-                if type(polygon) == list:
-                    # Convert polygon to RLE format
-                    mask = Image.new('L', (width, height), 0)
-                    ImageDraw.Draw(mask).polygon(polygon, outline=1, fill=1)
-                    rle = ms.encode(np.asfortranarray(np.array(mask)))
-                    rle['counts'] = str(rle['counts'], encoding='utf-8')
-                else:
-                    rle = polygon
-
+            for cls, score, bbox, rle in zip(class_list, score_list, bbox_list, rle_list):
                 # Save predicted bbox result
                 detected_result.append({
                     'image_id': img_id,
@@ -247,7 +232,7 @@ class Evaluator:
 
             # Store value
             self.writer.write_col([self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
-                                   round(self.model.get_timer()[2].dt, 3), round(self.model.get_timer()[3].dt, 3)] +
+                                   round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] +
                                   all_boxes_result + all_masks_result, sheet_name=self.cfg['sheet_names'][0])
 
             # Evaluate per class
@@ -275,7 +260,7 @@ class Evaluator:
 
             # Print process time
             print('\n\n')
-            for timer in self.model.get_timer():
+            for timer in TIMER:
                 print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
             print('\n\n')
 
