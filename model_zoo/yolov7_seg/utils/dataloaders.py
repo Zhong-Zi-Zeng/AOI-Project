@@ -351,7 +351,7 @@ class LoadStreams:
             self.threads[i].start()
         LOGGER.info('')  # newline
 
-        # check for common shapes
+        # check for common.yaml shapes
         s = np.stack([letterbox(x, img_size, stride=stride, auto=auto)[0].shape for x in self.imgs])
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
         self.auto = auto and self.rect

@@ -41,6 +41,19 @@ class Builder:
                 else:
                     index += 1
 
+    def _process_base_key(self, config_dir, config):
+        """
+            將所有config中base的部分進行讀取並合併後，再跟custom config去合併
+        """
+        merged_config = {}
+        if '_base_' in config:
+            for base_file in config['_base_']:
+                base_path = os.path.join(config_dir, base_file)
+                base_config = load_yaml(base_path)
+                self._merge_dicts(merged_config, self._process_base_key(config_dir, base_config))
+        self._merge_dicts(merged_config, config)
+        return merged_config
+
     def build_config(self) -> dict:
         """
             從給定的config路徑去生成一個完整的config，如果與base config中有重複的key
@@ -49,38 +62,26 @@ class Builder:
             Returns:
                 config (dict): 最後合併好的config
         """
-
         custom_config = load_yaml(self.config_path)
+        config_dir = os.path.dirname(self.config_path)
 
-        base_config = {}
-
-        # Load base config
-        if '_base_' in custom_config:
-            config_dir = os.path.dirname(self.config_path)
-            for base in custom_config['_base_']:
-                self._merge_dicts(base_config, load_yaml(os.path.join(config_dir, base)))
-
-        # Merge custom config into base config
-        self._merge_dicts(base_config, custom_config)
+        # Load config
+        final_config = self._process_base_key(config_dir, custom_config)
 
         # Create work dir
-        self._create_work_dir(base_config)
+        self._create_work_dir(final_config)
 
-        return base_config
+        return final_config
 
     @staticmethod
     def build_model(config: dict) -> BaseInstanceModel:
         """
             從給定的config中的"name", 去model_zoo中尋找對應的model
         """
+        module = importlib.import_module(f'model_zoo.{config["model_dir_name"]}')
+        model = getattr(module, config["model_name"], None)
 
-        if config['model_name'] == 'Yolov7Seg':
-            from model_zoo.yolov7_seg import Yolov7Seg as model
-        elif config['model_name'] == 'Yolov7Obj':
-            from model_zoo.yolov7_obj import Yolov7Obj as model
-        elif config['model_name'] == 'CascadeMaskRCNN':
-            from model_zoo.mmdetection import CascadeMaskRCNN as model
-        else:
+        if model is None:
             raise ValueError("Can not find the model of {}".format(config['model_name']))
-
-        return model(config)
+        else:
+            return model(config)

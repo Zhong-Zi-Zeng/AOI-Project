@@ -298,7 +298,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             thread.start()
         print('')  # newline
 
-        # check for common shapes
+        # check for common.yaml shapes
         s = np.stack([letterbox(x, self.img_size, stride=self.stride)[0].shape for x in self.imgs], 0)  # shapes
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
         if not self.rect:

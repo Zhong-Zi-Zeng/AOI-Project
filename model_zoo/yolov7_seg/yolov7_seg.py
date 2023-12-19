@@ -14,7 +14,7 @@ from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
 from engine.timer import TIMER
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, polygon_to_rle)
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, polygon_to_rle, check_path)
 import numpy as np
 import torch
 import subprocess
@@ -38,6 +38,7 @@ class Yolov7Seg(BaseInstanceModel):
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
         hyp_file['lrf'] = self.cfg['lr']
+        # TODO: Augmentation
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
@@ -179,7 +180,7 @@ class Yolov7Seg(BaseInstanceModel):
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
                         '--batch', str(self.cfg['batch_size']),
-                        '--weights', self.cfg['pretrained_weight'],
+                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else self.cfg['pretrained_weight'],
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],

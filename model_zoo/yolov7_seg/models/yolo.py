@@ -375,7 +375,7 @@ class ClassificationModel(BaseModel):
         m = model.model[-1]  # last layer
         ch = m.conv.in_channels if hasattr(m, 'conv') else m.cv1.conv.in_channels  # ch into module
         c = Classify(ch, nc)  # Classify()
-        c.i, c.f, c.type = m.i, m.f, 'models.common.Classify'  # index, from, type
+        c.i, c.f, c.type = m.i, m.f, 'models.common.yaml.Classify'  # index, from, type
         model.model[-1] = c  # replace
         self.model = model.model
         self.stride = model.stride

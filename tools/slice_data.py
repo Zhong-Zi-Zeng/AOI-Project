@@ -2,6 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from copy import deepcopy
 from converter import jsonParser
+from tqdm import tqdm
 import argparse
 import os
 import json
@@ -92,11 +93,11 @@ def slice_file(source_dir: str, assign_number: int, classes_name: list):
     json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
                        if is_json(os.path.join(source_dir, json_name))]
 
-    for idx, (old_image_file, old_json_file) in enumerate(zip(image_files_path, json_files_path)):
+    for idx, (old_image_file, old_json_file) in tqdm(enumerate(zip(image_files_path, json_files_path)),
+                                                     total=len(image_files_path)):
         image_height, image_width, mask, classes, bboxes, polygons = jsonParser(old_json_file).parse()
 
         new_image_file = os.path.join(str(Path(old_image_file).parent), str(idx) + '.jpg')
-
         # total
         for cls in set(classes):
             total[cls.replace('#', '')]['number'] += 1

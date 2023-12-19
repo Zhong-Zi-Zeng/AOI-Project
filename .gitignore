@@ -11,8 +11,6 @@ __pycache__/
 *.png
 *.bmp
 *.json
-*.pt
-*.pth
 .idea/
 *.txt
 *.xlsx

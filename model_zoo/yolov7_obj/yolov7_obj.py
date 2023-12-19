@@ -10,7 +10,7 @@ from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 from model_zoo.base.BaseDetectModel import BaseDetectModel
 from engine.timer import TIMER
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, polygon_to_rle)
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path)
 from utils.torch_utils import select_device
 import numpy as np
 import cv2
@@ -38,6 +38,7 @@ class Yolov7Obj(BaseDetectModel):
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
         hyp_file['lrf'] = self.cfg['lr']
+        # TODO: Augmentation
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
@@ -48,9 +49,6 @@ class Yolov7Obj(BaseDetectModel):
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml'), cfg_file)
 
     def _load_model(self):
-        """
-            載入model，為後面的inference或是evaluate使用
-        """
         # Load model
         self.device = select_device('')
         self.model = attempt_load(self.cfg['weight'], map_location=self.device)
@@ -73,7 +71,22 @@ class Yolov7Obj(BaseDetectModel):
         #  --hyp "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\hyp.yaml"
         #  --weights " "
         #  --device 0
-        pass
+
+        subprocess.run(['python',
+                        os.path.join(get_model_path(__file__), 'train_aux.py'),
+                        '--data', self.cfg['data_file'],
+                        '--cfg', self.cfg['cfg_file'],
+                        '--hyp', self.cfg['hyp_file'],
+                        '--batch-size', str(self.cfg['batch_size']),
+                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
+                        '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
+                        '--project', get_work_dir_path(self.cfg),
+                        '--optimizer', self.cfg['optimizer'],
+                        '--name', './',
+                        '--img', str(self.cfg['imgsz'][0]),
+                        '--exist-ok',
+                        ]
+                       )
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
@@ -82,24 +95,6 @@ class Yolov7Obj(BaseDetectModel):
                  *args: Any,
                  **kwargs: Any
                  ) -> dict:
-        """
-        1. Inference和Evaluation時會用到
-
-        Args:
-            source: 照片路徑或是已讀取的照片
-            conf_thres: 信心度的threshold
-            nms_thres: nms的threshold
-
-        Returns:
-            返回一個字典，格式如下:
-            {
-                result_image (np.array[np.uint8]): 標註後的圖片
-                class_list (list[int]): (M, ) 檢測到的類別編號，M為檢測到的物體數量
-                score_list (list[float]): (M, ) 每個物體的信心值
-                bbox_list (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
-            }
-        """
-
         if not hasattr(self, 'model'):
             self._load_model()
 

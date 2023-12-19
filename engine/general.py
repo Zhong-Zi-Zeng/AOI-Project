@@ -7,7 +7,12 @@ import numpy as np
 import os
 import yaml
 import json
+
 ROOT = os.getcwd()
+
+
+def check_path(path: str) -> bool:
+    return os.path.exists(path)
 
 
 def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:
@@ -19,6 +24,7 @@ def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:
 
     return rle
 
+
 def load_python(path: str) -> dict:
     """讀取python檔案，並將其解析成dict"""
     data = {}
@@ -29,12 +35,14 @@ def load_python(path: str) -> dict:
 
     return data
 
+
 def load_yaml(path: str) -> dict:
     assert os.path.isfile(path), 'Can not find this yaml file {}'.format(path)
 
     with open(path, 'r', encoding="utf-8") as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
     return data
+
 
 def save_yaml(path: str, data: dict):
     with open(path, 'w') as file:
@@ -57,6 +65,7 @@ def get_model_path(__file__: str) -> str:
             __file__ = "D://A"
     """
     return str(Path(__file__).parent)
+
 
 def get_work_dir_path(cfg: dict) -> str:
     """

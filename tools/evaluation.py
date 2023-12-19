@@ -77,7 +77,6 @@ class Writer:
 
     def _append_title(self):
         """從config中的common、metrics、class_names添加到對應的sheet"""
-
         for idx, sheet_name in enumerate(self.cfg['sheet_names']):
             if self._check_has_title(sheet_name):
                 continue

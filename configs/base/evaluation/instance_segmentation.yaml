@@ -1,3 +1,7 @@
+_base_: [
+  "./base/evaluation/common_metrics.yaml"
+]
+
 nms_thres: 0.5
 conf_thres: 0.001
 task: "instance_segmentation"
@@ -17,9 +21,3 @@ metrics:
   - "mAP_0.5(Mask)"
   - "mAP_0.5:0.95(Mask)"
   - "mAR_0.5:0.95(Mask)"
-
-common:
-  - "Model"
-  - "Optimizer"
-  - "Image Size"
-  - "Use Patch"
