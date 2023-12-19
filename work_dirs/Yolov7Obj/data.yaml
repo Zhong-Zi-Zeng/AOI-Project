@@ -1,0 +1,21 @@
+download: bash ./scripts/get_coco.sh
+names:
+- Border
+- black_Marks
+- Bright_Marks
+- Pass
+- Dirty
+- Friction
+- Black_point
+- Buttom_scratches
+- Small_scratches
+- AnotherColor
+- Severe_scratches
+- Glossy
+- ReturnPoint
+- Assembly
+- Scractches_Blackbackground
+- Buttom_Friction
+nc: 16
+train: D:/Heng_shared/yoloBox/train_list.txt
+val: D:/Heng_shared/yoloBox/val_list.txt

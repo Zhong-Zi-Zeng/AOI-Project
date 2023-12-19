@@ -142,21 +142,30 @@ class Evaluator:
             result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
 
             # Analyze result
-            class_list = result['class_list']
-            score_list = result['score_list']
-            bbox_list = result['bbox_list']
-            rle_list = result['rle_list']
-
-            for cls, score, bbox, rle in zip(class_list, score_list, bbox_list, rle_list):
-                # Save predicted bbox result
-                detected_result.append({
-                    'image_id': img_id,
-                    'category_id': cls,
-                    'bbox': bbox,
-                    'score': round(score, 5),
-                    'segmentation': rle
-                })
-
+            if self.cfg['task'] == 'instance_segmentation':
+                class_list = result['class_list']
+                score_list = result['score_list']
+                bbox_list = result['bbox_list']
+                rle_list = result['rle_list']
+                for cls, score, bbox, rle in zip(class_list, score_list, bbox_list, rle_list):
+                    detected_result.append({
+                        'image_id': img_id,
+                        'category_id': cls,
+                        'bbox': bbox,
+                        'score': round(score, 5),
+                        'segmentation': rle
+                    })
+            elif self.cfg['task'] == 'object_detection':
+                class_list = result['class_list']
+                score_list = result['score_list']
+                bbox_list = result['bbox_list']
+                for cls, score, bbox in zip(class_list, score_list, bbox_list):
+                    detected_result.append({
+                        'image_id': img_id,
+                        'category_id': cls,
+                        'bbox': bbox,
+                        'score': round(score, 5),
+                    })
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
@@ -196,14 +205,11 @@ class Evaluator:
         stats = [round(val, 3) for val in stats]
 
         # 依照不同的task取出需要的metrics
-        if self.cfg['task'] == 'instance_segmentation':
+        if self.cfg['task'] == 'instance_segmentation' or self.cfg['task'] == 'object_detection':
             if class_id is None:
                 return [stats[1], stats[0], stats[8]]
             else:
                 return [stats[1], stats[8]]
-        elif self.cfg['task'] == 'object_detection':
-            # TODO: object_detection evaluation value
-            pass
         elif self.cfg['task'] == 'semantic_segmentation':
             # TODO: semantic_segmentation evaluation value
             pass
@@ -211,6 +217,91 @@ class Evaluator:
             raise ValueError('Can not find the task type of {}'.format(self.cfg['task']))
 
         return stats
+
+    def _instance_segmentation_eval(self, predicted_json: COCO):
+        # Evaluate all classes
+        all_boxes_result = self._coco_eval(predicted_json, task='bbox')
+        all_masks_result = self._coco_eval(predicted_json, task='segm')
+        print("For all classes:")
+        print(("%15s" * 6) % (
+            "(Box mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)", " (Mask mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)"))
+        print(("%15.3f" * 6) % (*all_boxes_result, *all_masks_result))
+
+        # Store value
+        self.writer.write_col(
+            [self.cfg['model_name'], self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
+             round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] + all_boxes_result + all_masks_result,
+            sheet_name=self.cfg['sheet_names'][0])
+
+        # Evaluate per class
+        print("\n\nFor each class:")
+        print(("%25s" + " %15s" * 4) % ("Class", "(Box mAP_0.5", " mAR_0.5:0.95)", " (Mask mAP_0.5", " mAR_0.5:0.95)"))
+
+        _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
+
+        for cls_id, cls_name in enumerate(self.cfg["class_names"]):
+            box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
+            mask_result = self._coco_eval(predicted_json, task='segm', class_id=cls_id)
+            print(("%25s" + " %15.3f" * 4) % (cls_name, *box_result, *mask_result))
+            _value[cls_name] = box_result + mask_result
+
+        # Store value
+        for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
+            data = [
+                self.cfg['model_name'],
+                self.cfg['optimizer'],
+                self.cfg['imgsz'][0],
+                self.cfg['use_patch'],
+                *[val[idx] for val in _value.values()]
+            ]
+            self.writer.write_col(data, sheet_name)
+
+        # Print process time
+        print('\n\n')
+        for timer in TIMER:
+            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+        print('\n\n')
+
+    def _object_detection_eval(self, predicted_json: COCO):
+        # Evaluate all classes
+        all_boxes_result = self._coco_eval(predicted_json, task='bbox')
+        print("For all classes:")
+        print(("%15s" * 3) % ("(Box mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)"))
+        print(("%15.3f" * 3) % tuple(all_boxes_result))
+
+        # Store value
+        self.writer.write_col(
+            [self.cfg['model_name'], self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
+             round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] + all_boxes_result,
+            sheet_name=self.cfg['sheet_names'][0])
+
+        # Evaluate per class
+        print("\n\nFor each class:")
+        print(("%25s" + " %15s" * 2) % ("Class", "(Box mAP_0.5", " mAR_0.5:0.95)"))
+
+        _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
+
+        for cls_id, cls_name in enumerate(self.cfg["class_names"]):
+            box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
+            print(("%25s" + " %15.3f" * 2) % (cls_name, *box_result))
+            _value[cls_name] = box_result
+
+        # Store value
+        for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
+            data = [
+                self.cfg['model_name'],
+                self.cfg['optimizer'],
+                self.cfg['imgsz'][0],
+                self.cfg['use_patch'],
+                *[val[idx] for val in _value.values()]
+            ]
+            self.writer.write_col(data, sheet_name)
+
+        # Print process time
+        print('\n\n')
+        for timer in TIMER:
+            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+        print('\n\n')
 
     def eval(self):
         # Generate detected json
@@ -220,49 +311,13 @@ class Evaluator:
             # Load json
             predicted_json = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
 
-            # Evaluate all classes
-            all_boxes_result = self._coco_eval(predicted_json, task='bbox')
-            all_masks_result = self._coco_eval(predicted_json, task='segm')
-            print("For all classes:")
-            print("%15s" * (len(all_boxes_result) + len(all_masks_result)) %
-                  ("(Box mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)",
-                   " (Mask mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)"))
-            print(("%15.3f" * (len(all_boxes_result) + len(all_masks_result)) %
-                   (*all_boxes_result, *all_masks_result)))
-
-            # Store value
-            self.writer.write_col([self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
-                                   round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] +
-                                  all_boxes_result + all_masks_result, sheet_name=self.cfg['sheet_names'][0])
-
-            # Evaluate per class
-            print("\n\nFor each class:")
-            print(("%25s" + " %15s" * 4) % ("Class", "(Box mAP_0.5", " mAR_0.5:0.95)",
-                                            " (Mask mAP_0.5", " mAR_0.5:0.95)"))
-
-            _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
-
-            for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
-                mask_result = self._coco_eval(predicted_json, task='segm', class_id=cls_id)
-                print(("%25s" + " %15.3f" * 4) % (cls_name, *box_result, *mask_result))
-                _value[cls_name] = box_result + mask_result
-
-            # Store value
-            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-                data = [
-                    self.cfg['optimizer'],
-                    self.cfg['imgsz'][0],
-                    self.cfg['use_patch'],
-                    *[val[idx] for val in _value.values()]
-                ]
-                self.writer.write_col(data, sheet_name)
-
-            # Print process time
-            print('\n\n')
-            for timer in TIMER:
-                print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
-            print('\n\n')
+            if self.cfg['task'] == 'instance_segmentation':
+                self._instance_segmentation_eval(predicted_json)
+            elif self.cfg['task'] == 'object_detection':
+                self._object_detection_eval(predicted_json)
+            elif self.cfg['task'] == 'semantic_segmentation':
+                # TODO: segmentation evaluation
+                pass
 
 
 if __name__ == "__main__":

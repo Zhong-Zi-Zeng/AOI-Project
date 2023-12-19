@@ -1,7 +1,9 @@
-from model_zoo import BaseInstanceModel
+from model_zoo import BaseInstanceModel, BaseDetectModel
 from .general import (get_work_dir_path, get_works_dir_path, load_yaml)
 import importlib
 import os
+import copy
+import sys
 
 
 class Builder:
@@ -71,10 +73,14 @@ class Builder:
         """
             從給定的config中的"name", 去model_zoo中尋找對應的model
         """
-        model_zoo = importlib.import_module('model_zoo')
-        model = getattr(model_zoo, config['model_name'], None)
 
-        if model is None:
-            raise ValueError("Can not find the model of {}".format(config['name']))
+        if config['model_name'] == 'Yolov7Seg':
+            from model_zoo.yolov7_seg import Yolov7Seg as model
+        elif config['model_name'] == 'Yolov7Obj':
+            from model_zoo.yolov7_obj import Yolov7Obj as model
+        elif config['model_name'] == 'CascadeMaskRCNN':
+            from model_zoo.mmdetection import CascadeMaskRCNN as model
         else:
-            return model(config)
+            raise ValueError("Can not find the model of {}".format(config['model_name']))
+
+        return model(config)

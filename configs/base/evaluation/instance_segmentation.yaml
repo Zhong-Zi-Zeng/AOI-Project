@@ -19,6 +19,7 @@ metrics:
   - "mAR_0.5:0.95(Mask)"
 
 common:
+  - "Model"
   - "Optimizer"
   - "Image Size"
   - "Use Patch"

@@ -31,14 +31,14 @@ class_names:
 
 
 # ===========Hyperparameter===========
-optimizer: "AdamW" # Adam、AdamW、SGD
-weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/yolov7/1024_AdamW_202312061844/weights/best.pt"
+optimizer: "SGD" # Adam、AdamW、SGD
+weight: "Z:/Student_Work/Heng/AOI_result/Instance Segmentation/yolov7/1024_SGD_202312061402/weights/best.pt"
 start_epoch: 0
 end_epoch: 50
 lr: 0.01
 start_factor: 0.3
 batch_size: 8
 imgsz: [1024, 1024]
-
+use_patch: false
 
 

@@ -4,7 +4,8 @@ import os
 
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_seg'))
 
-from models.common import DetectMultiBackend
+from typing import Union, Any
+from model_zoo.yolov7_seg.models.common import DetectMultiBackend
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
 from utils.augmentations import letterbox
 from utils.plots import Annotator, colors
@@ -62,11 +63,12 @@ class Yolov7Seg(BaseInstanceModel):
         self.model.warmup(imgsz=(1 if pt else bs, 3, *self.cfg['imgsz']))  # warmup
 
     def _predict(self,
-                 source: [str | np.ndarray[np.uint8]],
+                 source: Union[str | np.ndarray[np.uint8]],
                  conf_thres: float = 0.25,
                  nms_thres: float = 0.5,
-                 *args,
-                 **kwargs) -> dict:
+                 *args: Any,
+                 **kwargs: Any
+                 ) -> dict:
 
         if not hasattr(self, 'model'):
             self._load_model()
@@ -161,6 +163,8 @@ class Yolov7Seg(BaseInstanceModel):
 
             # results
             result_image = annotator.result()
+            cv2.imshow('', result_image)
+            cv2.waitKey(0)
 
             # ----------------------------Post-process (End)----------------------------
 

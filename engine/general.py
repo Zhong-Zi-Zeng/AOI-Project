@@ -11,13 +11,12 @@ import json
 ROOT = os.getcwd()
 
 
-def polygon_to_rle(polygon: list, height: int, width: int, ) -> dict:
+def polygon_to_rle(polygon: list, height: int, width: int) -> dict:
     """Convert polygon to RLE format"""
     mask = Image.new('L', (width, height), 0)
     ImageDraw.Draw(mask).polygon(polygon, outline=1, fill=1)
     rle = ms.encode(np.asfortranarray(np.array(mask)))
     rle['counts'] = str(rle['counts'], encoding='utf-8')
-
     return rle
 
 def load_python(path: str) -> dict:

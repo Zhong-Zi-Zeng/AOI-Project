@@ -1,0 +1,44 @@
+_base_: [ "./base/model/yolov7_obj_base.yaml", # model
+          "./base/evaluation/object_detection.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
+]
+
+# ===========Model===========
+train_txt: "D:/Heng_shared/yoloBox/train_list.txt"
+val_txt: "D:/Heng_shared/yoloBox/val_list.txt"
+
+# ===========Dataset===========
+number_of_class: 16
+coco_root: "D:/Dataset/coco_dataset"
+class_names:
+  - "Border"
+  - "black_Marks"
+  - "Bright_Marks"
+  - "Pass"
+  - "Dirty"
+  - "Friction"
+  - "Black_point"
+  - "Buttom_scratches"
+  - "Small_scratches"
+  - "AnotherColor"
+  - "Severe_scratches"
+  - "Glossy"
+  - "ReturnPoint"
+  - "Assembly"
+  - "Scractches_Blackbackground"
+  - "Buttom_Friction"
+
+
+# ===========Hyperparameter===========
+optimizer: "AdamW" # Adam、AdamW、SGD
+weight: "Z:/Student_Work/Heng/yolov7-e6e.pt"
+start_epoch: 0
+end_epoch: 50
+lr: 0.01
+start_factor: 0.3
+batch_size: 8
+imgsz: [640, 640]
+
+
+
