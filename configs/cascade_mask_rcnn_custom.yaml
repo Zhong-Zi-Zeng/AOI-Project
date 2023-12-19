@@ -28,7 +28,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "//DESKTOP-PPOB8AK/share/AOI_result/Instance Segmentation/cascade-mask-rcnn/1024_SGD_202312062018/epoch_50.pth"
+weight: "Z:/Student_Work/Heng/AOI_result/Instance Segmentation/cascade-mask-rcnn/1024_SGD_202312062018/epoch_50.pth"
 start_epoch: 0
 end_epoch: 50
 lr: 0.01

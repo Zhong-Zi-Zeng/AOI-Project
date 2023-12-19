@@ -156,15 +156,13 @@ class Yolov7Seg(BaseInstanceModel):
                         bbox_list.append(list(map(float, [x, y, w, h])))
                         class_list.append(cls)
                         score_list.append(conf)
-                        rle_list.append(polygon_to_rle(polygons[j], self.imgsz[0], self.imgsz[1]))
+                        rle_list.append(polygon_to_rle(polygons[j], original_image.shape[0], original_image.shape[1]))
 
                         # Draw bounding box
                         annotator.box_label(xyxy, self.names[cls], color=colors(cls, True))
 
             # results
             result_image = annotator.result()
-            cv2.imshow('', result_image)
-            cv2.waitKey(0)
 
             # ----------------------------Post-process (End)----------------------------
 
