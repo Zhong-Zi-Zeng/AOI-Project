@@ -1,6 +1,5 @@
 model_name: 'Yolov7Obj'
 model_dir_name: 'yolov7_obj'
-work_dir_name: 'Yolov7Obj'
 
 train_txt: ''
 val_txt: ''

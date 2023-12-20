@@ -3,3 +3,5 @@ common:
   - "Optimizer"
   - "Image Size"
   - "Use Patch"
+  - "Inference Time(ms)"
+  - "NMS Time(ms)"

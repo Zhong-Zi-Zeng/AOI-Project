@@ -1,5 +1,4 @@
 model_name: 'CascadeMaskRCNN'
 model_dir_name: 'mmdetection'
-work_dir_name: 'CascadeMaskRCNN'
 
 cfg_file: "./model_zoo/mmdetection/configs/custom_configs/cascade-mask-rcnn.py"

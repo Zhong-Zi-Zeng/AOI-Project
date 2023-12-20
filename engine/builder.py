@@ -25,6 +25,7 @@ class Builder:
 
     @staticmethod
     def _create_work_dir(cfg: dict):
+        cfg['work_dir_name'] = cfg['model_name']
         work_dir_path = get_work_dir_path(cfg)
 
         if not os.path.isdir(work_dir_path):

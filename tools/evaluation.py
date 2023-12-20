@@ -31,6 +31,65 @@ def get_args_parser():
     return parser
 
 
+class Logger:
+    def __init__(self,
+                 cfg: dict):
+        self.cfg = cfg
+        self._start = False
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Print process time
+        print('\n\n')
+        for timer in TIMER:
+            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+        print('\n\n')
+
+        self._start = False
+
+    def print_for_all(self,
+                      all_boxes_result: Optional[list] = None,
+                      all_masks_result: Optional[list] = None):
+        print("For all classes:")
+
+        if all_boxes_result is not None and \
+                all_masks_result is not None:
+            length = len(all_boxes_result) + len(all_masks_result)
+            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
+            print(("%20.3f" * length) % (*all_boxes_result, *all_masks_result))
+
+        elif all_boxes_result is not None:
+            length = len(all_boxes_result)
+            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
+            print(("%20.3f" * length) % (tuple(all_boxes_result)))
+
+        elif all_masks_result is not None:
+            length = len(all_masks_result)
+            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
+            print(("%20.3f" * length) % (tuple(all_masks_result)))
+
+    def print_for_each(self,
+                       cls_name: str,
+                       box_result: list = [],
+                       mask_result: list = []):
+        length = len(box_result) + len(mask_result)
+
+        if not self._start:
+            print("\n\nFor each class:")
+            print(("%25s" + " %20s" * length) % ("Class", *self.cfg['metrics_for_each']))
+            self._start = True
+
+        if box_result is not None and \
+                mask_result is not None:
+            print(("%25s" + " %20.3f" * length) % (cls_name, *box_result, *mask_result))
+        elif box_result is not None:
+            print(("%25s" + " %20.3f" * length) % (cls_name, *box_result))
+        elif mask_result is not None:
+            print(("%25s" + " %20.3f" * length) % (cls_name, *mask_result))
+
+
 class Writer:
     def __init__(self, cfg: dict, excel_path: Optional[str] = None):
         self.cfg = cfg
@@ -47,7 +106,13 @@ class Writer:
             self._append_title()
 
     def __enter__(self):
-        pass
+        # For common metrics
+        self.common_metrics = [self.cfg['model_name'],
+                               self.cfg['optimizer'],
+                               self.cfg['imgsz'][0],
+                               self.cfg['use_patch'],
+                               round(TIMER[2].dt, 3),
+                               round(TIMER[3].dt, 3)]
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """自動儲存"""
@@ -82,7 +147,7 @@ class Writer:
                 continue
 
             if idx == 0:
-                self.write_col(self.cfg['common'] + self.cfg['metrics'], sheet_name, row=1)
+                self.write_col(self.cfg['common'] + self.cfg['metrics_for_all'], sheet_name, row=1)
             else:
                 self.write_col(self.cfg['common'] + self.cfg['class_names'], sheet_name, row=1)
 
@@ -123,6 +188,7 @@ class Evaluator:
         self.conf_thres = cfg["conf_thres"]
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
+        self.logger = Logger(cfg)
 
     def _generate_det(self):
         """
@@ -218,89 +284,56 @@ class Evaluator:
         return stats
 
     def _instance_segmentation_eval(self, predicted_json: COCO):
-        # Evaluate all classes
-        all_boxes_result = self._coco_eval(predicted_json, task='bbox')
-        all_masks_result = self._coco_eval(predicted_json, task='segm')
-        print("For all classes:")
-        print(("%15s" * 6) % (
-            "(Box mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)", " (Mask mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)"))
-        print(("%15.3f" * 6) % (*all_boxes_result, *all_masks_result))
+        with self.logger:
+            # =========Evaluate all classes=========
+            all_boxes_result = self._coco_eval(predicted_json, task='bbox')
+            all_masks_result = self._coco_eval(predicted_json, task='segm')
 
-        # Store value
-        self.writer.write_col(
-            [self.cfg['model_name'], self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
-             round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] + all_boxes_result + all_masks_result,
-            sheet_name=self.cfg['sheet_names'][0])
+            # Print information
+            self.logger.print_for_all(all_boxes_result, all_masks_result)
 
-        # Evaluate per class
-        print("\n\nFor each class:")
-        print(("%25s" + " %15s" * 4) % ("Class", "(Box mAP_0.5", " mAR_0.5:0.95)", " (Mask mAP_0.5", " mAR_0.5:0.95)"))
+            # Store value
+            self.writer.write_col(self.writer.common_metrics + all_boxes_result + all_masks_result,
+                                  sheet_name=self.cfg['sheet_names'][0])
 
-        _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
+            # =========Evaluate each class=========
+            _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
-        for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-            box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
-            mask_result = self._coco_eval(predicted_json, task='segm', class_id=cls_id)
-            print(("%25s" + " %15.3f" * 4) % (cls_name, *box_result, *mask_result))
-            _value[cls_name] = box_result + mask_result
+            for cls_id, cls_name in enumerate(self.cfg["class_names"]):
+                box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
+                mask_result = self._coco_eval(predicted_json, task='segm', class_id=cls_id)
+                _value[cls_name] = box_result + mask_result
+                self.logger.print_for_each(cls_name, box_result, mask_result)
 
-        # Store value
-        for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-            data = [
-                self.cfg['model_name'],
-                self.cfg['optimizer'],
-                self.cfg['imgsz'][0],
-                self.cfg['use_patch'],
-                *[val[idx] for val in _value.values()]
-            ]
-            self.writer.write_col(data, sheet_name)
-
-        # Print process time
-        print('\n\n')
-        for timer in TIMER:
-            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
-        print('\n\n')
+            # Store value
+            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
+                self.writer.write_col(self.writer.common_metrics + [val[idx] for val in _value.values()],
+                                      sheet_name=sheet_name)
 
     def _object_detection_eval(self, predicted_json: COCO):
-        # Evaluate all classes
-        all_boxes_result = self._coco_eval(predicted_json, task='bbox')
-        print("For all classes:")
-        print(("%15s" * 3) % ("(Box mAP_0.5", " mAP_0.5:0.95", " mAR_0.5:0.95)"))
-        print(("%15.3f" * 3) % tuple(all_boxes_result))
+        with self.logger:
+            # =========Evaluate all classes=========
+            all_boxes_result = self._coco_eval(predicted_json, task='bbox')
 
-        # Store value
-        self.writer.write_col(
-            [self.cfg['model_name'], self.cfg['optimizer'], self.cfg['imgsz'][0], self.cfg['use_patch'],
-             round(TIMER[2].dt, 3), round(TIMER[3].dt, 3)] + all_boxes_result,
-            sheet_name=self.cfg['sheet_names'][0])
+            # Print information
+            self.logger.print_for_all(all_boxes_result)
 
-        # Evaluate per class
-        print("\n\nFor each class:")
-        print(("%25s" + " %15s" * 2) % ("Class", "(Box mAP_0.5", " mAR_0.5:0.95)"))
+            # Store value
+            self.writer.write_col(self.writer.common_metrics + all_boxes_result,
+                                  sheet_name=self.cfg['sheet_names'][0])
 
-        _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
+            # =========Evaluate per class=========
+            _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
-        for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-            box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
-            print(("%25s" + " %15.3f" * 2) % (cls_name, *box_result))
-            _value[cls_name] = box_result
+            for cls_id, cls_name in enumerate(self.cfg["class_names"]):
+                box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
+                _value[cls_name] = box_result
+                self.logger.print_for_each(cls_name, box_result)
 
-        # Store value
-        for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-            data = [
-                self.cfg['model_name'],
-                self.cfg['optimizer'],
-                self.cfg['imgsz'][0],
-                self.cfg['use_patch'],
-                *[val[idx] for val in _value.values()]
-            ]
-            self.writer.write_col(data, sheet_name)
-
-        # Print process time
-        print('\n\n')
-        for timer in TIMER:
-            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
-        print('\n\n')
+            # Store value
+            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
+                self.writer.write_col(self.writer.common_metrics + [val[idx] for val in _value.values()],
+                                      sheet_name=sheet_name)
 
     def eval(self):
         # Generate detected json
