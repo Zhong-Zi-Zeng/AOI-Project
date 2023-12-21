@@ -1,0 +1,4 @@
+class_names: []
+number_of_class: 0
+coco_root: "../coco"
+use_patch: false

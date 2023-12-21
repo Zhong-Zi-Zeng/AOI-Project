@@ -1,5 +1,0 @@
-# ===========Default setting===========
-work_dir: './work_dirs/model'
-coco_root: './data/coco'
-nms_thres: 0.5
-conf_thres: 0.001

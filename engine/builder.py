@@ -1,14 +1,16 @@
-from model_zoo.base.BaseModel import BaseModel
-import yaml
+from model_zoo import BaseInstanceModel, BaseDetectModel
+from .general import (get_work_dir_path, get_works_dir_path, load_yaml)
 import importlib
 import os
+import copy
+import sys
 
 
 class Builder:
     def __init__(self, config_path: str):
         self.config_path = config_path
 
-    def merge_dicts(self, base: dict, custom: dict):
+    def _merge_dicts(self, base: dict, custom: dict):
         """
             尋找共同的key並進行替換
             Args:
@@ -17,15 +19,41 @@ class Builder:
         """
         for key, value in custom.items():
             if key in base and isinstance(base[key], dict) and isinstance(custom[key], dict):
-                self.merge_dicts(base[key], custom[key])
+                self._merge_dicts(base[key], custom[key])
             else:
                 base[key] = custom[key]
 
     @staticmethod
-    def _load_config(path: str) -> dict:
-        with open(path, 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-        return config
+    def _create_work_dir(cfg: dict):
+        cfg['work_dir_name'] = cfg['model_name']
+        work_dir_path = get_work_dir_path(cfg)
+
+        if not os.path.isdir(work_dir_path):
+            os.makedirs(work_dir_path)
+        else:
+            index = 2
+            while True:
+                new_work_dir_name = f"{cfg['work_dir_name']}_{index}"
+                new_work_dir_path = os.path.join(get_works_dir_path(), new_work_dir_name)
+                if not os.path.exists(new_work_dir_path):
+                    os.makedirs(new_work_dir_path)
+                    cfg['work_dir_name'] = new_work_dir_name
+                    break
+                else:
+                    index += 1
+
+    def _process_base_key(self, config_dir, config):
+        """
+            將所有config中base的部分進行讀取並合併後，再跟custom config去合併
+        """
+        merged_config = {}
+        if '_base_' in config:
+            for base_file in config['_base_']:
+                base_path = os.path.join(config_dir, base_file)
+                base_config = load_yaml(base_path)
+                self._merge_dicts(merged_config, self._process_base_key(config_dir, base_config))
+        self._merge_dicts(merged_config, config)
+        return merged_config
 
     def build_config(self) -> dict:
         """
@@ -35,30 +63,26 @@ class Builder:
             Returns:
                 config (dict): 最後合併好的config
         """
+        custom_config = load_yaml(self.config_path)
+        config_dir = os.path.dirname(self.config_path)
 
-        custom_config = self._load_config(self.config_path)
+        # Load config
+        final_config = self._process_base_key(config_dir, custom_config)
 
-        base_config = {}
+        # Create work dir
+        self._create_work_dir(final_config)
 
-        # Load base config
-        if '_base_' in custom_config:
-            config_dir = os.path.dirname(self.config_path)
-            for base in custom_config['_base_']:
-                with open(os.path.join(config_dir, base), 'r') as file:
-                    base_config_from_file = yaml.load(file, Loader=yaml.FullLoader)
-                    self.merge_dicts(base_config, base_config_from_file)
-
-        # Merge custom config into base config
-        self.merge_dicts(base_config, custom_config)
-
-        return base_config
+        return final_config
 
     @staticmethod
-    def build_model(config: dict) -> BaseModel:
-        model_zoo = importlib.import_module('model_zoo')
-        model = getattr(model_zoo, config['name'], None)
+    def build_model(config: dict) -> BaseInstanceModel:
+        """
+            從給定的config中的"name", 去model_zoo中尋找對應的model
+        """
+        module = importlib.import_module(f'model_zoo.{config["model_dir_name"]}')
+        model = getattr(module, config["model_name"], None)
 
         if model is None:
-            raise ValueError("Can not find the model of {}".format(config['name']))
+            raise ValueError("Can not find the model of {}".format(config['model_name']))
         else:
             return model(config)

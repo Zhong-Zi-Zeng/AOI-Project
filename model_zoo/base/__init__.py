@@ -1,1 +1,2 @@
-from .BaseModel import BaseModel
+from .BaseInstanceModel import BaseInstanceModel
+from .BaseDetectModel import BaseDetectModel

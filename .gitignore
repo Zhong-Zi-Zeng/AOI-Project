@@ -10,11 +10,13 @@ __pycache__/
 *.jpg
 *.png
 *.bmp
-*.json
 *.pt
 *.pth
+*.json
 .idea/
 *.txt
+*.xlsx
+/work_dirs
 
 # Distribution / packaging
 .Python
