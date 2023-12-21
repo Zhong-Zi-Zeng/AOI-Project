@@ -54,4 +54,9 @@ if __name__ == '__main__':
                            patch_size=args.patch_size)
     else:
         raise ValueError("Can not find the converter of {}.".format(args.format))
-    conv.generate_original()
+
+    if args.patch_size == None:
+        conv.generate_original()
+    else:
+        conv.generate_patch()
+

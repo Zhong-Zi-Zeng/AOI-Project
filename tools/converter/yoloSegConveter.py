@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import matplotlib.pyplot as plt
+
 from .baseConverter import BaseConverter
 from patchify import patchify
 from pathlib import Path
@@ -19,13 +22,13 @@ class yoloSegConverter(BaseConverter):
                  output_dir: str,
                  classes_txt: str,
                  dataset_type: str,
-                 patch_size: Optional[int] = None):
+                 patch_size: Optional[int] = None):  # 若無提供patch_size，預設None
         super().__init__(source_dir, output_dir, classes_txt)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
         self.classes_txt = classes_txt
         self.patch_size = patch_size
-        self.dataset_type = dataset_type    # train or test
+        self.dataset_type = dataset_type  # train or test
         self.generate_dir()
 
     def generate_dir(self):
@@ -39,8 +42,9 @@ class yoloSegConverter(BaseConverter):
     def generate_original(self):
         for idx, (image_file, json_file) in enumerate(
                 tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
+
             # 解析json
-            image_height, image_width, _, classes, _, polygons = jsonParser(json_file).parse()
+            image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # <train or test>
             # image
@@ -66,6 +70,52 @@ class yoloSegConverter(BaseConverter):
                     file.write(" ".join(yolo_coords) + "\n")
 
     def generate_patch(self):
-        pass
+        for idx, (image_file, json_file) in enumerate(
+                tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
 
+            # 解析json
+            image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
+            # 切patch
+            results = BaseConverter.divide_to_patch(self,
+                                                   image_file,
+                                                   image_height,
+                                                   image_width,
+                                                   mask,
+                                                   classes,
+                                                   bboxes,
+                                                   polygons, self.patch_size)
+            # 取有瑕疵的patch
+            for i in range(len(results)):
+                image_patch = results[i]['image']
+
+                image_height = results[i]['label']['image_height'][0]
+                image_width = results[i]['label']['image_width'][0]
+                mask = np.array(results[i]['label']['mask'])
+                classes = results[i]['label']['classes']
+                bboxes = results[i]['label']['bboxes']
+                polygons = results[i]['label']['polygons']
+
+                processed_image_count = results[i]['processed_image_count']
+
+                # <train or test>
+                # image
+                image_name = f"patch_{processed_image_count}_{i}"
+                image_patch.save(os.path.join(self.output_dir, self.dataset_type, 'images', image_name + '.jpg'))
+
+                # label
+                with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
+                    for idx, polygon in enumerate(polygons):
+                        # Normalize polygon to be between 0-1
+                        normalized_polygon = polygon / np.array([image_width, image_height])
+
+                        # Extract the class label without the '#'
+                        class_name = classes[idx][1:]
+
+                        # Find the index of a class label
+                        class_idx = self.classes_name.index(class_name)
+
+                        # Add the coordinates of each vertex to a list in YOLO format
+                        # class, x1, y1, x2, y2, …(Normalize 0–1)
+                        yolo_coords = [str(class_idx)] + normalized_polygon.flatten().astype(str).tolist()
+                        file.write(" ".join(yolo_coords) + "\n")
