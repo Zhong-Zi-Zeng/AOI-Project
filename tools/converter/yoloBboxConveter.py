@@ -80,6 +80,63 @@ class yoloBboxConverter(BaseConverter):
 
 
     def generate_patch(self):
-        pass
+        image_paths = []
 
+        for idx, (image_file, json_file) in enumerate(
+                tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
 
+            # 解析json
+            image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
+
+            # 切patch
+            results = BaseConverter.divide_to_patch(self,
+                                                   image_file,
+                                                   image_height,
+                                                   image_width,
+                                                   mask,
+                                                   classes,
+                                                   bboxes,
+                                                   polygons, self.patch_size)
+            # 取有瑕疵的patch
+            for i in range(len(results)):
+                image_patch = results[i]['image']
+
+                image_height = results[i]['label']['image_height'][0]
+                image_width = results[i]['label']['image_width'][0]
+                mask = np.array(results[i]['label']['mask'])
+                classes = results[i]['label']['classes']
+                bboxes = results[i]['label']['bboxes']
+                polygons = results[i]['label']['polygons']
+
+                processed_image_count = results[i]['processed_image_count']
+
+                # <images & labels train> or <images & labels val>
+                # image
+                image_name = f"patch_{processed_image_count}_{i}"
+                image_patch.save(os.path.join(self.output_dir, 'images', self.dataset_type, image_name + '.jpg'))
+
+                # 存所有train or val圖片的路徑
+                image_paths.append(os.path.join(self.output_dir, 'images', self.dataset_type, image_name + '.jpg'))
+                # train_list.txt or val_list.txt
+                with open(os.path.join(self.output_dir, self.dataset_type + '_list.txt'), 'w') as file:
+                    file.write('\n'.join(image_paths))
+
+                # label
+                with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
+                    for idx, bbox in enumerate(bboxes):
+                        # Normalize
+                        bbox[0] /= image_width
+                        bbox[1] /= image_height
+                        bbox[2] /= image_width
+                        bbox[3] /= image_height
+
+                        # Extract the class label without the '#'
+                        class_name = classes[idx][1:]
+
+                        # Find the index of a class label
+                        class_idx = self.classes_name.index(class_name)
+
+                        # Add the coordinates of each vertex to a list in YOLO format
+                        # class, x, y, w, h(Normalize 0–1)
+                        yolo_bbox = [str(class_idx)] + list(map(str, bbox))
+                        file.write(" ".join(yolo_bbox) + "\n")

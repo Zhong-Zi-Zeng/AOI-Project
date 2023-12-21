@@ -10,13 +10,13 @@ def get_args_parser():
                         help="The dataset's path includes image files and json files.")
     parser.add_argument('--output_dir', type=str,
                         help="Save the result in this directory.")
-    parser.add_argument('--classes_txt', type=str, required=True,
+    parser.add_argument('--classes_txt', type=str, required=False,
                         help='The category of training needs a Txt file.')
-    parser.add_argument('--dataset_type', type=str, choices=['train', 'test'], required=True,
+    parser.add_argument('--dataset_type', type=str, choices=['train', 'test'], required=False,
                         help='For training dataset or testing dataset.')
-    parser.add_argument('--format', type=str, choices=['coco', 'yoloSeg', 'yoloBbox', 'sa'], required=True,
+    parser.add_argument('--format', type=str, choices=['coco', 'yoloSeg', 'yoloBbox', 'sa'], required=False,
                         help='Which output format do you want?')
-    parser.add_argument('--patch_size', type=int,
+    parser.add_argument('--patch_size', type=int, choices=[256, 512, 1024],
                         help='The size of the patch needs to be divisible by width and height. '
                              'If you assign the value, the script will generate a patch dataset')
 
@@ -52,4 +52,9 @@ if __name__ == '__main__':
                            classes_txt=args.classes_txt,
                            dataset_type=args.dataset_type,
                            patch_size=args.patch_size)
-    conv.generate_original()
+
+    if args.patch_size == None:
+        conv.generate_original()
+    else:
+        conv.generate_patch()
+

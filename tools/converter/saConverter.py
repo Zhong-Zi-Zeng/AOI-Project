@@ -67,7 +67,7 @@ class saConverter(BaseConverter):
             cv2.imwrite(os.path.join(self.output_dir, self.dataset_type, 'label', image_name + '.jpg'),
                         mask)
 
-    def generate_patch(self):
+    def divide_to_patch(self):
         assert self.patch_size is not None, 'You need to assign the size of patch'
         name = 0
 
