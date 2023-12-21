@@ -82,6 +82,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
+                        '--device', self.cfg['device'],
                         '--name', './',
                         '--img', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
@@ -162,6 +163,10 @@ class Yolov7Obj(BaseDetectModel):
                         # Draw bounding box
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=1)
+
+            # img = cv2.resize(original_image, (512, 512))
+            # cv2.imshow('', img)
+            # cv2.waitKey(0)
 
             return {
                 'result_image': original_image,

@@ -358,7 +358,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=args.config)
+    builder = Builder(config_path=args.config, task='eval')
 
     # Build config
     cfg = builder.build_config()

@@ -1,5 +1,5 @@
 from model_zoo import BaseInstanceModel, BaseDetectModel
-from .general import (get_work_dir_path, get_works_dir_path, load_yaml)
+from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml)
 import importlib
 import os
 import copy
@@ -7,8 +7,9 @@ import sys
 
 
 class Builder:
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, task: str):
         self.config_path = config_path
+        self.task = task
 
     def _merge_dicts(self, base: dict, custom: dict):
         """
@@ -23,9 +24,8 @@ class Builder:
             else:
                 base[key] = custom[key]
 
-    @staticmethod
-    def _create_work_dir(cfg: dict):
-        cfg['work_dir_name'] = cfg['model_name']
+    def _create_work_dir(self, cfg: dict):
+        cfg['work_dir_name'] = os.path.join(self.task, cfg['model_name'])
         work_dir_path = get_work_dir_path(cfg)
 
         if not os.path.isdir(work_dir_path):
@@ -71,6 +71,9 @@ class Builder:
 
         # Create work dir
         self._create_work_dir(final_config)
+
+        # Save final config
+        save_yaml(os.path.join(get_work_dir_path(final_config), "final_config"), final_config)
 
         return final_config
 

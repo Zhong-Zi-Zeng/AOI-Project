@@ -1,12 +1,12 @@
-_base_: [ "./base/model/yolov7_seg_base.yaml", # model
+_base_: [ "./base/model/yolov7_inSeg_base.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
 ]
 
 # ===========Model===========
-train_txt: "D:/Heng_shared/yoloSeg/train"
-val_txt: "D:/Heng_shared/yoloSeg/test"
+train_txt: "/home/miislab-server/Heng/Heng_shared/yoloSeg/train"
+val_txt: "/home/miislab-server/Heng/Heng_shared/yoloSeg/test"
 
 # ===========Dataset===========
 number_of_class: 16
@@ -32,13 +32,13 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "Z:/Student_Work/Heng/AOI_result/Instance Segmentation/yolov7/1024_SGD_202312061402/weights/best.pt"
+weight: "/home/miislab-server/Heng/Heng_shared/best.pt"
 start_epoch: 0
 end_epoch: 50
 lr: 0.01
 start_factor: 0.3
 batch_size: 8
 imgsz: [1024, 1024]
-use_patch: false
+
 
 

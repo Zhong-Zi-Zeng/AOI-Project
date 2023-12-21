@@ -1,0 +1,12 @@
+model_name: 'Yolov7inSeg'
+model_dir_name: 'yolov7_inSeg'
+
+train_txt: ''
+val_txt: ''
+pretrained_weight: "./model_zoo/yolov7_inSeg/yolov7-seg.pt"
+data_file: "./model_zoo/yolov7_inSeg/data/custom.yaml"
+hyp_file: "./model_zoo/yolov7_inSeg/data/hyps/hyp.scratch-high.yaml"
+cfg_file: "./model_zoo/yolov7_inSeg/models/segment/yolov7-seg.yaml"
+
+
+
