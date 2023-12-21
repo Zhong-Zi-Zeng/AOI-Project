@@ -72,6 +72,7 @@ class Yolov7inSeg(BaseInstanceModel):
                  ) -> dict:
 
         if not hasattr(self, 'model'):
+            self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
         max_det = kwargs.get('max_det', 1000)
@@ -180,7 +181,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
                         '--batch', str(self.cfg['batch_size']),
-                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else self.cfg['pretrained_weight'],
+                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],

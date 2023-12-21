@@ -63,14 +63,6 @@ class Yolov7Obj(BaseDetectModel):
         """
             Run每個model自己的training command
         """
-        # TODO: .\train_aux.py
-        #  --batch-size 4
-        #  --data "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\data.yaml"
-        #  --img 1024 1024 --cfg "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\cfg.yaml"
-        #  --name yyyy
-        #  --hyp "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\hyp.yaml"
-        #  --weights " "
-        #  --device 0
 
         subprocess.run(['python',
                         os.path.join(get_model_path(__file__), 'train_aux.py'),
@@ -96,7 +88,9 @@ class Yolov7Obj(BaseDetectModel):
                  *args: Any,
                  **kwargs: Any
                  ) -> dict:
+
         if not hasattr(self, 'model'):
+            self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
         names = self.model.module.names if hasattr(self.model, 'module') else self.model.names

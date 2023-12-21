@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union, Any, Dict
 from abc import ABC, abstractmethod
+from engine.general import check_path
 import numpy as np
 
 
@@ -11,6 +12,10 @@ class BaseModel(ABC):
 
         # Update config
         self._config_transform()
+
+    def _check_weight_path(self, weight_path: str):
+        assert check_path(weight_path), f"Can not find the weight. " \
+                                        f"Please check the path."
 
     @abstractmethod
     def _config_transform(self):
