@@ -10,18 +10,20 @@ from skimage.util import view_as_windows
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-
+import yaml
 
 class BaseConverter(ABC):
     def __init__(self,
                  source_dir: str,
                  output_dir: str,
-                 classes_txt: str):
+                 classes_yaml: str):
         # 生成初始的資料夾
         os.makedirs(output_dir, exist_ok=True)
 
-        with open(classes_txt, 'r') as file:
-            self.classes_name = [cls.rstrip() for cls in file.readlines()]  # 儲存所有類別名稱
+        with open(classes_yaml, 'r') as file:
+            # self.classes_name = [cls.rstrip() for cls in file.readlines()]  # txt
+            classes_data = yaml.safe_load(file)  # yaml
+            self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
         self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                                  if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
@@ -32,15 +34,15 @@ class BaseConverter(ABC):
         self.processed_image_count = 0  # Record the number of times divide_to_patch is called (so that the patch name is not overwritten)
 
 
-    def divide_to_patch(self,
-                        image_file,
-                        image_height,
-                        image_width,
-                        mask,
-                        classes,
-                        bboxes,
-                        polygons,
-                        patch_size):
+    def _divide_to_patch(self,
+                         image_file,
+                         image_height,
+                         image_width,
+                         mask,
+                         classes,
+                         bboxes,
+                         polygons,
+                         patch_size):
         """
             Returns:
                 h (int): 圖片的高

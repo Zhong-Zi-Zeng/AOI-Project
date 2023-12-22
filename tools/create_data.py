@@ -10,8 +10,8 @@ def get_args_parser():
                         help="The dataset's path includes image files and json files.")
     parser.add_argument('--output_dir', type=str,
                         help="Save the result in this directory.")
-    parser.add_argument('--classes_txt', type=str, required=True,
-                        help='The category of training needs a Txt file.')
+    parser.add_argument('--classes_yaml', type=str, required=True,
+                        help='The category of training needs a YAML file.')
     parser.add_argument('--dataset_type', type=str, choices=['train', 'test'], required=True,
                         help='For training dataset or testing dataset.')
     parser.add_argument('--format', type=str, choices=['coco', 'yoloSeg', 'yoloBbox', 'sa'], required=True,
@@ -31,25 +31,25 @@ if __name__ == '__main__':
     if args.format == 'coco':
         conv = cocoConverter(source_dir=args.source_dir,
                              output_dir=args.output_dir,
-                             classes_txt=args.classes_txt,
+                             classes_yaml=args.classes_yaml,
                              dataset_type=args.dataset_type,
                              patch_size=args.patch_size)
     elif args.format == 'yoloSeg':
         conv = yoloSegConverter(source_dir=args.source_dir,
                                 output_dir=args.output_dir,
-                                classes_txt=args.classes_txt,
+                                classes_yaml=args.classes_yaml,
                                 dataset_type=args.dataset_type,
                                 patch_size=args.patch_size)
     elif args.format == 'yoloBbox':
         conv = yoloBboxConverter(source_dir=args.source_dir,
                                 output_dir=args.output_dir,
-                                classes_txt=args.classes_txt,
+                                classes_yaml=args.classes_yaml,
                                 dataset_type=args.dataset_type,
                                 patch_size=args.patch_size)
     elif args.format == 'sa':
         conv = saConverter(source_dir=args.source_dir,
                            output_dir=args.output_dir,
-                           classes_txt=args.classes_txt,
+                           classes_yaml=args.classes_yaml,
                            dataset_type=args.dataset_type,
                            patch_size=args.patch_size)
     else:

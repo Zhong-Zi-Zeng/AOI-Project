@@ -1,0 +1,32 @@
+Border:
+  super: "Scratch"
+black_Marks:
+  super: "Scratch"
+Bright_Marks:
+  super: "Scratch"
+Pass:
+  super: "Dirty"
+Dirty:
+  super: "Dirty"
+Friction:
+  super: "Friction"
+Black_point:
+  super: "Dirty"
+Buttom_scratches:
+  super: "Scratch"
+Small_scratches:
+  super: "Scratch"
+AnotherColor:
+  super: "Dirty"
+Severe_scratches:
+  super: "Scratch"
+Glossy:
+  super: "Friction"
+ReturnPoint:
+  super: "Dirty"
+Assembly:
+  super: "Assembly"
+Scractches_Blackbackground:
+  super: "Scratch"
+Buttom_Friction:
+  super: "Friction"
