@@ -2,10 +2,10 @@ from __future__ import annotations
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_seg'))
+sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_inSeg'))
 
 from typing import Union, Any
-from model_zoo.yolov7_seg.models.common import DetectMultiBackend
+from model_zoo.yolov7_inSeg.models.common import DetectMultiBackend
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
 from utils.augmentations import letterbox
 from utils.plots import Annotator, colors
@@ -19,7 +19,7 @@ import numpy as np
 import torch
 import subprocess
 
-class Yolov7Seg(BaseInstanceModel):
+class Yolov7inSeg(BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg)
         self.cfg = cfg
@@ -72,6 +72,7 @@ class Yolov7Seg(BaseInstanceModel):
                  ) -> dict:
 
         if not hasattr(self, 'model'):
+            self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
         max_det = kwargs.get('max_det', 1000)
@@ -180,11 +181,12 @@ class Yolov7Seg(BaseInstanceModel):
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
                         '--batch', str(self.cfg['batch_size']),
-                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else self.cfg['pretrained_weight'],
+                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
                         '--imgsz', str(self.cfg['imgsz'][0]),
+                        '--device', self.cfg['device'],
                         '--exist-ok',
                         '--cos-lr'
                         ]

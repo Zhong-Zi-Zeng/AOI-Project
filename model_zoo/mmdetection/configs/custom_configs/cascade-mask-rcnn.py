@@ -6,7 +6,7 @@ _base_ = [
 ]
 
 # ==========Dataset setting==========
-data_root = "../coco/"
+data_root = "/home/miislab-server/MiiSLab_NAS/Student_Work/YA/coco"
 classes = ('Border',
            'black_Marks',
            'Bright_Marks',

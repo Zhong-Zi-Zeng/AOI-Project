@@ -63,14 +63,6 @@ class Yolov7Obj(BaseDetectModel):
         """
             Run每個model自己的training command
         """
-        # TODO: .\train_aux.py
-        #  --batch-size 4
-        #  --data "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\data.yaml"
-        #  --img 1024 1024 --cfg "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\cfg.yaml"
-        #  --name yyyy
-        #  --hyp "D:\Heng_shared\AOI-Project\work_dirs\Yolov7Obj_4\hyp.yaml"
-        #  --weights " "
-        #  --device 0
 
         subprocess.run(['python',
                         os.path.join(get_model_path(__file__), 'train_aux.py'),
@@ -82,6 +74,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
+                        '--device', self.cfg['device'],
                         '--name', './',
                         '--img', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
@@ -95,7 +88,9 @@ class Yolov7Obj(BaseDetectModel):
                  *args: Any,
                  **kwargs: Any
                  ) -> dict:
+
         if not hasattr(self, 'model'):
+            self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
         names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
@@ -162,6 +157,10 @@ class Yolov7Obj(BaseDetectModel):
                         # Draw bounding box
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=1)
+
+            # img = cv2.resize(original_image, (512, 512))
+            # cv2.imshow('', img)
+            # cv2.waitKey(0)
 
             return {
                 'result_image': original_image,

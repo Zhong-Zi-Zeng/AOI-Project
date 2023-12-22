@@ -14,7 +14,6 @@ __pycache__/
 *.pth
 *.json
 .idea/
-*.txt
 *.xlsx
 /work_dirs
 

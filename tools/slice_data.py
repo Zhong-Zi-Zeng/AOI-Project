@@ -121,9 +121,9 @@ def slice_file(source_dir: str, assign_number: int, classes_name: list) -> objec
 
     # 把描述檔存在source資料夾下
     with open(os.path.join(source_dir, 'test_detail.json'), 'w') as file:
-        json.dump(test, file)
+        json.dump(test, file, indent=2)
     with open(os.path.join(source_dir, 'all_detail.json'), 'w') as file:
-        json.dump(total, file)
+        json.dump(total, file, indent=2)
 
 
 if __name__ == '__main__':
