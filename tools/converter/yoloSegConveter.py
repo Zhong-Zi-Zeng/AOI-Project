@@ -20,13 +20,12 @@ class yoloSegConverter(BaseConverter):
     def __init__(self,
                  source_dir: str,
                  output_dir: str,
-                 classes_txt: str,
+                 classes_yaml: str,
                  dataset_type: str,
                  patch_size: Optional[int] = None):  # 若無提供patch_size，預設None
-        super().__init__(source_dir, output_dir, classes_txt)
+        super().__init__(source_dir, output_dir,  classes_yaml)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
-        self.classes_txt = classes_txt
         self.patch_size = patch_size
         self.dataset_type = dataset_type  # train or test
         self.generate_dir()
@@ -62,11 +61,15 @@ class yoloSegConverter(BaseConverter):
                     class_name = classes[idx][1:]
 
                     # Find the index of a class label
-                    class_idx = self.classes_name.index(class_name)
+                    # class_idx = self.classes_name.index(class_name)
+
+                    # Find the index of a superclass label
+                    superclass_value = self.classes_name[class_name]
+                    superclass_idx = list(self.classes_name.values()).index(superclass_value)
 
                     # Add the coordinates of each vertex to a list in YOLO format
                     # class, x1, y1, x2, y2, …(Normalize 0–1)
-                    yolo_coords = [str(class_idx)] + normalized_polygon.flatten().astype(str).tolist()
+                    yolo_coords = [str(superclass_value)] + normalized_polygon.flatten().astype(str).tolist()
                     file.write(" ".join(yolo_coords) + "\n")
 
     def generate_patch(self):
@@ -77,14 +80,14 @@ class yoloSegConverter(BaseConverter):
             image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # 切patch
-            results = BaseConverter.divide_to_patch(self,
-                                                   image_file,
-                                                   image_height,
-                                                   image_width,
-                                                   mask,
-                                                   classes,
-                                                   bboxes,
-                                                   polygons, self.patch_size)
+            results = BaseConverter._divide_to_patch(self,
+                                                     image_file,
+                                                     image_height,
+                                                     image_width,
+                                                     mask,
+                                                     classes,
+                                                     bboxes,
+                                                     polygons, self.patch_size)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
@@ -113,9 +116,13 @@ class yoloSegConverter(BaseConverter):
                         class_name = classes[idx][1:]
 
                         # Find the index of a class label
-                        class_idx = self.classes_name.index(class_name)
+                        # class_idx = self.classes_name.index(class_name)
+
+                        # Find the index of a superclass label
+                        superclass_value = self.classes_name[class_name]
+                        superclass_idx = list(self.classes_name.values()).index(superclass_value)
 
                         # Add the coordinates of each vertex to a list in YOLO format
                         # class, x1, y1, x2, y2, …(Normalize 0–1)
-                        yolo_coords = [str(class_idx)] + normalized_polygon.flatten().astype(str).tolist()
+                        yolo_coords = [str(superclass_idx)] + normalized_polygon.flatten().astype(str).tolist()
                         file.write(" ".join(yolo_coords) + "\n")

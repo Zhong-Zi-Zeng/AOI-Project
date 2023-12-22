@@ -6,6 +6,7 @@ from tqdm import tqdm
 import argparse
 import os
 import json
+import yaml
 
 
 def get_args_parser():
@@ -13,8 +14,8 @@ def get_args_parser():
 
     parser.add_argument('--source_dir', type=str, required=True,
                         help="The dataset's path includes image files and json files.")
-    parser.add_argument('--classes_txt', type=str, required=True,
-                        help='The category of training needs a Txt file.')
+    parser.add_argument('--classes_yaml', type=str, required=True,
+                        help='The category of training needs a YAML file.')
     parser.add_argument('--assign_number', type=int, default=3,
                         help="Each number of categories in the test dataset. The default is 3.")
 
@@ -83,9 +84,9 @@ def check_file(source_dir: str):
         os.rename(except_json_file, os.path.join(source_dir, 'delete', Path(except_json_file).name))
 
 
-def slice_file(source_dir: str, assign_number: int, classes_name: list):
-    test = {cls: {'number': 0, 'file_name': []} for cls in classes_name}
-    total = {cls: {'number': 0, 'file_name': []} for cls in classes_name}
+def slice_file(source_dir: str, assign_number: int, classes_name: list) -> object:    # classes_name = {'Border': 'aaa'...}
+    test = {cls: {'super': classes_name[cls], 'number': 0, 'file_name': []} for cls in classes_name}
+    total = {cls: {'super': classes_name[cls], 'number': 0, 'file_name': []} for cls in classes_name}
 
     image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                         if is_image(os.path.join(source_dir, image_name))]
@@ -98,6 +99,7 @@ def slice_file(source_dir: str, assign_number: int, classes_name: list):
         image_height, image_width, mask, classes, bboxes, polygons = jsonParser(old_json_file).parse()
 
         new_image_file = os.path.join(str(Path(old_image_file).parent), str(idx) + '.jpg')
+
         # total
         for cls in set(classes):
             total[cls.replace('#', '')]['number'] += 1
@@ -129,8 +131,10 @@ if __name__ == '__main__':
                                      parents=[get_args_parser()])
     args = parser.parse_args()
 
-    with open(args.classes_txt, 'r') as file:
-        classes_name = [cls.rstrip() for cls in file.readlines()]  # 儲存所有類別名稱
+    with open(args.classes_yaml, 'r') as file:
+        # classes_name = [cls.rstrip() for cls in file.readlines()]  # txt
+        classes_data = yaml.safe_load(file)     # yaml
+        classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
     os.mkdir(os.path.join(args.source_dir, 'train'))
     os.mkdir(os.path.join(args.source_dir, 'test'))
