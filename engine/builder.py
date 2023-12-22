@@ -73,7 +73,7 @@ class Builder:
         self._create_work_dir(final_config)
 
         # Save final config
-        save_yaml(os.path.join(get_work_dir_path(final_config), "final_config"), final_config)
+        save_yaml(os.path.join(get_work_dir_path(final_config), "final_config.yaml"), final_config)
 
         return final_config
 

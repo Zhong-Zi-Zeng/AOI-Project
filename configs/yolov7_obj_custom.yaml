@@ -5,8 +5,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: "./data/yoloBbox/train_list.txt"
-val_txt: "./data/yoloBbox/val_list.txt"
+train_txt: "D:/Heng_shared/AOI-Project/data/patch_256_class_16/train_list.txt"
+val_txt: "D:/Heng_shared/AOI-Project/data/patch_256_class_16/val_list.txt"
 
 # ===========Dataset===========
 number_of_class: 16

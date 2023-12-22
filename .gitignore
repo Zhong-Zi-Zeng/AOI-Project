@@ -16,6 +16,7 @@ __pycache__/
 .idea/
 *.xlsx
 /work_dirs
+/data
 
 # Distribution / packaging
 .Python
