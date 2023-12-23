@@ -92,23 +92,16 @@ class BaseConverter(ABC):
                 # polygon
                 contours, _ = cv2.findContours(patch, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)  # 只要外部輪廓，所有輪廓點
                 patch_polygon = np.vstack(contours).reshape((-1, 2))
+                # bbox
+                x, y, w, h = cv2.boundingRect(patch_polygon)
 
-                # 濾掉瑕疵面積太小的patch
-                defect_area = cv2.contourArea(patch_polygon)
-                min_defect_area_threshold = 4000.0
-                if defect_area > min_defect_area_threshold:
-                    # print(defect_area)
-                    
-                    # bbox
-                    x, y, w, h = cv2.boundingRect(patch_polygon)
-
-                    # info
-                    labels[patch_idx]['image_height'].append(patch_size)
-                    labels[patch_idx]['image_width'].append(patch_size)
-                    labels[patch_idx]['mask'].append(patch)
-                    labels[patch_idx]['classes'].append(cls)
-                    labels[patch_idx]['bboxes'].append([x, y, w, h])
-                    labels[patch_idx]['polygons'].append(patch_polygon)
+                # info
+                labels[patch_idx]['image_height'].append(patch_size)
+                labels[patch_idx]['image_width'].append(patch_size)
+                labels[patch_idx]['mask'].append(patch)
+                labels[patch_idx]['classes'].append(cls)
+                labels[patch_idx]['bboxes'].append([x, y, w, h])
+                labels[patch_idx]['polygons'].append(patch_polygon)
 
         # Save all defective patch images
         results = []
