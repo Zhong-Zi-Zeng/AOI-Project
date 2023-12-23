@@ -5,12 +5,12 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: "D:/Heng_shared/AOI-Project/data/patch_256_class_16/train_list.txt"
-val_txt: "D:/Heng_shared/AOI-Project/data/patch_256_class_16/val_list.txt"
+train_txt: "D:/Heng_shared/AOI-Project/data/yoloBbox/original_class_16/train_list.txt"
+val_txt: "D:/Heng_shared/AOI-Project/data/yoloBbox/original_class_16/val_list.txt"
 
 # ===========Dataset===========
 number_of_class: 16
-coco_root: "../coco"
+coco_root: "D:/Heng_shared/AOI-Project/data/coco/original_class_16"
 class_names:
   - "Border"
   - "black_Marks"
@@ -32,7 +32,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
-weight: " "
+weight: "Z:/Student_Work/Heng/AOI_result/Object Detection/yolov7結果_YA/yoloBbox/train/exp_hyp/weights/best.pt"
 start_epoch: 0
 end_epoch: 50
 lr: 0.01
