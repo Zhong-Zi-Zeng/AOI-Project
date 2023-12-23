@@ -15,7 +15,8 @@ __pycache__/
 *.json
 .idea/
 *.xlsx
-/data/AOI-Dataset
+/data
+!data/.gitkeep
 /work_dirs
 
 # Distribution / packaging
