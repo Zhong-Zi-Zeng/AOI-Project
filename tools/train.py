@@ -4,8 +4,12 @@ import os
 
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
+import numpy as np
 import argparse
+import torch
 
+torch.manual_seed(10)
+np.random.seed(10)
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Model training script.', add_help=False)
