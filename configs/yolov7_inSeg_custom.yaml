@@ -5,8 +5,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: "./data/yoloSeg/original_class_16/train"
-val_txt: "./data/yoloSeg/original_class_16/test"
+train_txt: " "
+val_txt: " "
 
 # ===========Dataset===========
 number_of_class: 16
