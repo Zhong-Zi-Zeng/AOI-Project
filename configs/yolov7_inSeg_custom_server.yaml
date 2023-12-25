@@ -5,12 +5,12 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/yoloSeg/original_class_16/train
-val_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/yoloSeg/original_class_16/test
+train_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/yoloSeg/patch_1024_class_16/train
+val_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/yoloSeg/patch_1024_class_16/test
 
 # ===========Dataset===========
 number_of_class: 16
-coco_root: "./data/coco/original_class_16"
+coco_root: "./data/coco/patch_1024_class_16"
 class_names:
   - "Border"
   - "black_Marks"
@@ -41,7 +41,7 @@ lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 8
 imgsz: [1024, 1024]
-use_patch: false
+use_patch: true
 
 
 

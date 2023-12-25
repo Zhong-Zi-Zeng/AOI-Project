@@ -73,8 +73,7 @@ class yoloBboxConverter(BaseConverter):
                     # class_idx = self.classes_name.index(class_name)
 
                     # Find the index of a superclass label
-                    superclass_value = self.classes_name[class_name]
-                    superclass_idx = list(self.classes_name.values()).index(superclass_value)
+                    superclass_idx = self.classes_name[class_name]['id']
 
                     # Add the coordinates of each vertex to a list in YOLO format
                     # class, x, y, w, h(Normalize 0–1)
@@ -140,8 +139,7 @@ class yoloBboxConverter(BaseConverter):
                         # class_idx = self.classes_name.index(class_name)
 
                         # Find the index of a superclass label
-                        superclass_value = self.classes_name[class_name]
-                        superclass_idx = list(self.classes_name.values()).index(superclass_value)
+                        superclass_idx = self.classes_name[class_name]['id']
 
                         # Add the coordinates of each vertex to a list in YOLO format
                         # class, x, y, w, h(Normalize 0–1)

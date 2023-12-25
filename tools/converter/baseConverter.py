@@ -22,8 +22,8 @@ class BaseConverter(ABC):
 
         with open(classes_yaml, 'r') as file:
             # self.classes_name = [cls.rstrip() for cls in file.readlines()]  # txt
-            classes_data = yaml.safe_load(file)  # yaml
-            self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
+            self.classes_name = yaml.safe_load(file)  # yaml
+            # self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
         self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                                  if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
