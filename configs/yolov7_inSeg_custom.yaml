@@ -19,7 +19,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "Z:/Student_Work/Heng/AOI_result/Instance Segmentation/yolov7/1024_Adam_202312061402/weights/best.pt"
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3

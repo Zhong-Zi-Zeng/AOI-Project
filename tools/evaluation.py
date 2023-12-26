@@ -105,6 +105,7 @@ class Writer:
             self._append_title()
         else:
             self.wb = openpyxl.load_workbook(self.excel_path)
+            self.excel_path = os.path.join(get_work_dir_path(cfg), 'result.xlsx')
             self._append_title()
 
     def __enter__(self):
