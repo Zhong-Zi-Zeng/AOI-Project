@@ -1,0 +1,32 @@
+_base_: [ "../base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
+          "../base/evaluation/instance_segmentation.yaml", # task
+          "../base/dataset.yaml", # dataset
+          "../base/hyp.yaml" # hyperparameter
+]
+
+# ===========Model===========
+train_dir: "./data/yoloSeg/patch_256_class_1/train"
+val_dir: "./data/yoloSeg/patch_256_class_1/test"
+
+# ===========Dataset===========
+number_of_class: 1
+coco_root: "./data/coco/patch_256_class_1"
+class_names:
+  - "Defect"
+
+# ===========Hyperparameter===========
+optimizer: "AdamW" # Adam、AdamW、SGD
+imgsz: [256, 256]
+use_patch: true
+
+weight: " "
+start_epoch: 0
+end_epoch: 50
+warmup_epoch: 3
+initial_lr: 0.003 # Initial learning rate
+lr: 0.01 # The learning rate after warmup
+minimum_lr: 0.001 # Minimum learning rate
+batch_size: 8
+device: "0"
+
+

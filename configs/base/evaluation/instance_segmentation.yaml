@@ -1,5 +1,5 @@
 _base_: [
-  "./base/evaluation/common_metrics.yaml"
+  "../base/evaluation/common_metrics.yaml"
 ]
 
 nms_thres: 0.5
