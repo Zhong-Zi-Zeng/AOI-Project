@@ -8,9 +8,11 @@ from typing import Optional
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from model_zoo import BaseInstanceModel
+from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
 from engine.timer import TIMER
 from tqdm import tqdm
+import numpy as np
 import pandas as pd
 import argparse
 import openpyxl
@@ -220,6 +222,8 @@ class Evaluator:
                         'score': round(score, 5),
                         'segmentation': rle
                     })
+
+
             elif self.cfg['task'] == 'object_detection':
                 class_list = result['class_list']
                 score_list = result['score_list']
@@ -231,19 +235,89 @@ class Evaluator:
                         'bbox': bbox,
                         'score': round(score, 5),
                     })
+
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
+    def _get_precision_recall(self,
+                              coco_de: COCO,
+                              iouType: str,
+                              threshold_iou: float = 0.5,
+                              mode: str = "micro") -> dict:
+        """
+            產生confusion matrix後計算整體和各個類別的Precision和Recall
+
+
+            Args:
+                coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
+                iouType (str): 指定評估的型態 ex['bbox', 'segm']
+                threshold_iou (float): IoU 閥值
+                mode (str): ["macro", "micro"] 使用宏平均還是微平均，預設使用微平均
+
+            Returns:
+
+                precision_recall (dict[list]): 整體和個別的precision、recall、tp、fp、fn
+                    {
+                        "All" : [total_precision, total_recall, total_tp, total_fp, total_fn],
+
+                        "Class_1": [precision, recall, tp, fp, fn],
+                        "Class_2": [precision, recall, tp, fp, fn],
+                        "Class_3": [precision, recall, tp, fp, fn]
+                        ...
+                    }
+        """
+        results = PreviewResults(
+            self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iouType, useCats=False
+        )
+
+        confusion_matrix_with_fp_fn = results.compute_confusion_matrix()  # (Number of Class, Number of Class + 2)
+        confusion_matrix = confusion_matrix_with_fp_fn[..., :-2]  # (Number of Class, Number of Class)
+
+        tp = np.diag(confusion_matrix)  # ((Number of Class, )
+        fp = confusion_matrix_with_fp_fn[:, -2]  # ((Number of Class, )
+        fn = confusion_matrix_with_fp_fn[:, -1]  # ((Number of Class, )
+
+        precision = np.divide(tp, tp + fp, out=np.zeros_like(tp), where=(tp + fp) != 0)  # ((Number of Class, )
+        recall = np.divide(tp, tp + fn, out=np.zeros_like(tp), where=(tp + fn) != 0)  # ((Number of Class, )
+
+        if mode == "micro":
+            total_precision = np.sum(tp) / np.sum(tp + fp)
+            total_recall = np.sum(tp) / np.sum(tp + fn)
+        elif mode == "macro":
+            total_precision = np.mean(precision)
+            total_recall = np.mean(recall)
+        else:
+            ValueError("Mode argument error. You only can choose micro or macro.")
+
+        precision_recall = {
+            "All": [np.round(total_precision, 3),
+                    np.round(total_recall, 3),
+                    np.round(np.sum(tp), 3),
+                    np.round(np.sum(fp), 3),
+                    np.round(np.sum(fn), 3)],
+        }
+
+        for idx, cls_name in enumerate(self.cfg['class_names']):
+            precision_recall.update({cls_name:
+                                         [np.round(precision[idx], 3),
+                                          np.round(recall[idx], 3),
+                                          np.round(tp[idx], 3),
+                                          np.round(fp[idx], 3),
+                                          np.round(fn[idx], 3)]}
+                                    )
+
+        return precision_recall
+
     def _coco_eval(self,
                    coco_de: COCO,
-                   task: str,
+                   iouType: str,
                    class_id: Optional[int] = None) -> list:
         """
             依照給定的task使用coco內建的eval api進行評估，並返回各項評估數值
 
             Args:
                 coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
-                task (str): 指定評估的型態 ex['bbox', 'segm']
+                iouType (str): 指定評估的型態 ex['bbox', 'segm']
                 class_id (int): 如果有給定的話，則是返回給定類別的評估結果，用於想得知每一個類別的評估數據
             Return:
                 stats[0] : AP at IoU=.50:.05:.95
@@ -259,7 +333,7 @@ class Evaluator:
                 stats[10] : AR for medium objects: 32^2 < area < 96^2
                 stats[11] : AR for large objects: area > 96^2
         """
-        coco_eval = COCOeval(self.coco_gt, coco_de, task)
+        coco_eval = COCOeval(self.coco_gt, coco_de, iouType)
 
         if class_id is not None:
             coco_eval.params.catIds = class_id
@@ -271,10 +345,7 @@ class Evaluator:
 
         # 依照不同的task取出需要的metrics
         if self.cfg['task'] == 'instance_segmentation' or self.cfg['task'] == 'object_detection':
-            if class_id is None:
-                return [stats[1], stats[0], stats[8]]
-            else:
-                return [stats[1], stats[8]]
+            return [stats[1], stats[2], stats[0]]
         elif self.cfg['task'] == 'semantic_segmentation':
             # TODO: semantic_segmentation evaluation value
             pass
@@ -283,26 +354,35 @@ class Evaluator:
 
         return stats
 
-    def _instance_segmentation_eval(self, predicted_json: COCO):
+    def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # =========Evaluate all classes=========
-            all_boxes_result = self._coco_eval(predicted_json, task='bbox')
-            all_masks_result = self._coco_eval(predicted_json, task='segm')
+            all_boxes_result = self._coco_eval(predicted_coco, iouType='bbox')
+            bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
+            all_masks_result = self._coco_eval(predicted_coco, iouType='segm')
+            mask_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='segm')
 
             # Print information
-            self.logger.print_for_all(all_boxes_result, all_masks_result)
+            self.logger.print_for_all(bbox_precision_recall["All"][:2] + all_boxes_result,
+                                      mask_precision_recall["All"][:2] + all_masks_result)
 
             # Store value
-            self.writer.write_col(self.writer.common_metrics + all_boxes_result + all_masks_result,
+            self.writer.write_col(self.writer.common_metrics +
+                                  bbox_precision_recall["All"][:2] + all_boxes_result +
+                                  mask_precision_recall["All"][:2] + all_masks_result,
                                   sheet_name=self.cfg['sheet_names'][0])
 
             # =========Evaluate each class=========
             _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
             for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
-                mask_result = self._coco_eval(predicted_json, task='segm', class_id=cls_id)
+                # box_result = self._coco_eval(predicted_coco, iouType='bbox', class_id=cls_id)
+                # mask_result = self._coco_eval(predicted_coco, iouType='segm', class_id=cls_id)
+                box_result = bbox_precision_recall[cls_name][:2]
+                mask_result = mask_precision_recall[cls_name][:2]
                 _value[cls_name] = box_result + mask_result
+
+                # Print information
                 self.logger.print_for_each(cls_name, box_result, mask_result)
 
             # Store value
@@ -310,23 +390,26 @@ class Evaluator:
                 self.writer.write_col(self.writer.common_metrics + [val[idx] for val in _value.values()],
                                       sheet_name=sheet_name)
 
-    def _object_detection_eval(self, predicted_json: COCO):
+    def _object_detection_eval(self, predicted_coco: COCO):
         with self.logger:
             # =========Evaluate all classes=========
-            all_boxes_result = self._coco_eval(predicted_json, task='bbox')
+            all_boxes_result = self._coco_eval(predicted_coco, iouType='bbox')
+            bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
 
             # Print information
-            self.logger.print_for_all(all_boxes_result)
+            self.logger.print_for_all(bbox_precision_recall["All"][:2] + all_boxes_result)
 
             # Store value
-            self.writer.write_col(self.writer.common_metrics + all_boxes_result,
+            self.writer.write_col(self.writer.common_metrics +
+                                  bbox_precision_recall["All"][:2] + all_boxes_result,
                                   sheet_name=self.cfg['sheet_names'][0])
 
             # =========Evaluate per class=========
             _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
             for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                box_result = self._coco_eval(predicted_json, task='bbox', class_id=cls_id)
+                # box_result = self._coco_eval(predicted_coco, iouType='bbox', class_id=cls_id)
+                box_result = bbox_precision_recall[cls_name][:2]
                 _value[cls_name] = box_result
                 self.logger.print_for_each(cls_name, box_result)
 
@@ -341,12 +424,12 @@ class Evaluator:
 
         with self.writer:
             # Load json
-            predicted_json = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
+            predicted_coco = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
 
             if self.cfg['task'] == 'instance_segmentation':
-                self._instance_segmentation_eval(predicted_json)
+                self._instance_segmentation_eval(predicted_coco)
             elif self.cfg['task'] == 'object_detection':
-                self._object_detection_eval(predicted_json)
+                self._object_detection_eval(predicted_coco)
             elif self.cfg['task'] == 'semantic_segmentation':
                 # TODO: segmentation evaluation
                 pass
