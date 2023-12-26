@@ -19,6 +19,8 @@ def get_args_parser():
     parser.add_argument('--patch_size', type=int,
                         help='The size of the patch needs to be divisible by width and height. '
                              'If you assign the value, the script will generate a patch dataset')
+    parser.add_argument('--store_none', action="store_true",
+                        help="Whether to save none anomaly patch.")
 
     return parser
 
@@ -33,19 +35,22 @@ if __name__ == '__main__':
                              output_dir=args.output_dir,
                              classes_yaml=args.classes_yaml,
                              dataset_type=args.dataset_type,
-                             patch_size=args.patch_size)
+                             patch_size=args.patch_size,
+                             store_none=args.store_none)
     elif args.format == 'yoloSeg':
         conv = yoloSegConverter(source_dir=args.source_dir,
                                 output_dir=args.output_dir,
                                 classes_yaml=args.classes_yaml,
                                 dataset_type=args.dataset_type,
-                                patch_size=args.patch_size)
+                                patch_size=args.patch_size,
+                                store_none=args.store_none)
     elif args.format == 'yoloBbox':
         conv = yoloBboxConverter(source_dir=args.source_dir,
                                 output_dir=args.output_dir,
                                 classes_yaml=args.classes_yaml,
                                 dataset_type=args.dataset_type,
-                                patch_size=args.patch_size)
+                                patch_size=args.patch_size,
+                                 store_none=args.store_none)
     elif args.format == 'sa':
         conv = saConverter(source_dir=args.source_dir,
                            output_dir=args.output_dir,

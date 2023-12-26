@@ -20,12 +20,14 @@ class cocoConverter(BaseConverter):
                  output_dir: str,
                  classes_yaml: str,
                  dataset_type: str,
-                 patch_size: Optional[int] = None):
+                 patch_size: Optional[int] = None,
+                 store_none: bool = False):
         super().__init__(source_dir, output_dir, classes_yaml)
         self.source_dir = source_dir
         self.output_dir = output_dir
         self.patch_size = patch_size
         self.dataset_type = 'val' if dataset_type == 'test' else dataset_type
+        self.store_none = store_none
         self._generate_dir()
 
     def _generate_dir(self):
@@ -74,8 +76,6 @@ class cocoConverter(BaseConverter):
                 })
                 anns_count += 1
 
-
-
         with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '2017.json'),
                   'w') as file:
             json.dump({'images': images,
@@ -93,7 +93,8 @@ class cocoConverter(BaseConverter):
         anns_count = 0
         img_id = 0
 
-        for image_file, json_file in tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path)):
+        for image_file, json_file in tqdm(zip(self.image_files_path, self.json_files_path),
+                                          total=len(self.image_files_path)):
             h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # 切patch
@@ -104,7 +105,7 @@ class cocoConverter(BaseConverter):
                                                      mask,
                                                      classes,
                                                      bboxes,
-                                                     polygons, self.patch_size)
+                                                     polygons, self.patch_size, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
@@ -130,22 +131,23 @@ class cocoConverter(BaseConverter):
                     'id': img_id
                 })
 
-                for cls, bbox, polygon in zip(classes, bboxes, polygons):
-                    class_name = cls.replace('#', '')
-                    anns.append({
-                        'segmentation': np.reshape(polygon, (1, -1)).tolist(),
-                        'area': cv2.contourArea(polygon),
-                        'iscrowd': 0,
-                        'image_id': img_id,
-                        'bbox': bbox,
-                        'category_id': self.classes_name[class_name]['id'],
-                        'id': anns_count,
-                    })
-                    anns_count += 1
+                if len(classes) != 0:
+                    for cls, bbox, polygon in zip(classes, bboxes, polygons):
+                        class_name = cls.replace('#', '')
+                        anns.append({
+                            'segmentation': np.reshape(polygon, (1, -1)).tolist(),
+                            'area': cv2.contourArea(polygon),
+                            'iscrowd': 0,
+                            'image_id': img_id,
+                            'bbox': bbox,
+                            'category_id': self.classes_name[class_name]['id'],
+                            'id': anns_count,
+                        })
+                        anns_count += 1
                 img_id += 1
 
         with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '2017.json'),
                   'w') as file:
             json.dump({'images': images,
                        'annotations': anns,
-                       'categories': cats}, file)
+                       'categories': cats}, file, indent=2)

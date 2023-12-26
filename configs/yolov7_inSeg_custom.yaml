@@ -5,8 +5,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: "./data/yoloSeg/train"
-val_txt: "./data/yoloSeg/test"
+train_dir: "D:/Heng_shared/AOI-Project/data/yoloSeg/original_class_16/train"
+val_dir: "D:/Heng_shared/AOI-Project/data/yoloSeg/original_class_16/test"
 
 # ===========Dataset===========
 number_of_class: 16
@@ -32,7 +32,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "Z:/Student_Work/Heng/AOI_result/Instance Segmentation/yolov7/1024_SGD_202312061402/weights/best.pt"
+weight: " "
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3

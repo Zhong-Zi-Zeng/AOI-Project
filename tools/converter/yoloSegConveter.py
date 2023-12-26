@@ -22,12 +22,14 @@ class yoloSegConverter(BaseConverter):
                  output_dir: str,
                  classes_yaml: str,
                  dataset_type: str,
-                 patch_size: Optional[int] = None):  # 若無提供patch_size，預設None
+                 patch_size: Optional[int] = None,
+                 store_none: bool = False):
         super().__init__(source_dir, output_dir,  classes_yaml)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
         self.patch_size = patch_size
         self.dataset_type = dataset_type  # train or test
+        self.store_none = store_none
         self.generate_dir()
 
     def generate_dir(self):
@@ -86,7 +88,7 @@ class yoloSegConverter(BaseConverter):
                                                      mask,
                                                      classes,
                                                      bboxes,
-                                                     polygons, self.patch_size)
+                                                     polygons, self.patch_size, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
@@ -106,20 +108,25 @@ class yoloSegConverter(BaseConverter):
                 image_patch.save(os.path.join(self.output_dir, self.dataset_type, 'images', image_name + '.jpg'))
 
                 # label
-                with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
-                    for idx, polygon in enumerate(polygons):
-                        # Normalize polygon to be between 0-1
-                        normalized_polygon = polygon / np.array([image_width, image_height])
+                if len(classes) != 0:
+                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
+                        for idx, polygon in enumerate(polygons):
+                            # Normalize polygon to be between 0-1
+                            normalized_polygon = polygon / np.array([image_width, image_height])
 
-                        # Extract the class label without the '#'
-                        class_name = classes[idx][1:]
+                            # Extract the class label without the '#'
+                            class_name = classes[idx][1:]
 
-                        # Find the index of a class label
-                        # class_idx = self.classes_name.index(class_name)
+                            # Find the index of a class label
+                            # class_idx = self.classes_name.index(class_name)
 
-                        # Find the index of a superclass label
-                        superclass_idx = self.classes_name[class_name]['id']
-                        # Add the coordinates of each vertex to a list in YOLO format
-                        # class, x1, y1, x2, y2, …(Normalize 0–1)
-                        yolo_coords = [str(superclass_idx)] + normalized_polygon.flatten().astype(str).tolist()
-                        file.write(" ".join(yolo_coords) + "\n")
+                            # Find the index of a superclass label
+                            superclass_idx = self.classes_name[class_name]['id']
+                            # Add the coordinates of each vertex to a list in YOLO format
+                            # class, x1, y1, x2, y2, …(Normalize 0–1)
+                            yolo_coords = [str(superclass_idx)] + normalized_polygon.flatten().astype(str).tolist()
+                            file.write(" ".join(yolo_coords) + "\n")
+                else:
+                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
+                        pass
+

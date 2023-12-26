@@ -27,8 +27,8 @@ class Yolov7inSeg(BaseInstanceModel):
     def _config_transform(self):
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
-        data_file['train'] = self.cfg['train_txt']
-        data_file['val'] = self.cfg['val_txt']
+        data_file['train'] = self.cfg['train_dir']
+        data_file['val'] = self.cfg['val_dir']
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
         self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')
@@ -188,6 +188,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--optimizer', self.cfg['optimizer'],
                         '--imgsz', str(self.cfg['imgsz'][0]),
                         '--device', self.cfg['device'],
+                        "--save-period", "1",
                         '--exist-ok',
                         '--cos-lr'
                         ]
