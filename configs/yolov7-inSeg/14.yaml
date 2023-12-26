@@ -1,9 +1,8 @@
-_base_: [ "../base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
-          "../base/evaluation/instance_segmentation.yaml", # task
-          "../base/dataset.yaml", # dataset
-          "../base/hyp.yaml" # hyperparameter
+_base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
+          "./base/evaluation/instance_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
 ]
-
 # ===========Model===========
 train_dir: "./data/yoloSeg/patch_256_class_4/train"
 val_dir: "./data/yoloSeg/patch_256_class_4/test"

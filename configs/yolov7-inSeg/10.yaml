@@ -1,7 +1,7 @@
-_base_: [ "../base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
-          "../base/evaluation/instance_segmentation.yaml", # task
-          "../base/dataset.yaml", # dataset
-          "../base/hyp.yaml" # hyperparameter
+_base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
+          "./base/evaluation/instance_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
 ]
 
 # ===========Model===========

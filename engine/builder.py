@@ -64,7 +64,8 @@ class Builder:
                 config (dict): 最後合併好的config
         """
         custom_config = load_yaml(self.config_path)
-        config_dir = os.path.dirname(self.config_path)
+        # config_dir = os.path.dirname(self.config_path)
+        config_dir = os.path.join(os.getcwd(), 'configs')
 
         # Load config
         final_config = self._process_base_key(config_dir, custom_config)

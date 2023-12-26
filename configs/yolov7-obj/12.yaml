@@ -1,8 +1,9 @@
-_base_: [ "../base/model/YOLO-v7/yolov7_obj_base.yaml", # model
-          "../base/evaluation/object_detection.yaml", # task
-          "../base/dataset.yaml", # dataset
-          "../base/hyp.yaml" # hyperparameter
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
+          "./base/evaluation/object_detection.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
 ]
+
 
 # ===========Model===========
 train_txt: "./data/yoloBbox/patch_512_class_4/train_list.txt"
