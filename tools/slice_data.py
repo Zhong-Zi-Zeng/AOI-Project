@@ -84,7 +84,7 @@ def check_file(source_dir: str):
         os.rename(except_json_file, os.path.join(source_dir, 'delete', Path(except_json_file).name))
 
 
-def slice_file(source_dir: str, assign_number: int, classes_name: list) -> object:    # classes_name = {'Border': 'aaa'...}
+def slice_file(source_dir: str, assign_number: int, classes_name: list):    # classes_name = {'Border': 'aaa'...}
     test = {cls: {'super': classes_name[cls], 'number': 0, 'file_name': []} for cls in classes_name}
     total = {cls: {'super': classes_name[cls], 'number': 0, 'file_name': []} for cls in classes_name}
 

@@ -36,8 +36,9 @@ class Yolov7Obj(BaseDetectModel):
 
         # Update hyp file
         hyp_file = load_yaml(self.cfg['hyp_file'])
-        hyp_file['lr0'] = self.cfg['lr'] * self.cfg['start_factor']
-        hyp_file['lrf'] = self.cfg['lr']
+        hyp_file['lr0'] = self.cfg['initial_lr'] / self.cfg['warmup_epoch'] / hyp_file['warmup_bias_lr']
+        hyp_file['lrf'] = self.cfg['minimum_lr'] / hyp_file['lr0']
+
         # TODO: Augmentation
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)

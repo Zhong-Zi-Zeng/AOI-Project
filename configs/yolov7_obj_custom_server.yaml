@@ -1,4 +1,4 @@
-_base_: [ "./base/model/yolov7_obj_base.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter

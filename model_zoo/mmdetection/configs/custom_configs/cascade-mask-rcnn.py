@@ -47,7 +47,9 @@ param_scheduler = [
     dict(type='CosineAnnealingLR',
          by_epoch=True,
          begin=3,
-         end=epochs)
+         end=epochs,
+         # eta_min = 0, minimum learning rate
+         )
 ]
 
 default_hooks = dict(

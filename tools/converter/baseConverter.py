@@ -12,6 +12,7 @@ import cv2
 import matplotlib.pyplot as plt
 import yaml
 
+
 class BaseConverter(ABC):
     def __init__(self,
                  source_dir: str,
@@ -22,8 +23,8 @@ class BaseConverter(ABC):
 
         with open(classes_yaml, 'r') as file:
             # self.classes_name = [cls.rstrip() for cls in file.readlines()]  # txt
-            classes_data = yaml.safe_load(file)  # yaml
-            self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
+            self.classes_name = yaml.safe_load(file)  # yaml
+            # self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
         self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                                  if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
@@ -33,7 +34,6 @@ class BaseConverter(ABC):
 
         self.processed_image_count = 0  # Record the number of times divide_to_patch is called (so that the patch name is not overwritten)
 
-
     def _divide_to_patch(self,
                          image_file,
                          image_height,
@@ -42,7 +42,8 @@ class BaseConverter(ABC):
                          classes,
                          bboxes,
                          polygons,
-                         patch_size):
+                         patch_size,
+                         store_none=False):
         """
             Returns:
                 h (int): 圖片的高
@@ -51,13 +52,14 @@ class BaseConverter(ABC):
                 classes (list): 這個json檔中包含的瑕疵類別 [N, ]
                 bboxes (list): 每個瑕疵對應的bbox，格式為x, y, w, h [N, 4]
                 polygons (list[np.ndarray]): 每個瑕疵對應的polygon [N, M, 2]
+                store_none (bool) : 是否儲存沒有瑕疵的patch
         """
         # Check whether image_h and image_w are divisible by patch_size
         if image_height % patch_size != 0 or image_width % patch_size != 0:
             raise ValueError("patch_size cannot divide the original image.")
 
         # Information about defective patches
-        patch_num = (image_height//patch_size) * (image_width//patch_size)
+        patch_num = (image_height // patch_size) * (image_width // patch_size)
         labels = {idx: {'image_height': [],
                         'image_width': [],
                         'mask': [],
@@ -86,29 +88,39 @@ class BaseConverter(ABC):
 
             # Find the index of the patch containing the defect and save the information
             flaws_idx = set(np.where(patches_mask > 0)[0])  # 取p
-            for patch_idx in flaws_idx:
-                # mask
-                patch = patches_mask[patch_idx]
-                # polygon
-                contours, _ = cv2.findContours(patch, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)  # 只要外部輪廓，所有輪廓點
-                patch_polygon = np.vstack(contours).reshape((-1, 2))
-                # bbox
-                x, y, w, h = cv2.boundingRect(patch_polygon)
+            for patch_idx in range(patch_num):
+                if patch_idx in flaws_idx:
+                    # mask
+                    patch = patches_mask[patch_idx]
+                    # polygon
+                    contours, _ = cv2.findContours(patch, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)  # 只要外部輪廓，所有輪廓點
+                    patch_polygon = np.vstack(contours).reshape((-1, 2))
+                    # bbox
+                    x, y, w, h = cv2.boundingRect(patch_polygon)
 
-                # info
-                labels[patch_idx]['image_height'].append(patch_size)
-                labels[patch_idx]['image_width'].append(patch_size)
-                labels[patch_idx]['mask'].append(patch)
-                labels[patch_idx]['classes'].append(cls)
-                labels[patch_idx]['bboxes'].append([x, y, w, h])
-                labels[patch_idx]['polygons'].append(patch_polygon)
+                    # info
+                    labels[patch_idx]['image_height'].append(patch_size)
+                    labels[patch_idx]['image_width'].append(patch_size)
+                    labels[patch_idx]['mask'].append(patch)
+                    labels[patch_idx]['classes'].append(cls)
+                    labels[patch_idx]['bboxes'].append([x, y, w, h])
+                    labels[patch_idx]['polygons'].append(patch_polygon)
+                else:
+                    # info
+                    labels[patch_idx]['image_height'].append(patch_size)
+                    labels[patch_idx]['image_width'].append(patch_size)
 
         # Save all defective patch images
         results = []
         for patch_idx in labels:
-            if labels[patch_idx]['image_height']:   # not empty
-                patch_image = Image.fromarray(original_patches[patch_idx])
-                results.append({'image': patch_image, 'label': labels[patch_idx], 'processed_image_count': self.processed_image_count})
+            patch_image = Image.fromarray(original_patches[patch_idx])
+
+            if store_none:
+                results.append({'image': patch_image, 'label': labels[patch_idx],
+                                'processed_image_count': self.processed_image_count})
+            if not store_none and labels[patch_idx]['classes']:
+                results.append({'image': patch_image, 'label': labels[patch_idx],
+                                'processed_image_count': self.processed_image_count})
 
         self.processed_image_count += 1
         return results
