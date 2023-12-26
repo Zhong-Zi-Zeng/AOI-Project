@@ -12,12 +12,9 @@ class yolov7_inSeg(BaseModel):
         self.result_path = result_path
         self.output_path = output_path
 
-        # Generate a folder to store the results of training curve
-        os.makedirs(os.path.join(self.output_path, 'yolov7_inSeg_train_curve'), exist_ok=True)
-
 
     def generate_curve(self):
-        # Read the result file
+        # Read the result file(csv)
         try:
             df = pd.read_csv(os.path.join(self.result_path, 'results.csv'), skipinitialspace=True)
             # print(df.head())
@@ -67,5 +64,5 @@ class yolov7_inSeg(BaseModel):
         plt.ylabel(f'{title_prefix}')
         plt.title(f'{title_prefix} Curve')
         plt.legend()
-        plt.savefig(os.path.join(os.path.join(self.output_path, 'yolov7_inSeg_train_curve'), f'{output_filename}.png'))
+        plt.savefig(os.path.join(os.path.join(self.output_path), f'{output_filename}.png'))
         plt.clf()

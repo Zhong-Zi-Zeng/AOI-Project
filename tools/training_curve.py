@@ -5,7 +5,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser(add_help=False)
 
     parser.add_argument('--model_type', type=str, required=True,
-                        choices=['yolov7_inSeg', 'cascade_inSeg_mm'],
+                        choices=['Yolov7inSeg', 'Yolov7Obj'],
                         help="Input model type.")
     parser.add_argument('--result_path', type=str, required=True,
                         help="Enter the path to the results folder.")
@@ -19,10 +19,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(parents=[get_args_parser()])
     args = parser.parse_args()
 
-    if args.model_type == 'yolov7_inSeg':
+    if args.model_type == 'Yolov7inSeg':
         trainCurve = yolov7_inSeg(result_path=args.result_path,
                                   output_path=args.output_path)
-    # elif args.model_type == 'cascade_inSeg_mm':
-    #     trainCurve = cascade_inSeg_mm(result_path=args.result_path,
-    #                                   output_path=args.output_path)
+    elif args.model_type == 'Yolov7Obj':
+        trainCurve = yolov7_Obj(result_path=args.result_path,
+                                output_path=args.output_path)
     trainCurve.generate_curve()
