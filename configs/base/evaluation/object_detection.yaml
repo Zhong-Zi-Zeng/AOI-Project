@@ -3,18 +3,20 @@ _base_: [
 ]
 
 nms_thres: 0.5
-conf_thres: 0.001
+conf_thres: 0.1
 task: "object_detection"
 sheet_names:
   - "All"
-  - "Each class(box, mAP)"
-  - "Each class(box, mAR)"
+  - "Each class(Precision, Box)"
+  - "Each class(Recall, Box)"
 
 metrics_for_all:
+  - "Precision(Box)"
+  - "Recall(Box)"
   - "mAP_0.5(Box)"
+  - "mAP_0.75(Box)"
   - "mAP_0.5:0.95(Box)"
-  - "mAR_0.5:0.95(Box)"
 
 metrics_for_each:
-  - "mAP_0.5(Box)"
-  - "mAR_0.5:0.95(Box)"
+  - "Precision(Box)"
+  - "Recall(Box)"

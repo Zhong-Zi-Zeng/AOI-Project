@@ -31,8 +31,8 @@ class_names:
 
 
 # ===========Hyperparameter===========
-optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+optimizer: "Adam" # Adam、AdamW、SGD
+weight: "Z:/Student_Work/Heng/AOI_result/Object Detection/yolov7結果_YA/yoloBbox/train/exp_hyp/weights/best.pt"
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3
