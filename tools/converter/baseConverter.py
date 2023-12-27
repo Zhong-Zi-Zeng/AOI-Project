@@ -70,7 +70,7 @@ class BaseConverter(ABC):
 
         # Read the original image and cut the patch
         original_image = cv2.imread(image_file)
-        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=patch_size)
+        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/4))   # 調整stride
         original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
 
         # Create empty masks
@@ -98,13 +98,23 @@ class BaseConverter(ABC):
                     # bbox
                     x, y, w, h = cv2.boundingRect(patch_polygon)
 
-                    # info
-                    labels[patch_idx]['image_height'].append(patch_size)
-                    labels[patch_idx]['image_width'].append(patch_size)
-                    labels[patch_idx]['mask'].append(patch)
-                    labels[patch_idx]['classes'].append(cls)
-                    labels[patch_idx]['bboxes'].append([x, y, w, h])
-                    labels[patch_idx]['polygons'].append(patch_polygon)
+                    # 濾掉瑕疵面積太小的patch
+                    defect_area = cv2.contourArea(patch_polygon)
+                    min_defect_area_threshold = 4000.0
+                    if defect_area > min_defect_area_threshold:
+                        # print(defect_area)
+                        # print(len(patch_polygon))
+                        # info
+                        labels[patch_idx]['image_height'].append(patch_size)
+                        labels[patch_idx]['image_width'].append(patch_size)
+                        labels[patch_idx]['mask'].append(patch)
+                        labels[patch_idx]['classes'].append(cls)
+                        labels[patch_idx]['bboxes'].append([x, y, w, h])
+                        labels[patch_idx]['polygons'].append(patch_polygon)
+                    else:
+                        # info
+                        labels[patch_idx]['image_height'].append(patch_size)
+                        labels[patch_idx]['image_width'].append(patch_size)
                 else:
                     # info
                     labels[patch_idx]['image_height'].append(patch_size)
@@ -118,6 +128,7 @@ class BaseConverter(ABC):
             if store_none:
                 results.append({'image': patch_image, 'label': labels[patch_idx],
                                 'processed_image_count': self.processed_image_count})
+
             if not store_none and labels[patch_idx]['classes']:
                 results.append({'image': patch_image, 'label': labels[patch_idx],
                                 'processed_image_count': self.processed_image_count})
