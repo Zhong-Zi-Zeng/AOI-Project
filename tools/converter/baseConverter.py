@@ -70,7 +70,7 @@ class BaseConverter(ABC):
 
         # Read the original image and cut the patch
         original_image = cv2.imread(image_file)
-        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/4))   # 調整stride
+        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=patch_size)   # 調整stride
         original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
 
         # Create empty masks
@@ -99,11 +99,16 @@ class BaseConverter(ABC):
                     x, y, w, h = cv2.boundingRect(patch_polygon)
 
                     # 濾掉瑕疵面積太小的patch
+                    thresholds = {
+                        256: 4000.0,
+                        512: 2000.0,
+                        1024: 1000.0
+                    }
+                    threshold = thresholds.get(patch_size)
                     defect_area = cv2.contourArea(patch_polygon)
-                    min_defect_area_threshold = 4000.0
-                    if defect_area > min_defect_area_threshold and len(patch_polygon) > 4:
-                        # print(defect_area)
-                        print(len(patch_polygon))
+
+                    if defect_area > threshold and len(patch_polygon) > 4:
+
                         # info
                         labels[patch_idx]['image_height'].append(patch_size)
                         labels[patch_idx]['image_width'].append(patch_size)
