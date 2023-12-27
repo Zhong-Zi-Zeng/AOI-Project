@@ -125,6 +125,7 @@ class yoloSegConverter(BaseConverter):
                             # Add the coordinates of each vertex to a list in YOLO format
                             # class, x1, y1, x2, y2, …(Normalize 0–1)
                             yolo_coords = [str(superclass_idx)] + normalized_polygon.flatten().astype(str).tolist()
+
                             file.write(" ".join(yolo_coords) + "\n")
                 else:
                     with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
