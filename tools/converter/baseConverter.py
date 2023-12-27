@@ -101,9 +101,9 @@ class BaseConverter(ABC):
                     # 濾掉瑕疵面積太小的patch
                     defect_area = cv2.contourArea(patch_polygon)
                     min_defect_area_threshold = 4000.0
-                    if defect_area > min_defect_area_threshold:
+                    if defect_area > min_defect_area_threshold and len(patch_polygon) > 4:
                         # print(defect_area)
-                        # print(len(patch_polygon))
+                        print(len(patch_polygon))
                         # info
                         labels[patch_idx]['image_height'].append(patch_size)
                         labels[patch_idx]['image_width'].append(patch_size)
