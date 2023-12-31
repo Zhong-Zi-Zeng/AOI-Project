@@ -1,1 +1,1 @@
-from .cascade_mask_rcnn import CascadeMaskRCNN
+from .models.cascade_mask_rcnn import CascadeMaskRCNN

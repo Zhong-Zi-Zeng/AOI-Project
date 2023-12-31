@@ -17,6 +17,9 @@ from mmdet.models.utils import empty_instances, multi_apply
 from mmdet.registry import MODELS, TASK_UTILS
 from mmdet.structures.bbox import get_box_tensor, scale_boxes
 from mmdet.utils import ConfigType, InstanceList, OptMultiConfig
+import sys
+import os
+sys.path.append(os.path.join(os.getcwd()))
 from engine.timer import TIMER
 
 @MODELS.register_module()

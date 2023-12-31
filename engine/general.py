@@ -56,15 +56,11 @@ def save_json(path: str,
         json.dump(data, file, indent=indent)
 
 
-def get_model_path(__file__: str) -> str:
+def get_model_path(cfg: dict) -> str:
     """
-        將原本指到py檔的路徑往前提一層
-        ex:
-            __file__ = "D://A/hello.py"
-            轉換為
-            __file__ = "D://A"
+        提取當前model的資料夾路徑
     """
-    return str(Path(__file__).parent)
+    return os.path.join(os.getcwd(), 'model_zoo', cfg['model_dir_name'])
 
 
 def get_work_dir_path(cfg: dict) -> str:
