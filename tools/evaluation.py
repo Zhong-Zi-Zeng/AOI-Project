@@ -243,27 +243,23 @@ class Evaluator:
     def _get_precision_recall(self,
                               coco_de: COCO,
                               iouType: str,
-                              threshold_iou: float = 0.5,
-                              mode: str = "micro") -> dict:
+                              threshold_iou: float = 0.5) -> dict:
         """
-            產生confusion matrix後計算整體和各個類別的Precision和Recall
-
+            產生confusion matrix後計算整體和各個類別的Precision、Recall、MR、FPR
 
             Args:
                 coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
                 iouType (str): 指定評估的型態 ex['bbox', 'segm']
                 threshold_iou (float): IoU 閥值
-                mode (str): ["macro", "micro"] 使用宏平均還是微平均，預設使用微平均
 
             Returns:
-
                 precision_recall (dict[list]): 整體和個別的precision、recall、tp、fp、fn
                     {
-                        "All" : [total_precision, total_recall, total_tp, total_fp, total_fn],
+                        "All" : [total_precision, total_recall, total_MR, total_FPR],
 
-                        "Class_1": [precision, recall, tp, fp, fn],
-                        "Class_2": [precision, recall, tp, fp, fn],
-                        "Class_3": [precision, recall, tp, fp, fn]
+                        "Class_1": [precision, recall, MR, FPR],
+                        "Class_2": [precision, recall, MR, FPR],
+                        "Class_3": [precision, recall, MR, FPR]
                         ...
                     }
         """
@@ -278,33 +274,26 @@ class Evaluator:
         fp = confusion_matrix_with_fp_fn[:, -2]  # ((Number of Class, )
         fn = confusion_matrix_with_fp_fn[:, -1]  # ((Number of Class, )
 
-        precision = np.divide(tp, tp + fp, out=np.zeros_like(tp), where=(tp + fp) != 0)  # ((Number of Class, )
-        recall = np.divide(tp, tp + fn, out=np.zeros_like(tp), where=(tp + fn) != 0)  # ((Number of Class, )
-
-        if mode == "micro":
-            total_precision = np.sum(tp) / np.sum(tp + fp)
-            total_recall = np.sum(tp) / np.sum(tp + fn)
-        elif mode == "macro":
-            total_precision = np.mean(precision)
-            total_recall = np.mean(recall)
-        else:
-            ValueError("Mode argument error. You only can choose micro or macro.")
+        # For all classes
+        total_precision = np.sum(tp) / np.sum(tp + fp) # 精確率
+        total_recall = np.sum(tp) / np.sum(tp + fn) # 檢出率
+        total_miss_rate = np.sum(fn) / np.sum(tp + fn) # 漏檢率
+        total_false_positive_rate = np.sum(fp) / np.sum(tp + fp) # 過殺率
 
         precision_recall = {
-            "All": [np.round(total_precision, 3),
-                    np.round(total_recall, 3),
-                    np.round(np.sum(tp), 3),
-                    np.round(np.sum(fp), 3),
-                    np.round(np.sum(fn), 3)],
+            "All": [round(total_precision.astype(float) * 100, 2),
+                    round(total_recall.astype(float) * 100, 2),
+                    round(total_miss_rate.astype(float) * 100, 2),
+                    round(total_false_positive_rate.astype(float) * 100, 2)],
         }
 
+        # For each class
         for idx, cls_name in enumerate(self.cfg['class_names']):
             precision_recall.update({cls_name:
-                                         [np.round(precision[idx], 3),
-                                          np.round(recall[idx], 3),
-                                          np.round(tp[idx], 3),
-                                          np.round(fp[idx], 3),
-                                          np.round(fn[idx], 3)]}
+                                         [round((tp[idx] / (tp + fp)[idx]).astype(float) * 100, 2), # 精確率
+                                          round((tp[idx] / (tp + fn)[idx]).astype(float) * 100, 2), # 檢出率
+                                          round((fn[idx] / (tp + fn)[idx]).astype(float) * 100, 2), # 漏檢率
+                                          round((fp[idx] / (tp + fp)[idx]).astype(float) * 100, 2)]}# 過殺率
                                     )
 
         return precision_recall
@@ -358,29 +347,25 @@ class Evaluator:
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # =========Evaluate all classes=========
-            all_boxes_result = self._coco_eval(predicted_coco, iouType='bbox')
             bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
-            all_masks_result = self._coco_eval(predicted_coco, iouType='segm')
             mask_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='segm')
 
             # Print information
-            self.logger.print_for_all(bbox_precision_recall["All"][:2] + all_boxes_result,
-                                      mask_precision_recall["All"][:2] + all_masks_result)
+            self.logger.print_for_all(bbox_precision_recall["All"],
+                                      mask_precision_recall["All"])
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +
-                                  bbox_precision_recall["All"][:2] + all_boxes_result +
-                                  mask_precision_recall["All"][:2] + all_masks_result,
+                                  bbox_precision_recall["All"] +
+                                  mask_precision_recall["All"],
                                   sheet_name=self.cfg['sheet_names'][0])
 
             # =========Evaluate each class=========
             _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
             for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                # box_result = self._coco_eval(predicted_coco, iouType='bbox', class_id=cls_id)
-                # mask_result = self._coco_eval(predicted_coco, iouType='segm', class_id=cls_id)
-                box_result = bbox_precision_recall[cls_name][:2]
-                mask_result = mask_precision_recall[cls_name][:2]
+                box_result = bbox_precision_recall[cls_name]
+                mask_result = mask_precision_recall[cls_name]
                 _value[cls_name] = box_result + mask_result
 
                 # Print information
@@ -394,23 +379,21 @@ class Evaluator:
     def _object_detection_eval(self, predicted_coco: COCO):
         with self.logger:
             # =========Evaluate all classes=========
-            all_boxes_result = self._coco_eval(predicted_coco, iouType='bbox')
             bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
 
             # Print information
-            self.logger.print_for_all(bbox_precision_recall["All"][:2] + all_boxes_result)
+            self.logger.print_for_all(bbox_precision_recall["All"])
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +
-                                  bbox_precision_recall["All"][:2] + all_boxes_result,
+                                  bbox_precision_recall["All"],
                                   sheet_name=self.cfg['sheet_names'][0])
 
             # =========Evaluate per class=========
             _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
 
             for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                # box_result = self._coco_eval(predicted_coco, iouType='bbox', class_id=cls_id)
-                box_result = bbox_precision_recall[cls_name][:2]
+                box_result = bbox_precision_recall[cls_name]
                 _value[cls_name] = box_result
                 self.logger.print_for_each(cls_name, box_result)
 

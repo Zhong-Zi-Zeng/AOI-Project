@@ -3,30 +3,36 @@ _base_: [
 ]
 
 nms_thres: 0.5
-conf_thres: 0.1
+conf_thres: 0.5
 task: "instance_segmentation"
 
 sheet_names:
   - "All"
   - "Each class(Precision, Box)"
   - "Each class(Recall, Box)"
+  - "Each class(MR, Box)"
+  - "Each class(FPR, Box)"
   - "Each class(Precision, Mask)"
   - "Each class(Recall, Mask)"
+  - "Each class(MR, Mask)"
+  - "Each class(FPR, Mask)"
 
 metrics_for_all:
   - "Precision(Box)"
   - "Recall(Box)"
-  - "mAP_0.5(Box)"
-  - "mAP_0.75(Box)"
-  - "mAP_0.5:0.95(Box)"
+  - "MR(Box)"
+  - "FPR(Box)"
   - "Precision(Mask)"
   - "Recall(Mask)"
-  - "mAP_0.5(Mask)"
-  - "mAP_0.75(Box)"
-  - "mAP_0.5:0.95(Mask)"
+  - "MR(Mask)"
+  - "FPR(Mask)"
 
 metrics_for_each:
   - "Precision(Box)"
   - "Recall(Box)"
+  - "MR(Box)"
+  - "FPR(Box)"
   - "Precision(Mask)"
   - "Recall(Mask)"
+  - "MR(Mask)"
+  - "FPR(Mask)"
