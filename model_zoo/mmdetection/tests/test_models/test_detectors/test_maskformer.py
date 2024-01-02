@@ -152,17 +152,17 @@ class TestMask2Former(unittest.TestCase):
 
     def test_init(self):
         model_cfg = self._create_model_cfg(
-            'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py')
+            'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py')
         detector = MODELS.build(model_cfg)
         detector.init_weights()
         assert detector.backbone
         assert detector.panoptic_head
 
     @parameterized.expand([
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py')
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py')
     ])
     def test_forward_loss_mode(self, device, cfg_path):
         print(device, cfg_path)
@@ -186,10 +186,10 @@ class TestMask2Former(unittest.TestCase):
         self.assertIsInstance(losses, dict)
 
     @parameterized.expand([
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py')
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py')
     ])
     def test_forward_predict_mode(self, device, cfg_path):
         with_semantic = 'panoptic' in cfg_path
@@ -213,10 +213,10 @@ class TestMask2Former(unittest.TestCase):
             self.assertIsInstance(batch_results[0], DetDataSample)
 
     @parameterized.expand([
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cpu', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
-        ('cuda', 'mask2former/mask2former_r50_8xb2-lsj-50e_coco.py')
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cpu', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py'),
+        ('cuda', 'mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco.py')
     ])
     def test_forward_tensor_mode(self, device, cfg_path):
         with_semantic = 'panoptic' in cfg_path

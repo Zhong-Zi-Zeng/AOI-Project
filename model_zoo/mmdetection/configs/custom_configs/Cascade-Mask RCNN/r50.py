@@ -20,13 +20,14 @@ start_factor = 0.3
 minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
+optimizer = 'SGD'
 backend_args = None
 
 # optimizer
 optim_wrapper = dict(
     _delete_=True,
     type='OptimWrapper',
-    optimizer=dict(type='AdamW', lr=lr, betas=(0.937, 0.999), weight_decay=0.0005))
+    optimizer=dict(type=optimizer, lr=lr, betas=(0.937, 0.999), weight_decay=0.0005))
 
 # scheduler
 param_scheduler = [
@@ -39,7 +40,7 @@ param_scheduler = [
          by_epoch=True,
          begin=warmup_end,
          end=epochs,
-         eta_min = 0
+         eta_min = minimum_lr
          )
 ]
 
@@ -51,8 +52,8 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',

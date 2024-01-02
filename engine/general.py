@@ -61,6 +61,12 @@ def update_python_file(old_python_file_path, new_python_file_path, variables):
                         node.value = ast.Num(n=value)
                     elif isinstance(value, list):
                         node.value = ast.List(elts=[ast.Str(s=elt) for elt in value], ctx=ast.Load())
+                    elif isinstance(value, dict):
+                        keys = [ast.Str(s=k) for k in value.keys()]
+                        values = [ast.Str(s=v) for v in value.values()]
+                        node.value = ast.Dict(keys=keys, values=values)
+                    elif isinstance(value, bool):
+                        node.value = ast.NameConstant(value=value)
 
     new_content = astor.to_source(tree)
 

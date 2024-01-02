@@ -12,7 +12,7 @@ import numpy as np
 import subprocess
 
 
-class CascadeMaskRCNN(BaseInstanceModel):
+class Mask2Former(BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg=cfg)
         self.cfg = cfg
@@ -41,20 +41,21 @@ class CascadeMaskRCNN(BaseInstanceModel):
             '_base_': new_base,
             'data_root': self.cfg['coco_root'],
             'classes': tuple(self.cfg['class_names']),
-            'batch_size': self.cfg['batch_size'],
-            'epoch': self.cfg['end_epoch'],
-            'height': self.cfg['imgsz'][0],
-            'width': self.cfg['imgsz'][1],
-            'num_classes': self.cfg['number_of_class'],
-            'lr': self.cfg['lr'],
-            'start_factor': self.cfg['initial_lr'] / self.cfg['lr'],
-            'minimum_lr': self.cfg['minimum_lr'],
-            'warmup_begin': self.cfg['start_epoch'],
-            'warmup_end': self.cfg['warmup_epoch'],
+            'batch_size':  self.cfg['batch_size'],
+            'epochs':  self.cfg['end_epoch'],
+            'height':  self.cfg['imgsz'][0],
+            'width':  self.cfg['imgsz'][1],
+            'num_things_classes':  self.cfg['number_of_class'],
+            'lr':  self.cfg['lr'],
+            'start_factor':  self.cfg['initial_lr'] / self.cfg['lr'],
+            'minimum_lr':  self.cfg['minimum_lr'],
+            'warmup_begin':  self.cfg['start_epoch'],
+            'warmup_end':  self.cfg['warmup_epoch'],
             'optim_wrapper': optimizer
         }
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
+
 
     def _load_model(self):
         self.model = DetInferencer(model=self.cfg['cfg_file'],

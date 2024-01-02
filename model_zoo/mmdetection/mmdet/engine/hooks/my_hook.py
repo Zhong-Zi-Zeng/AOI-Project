@@ -12,11 +12,10 @@ class MyHook(Hook):
     def __init__(self):
         pass
 
-    def after_train_epoch(self, runner) -> None:
+    def before_run(self, runner) -> None:
         model = runner.model
         model.eval()
 
-        for i, data in enumerate(runner.train_dataloader):
+        for i, data in enumerate(runner.val_dataloader):
             outputs = runner.model.train_step(data, runner.optim_wrapper)
-
-
+            print(outputs)
