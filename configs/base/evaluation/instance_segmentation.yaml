@@ -3,7 +3,7 @@ _base_: [
 ]
 
 nms_thres: 0.5
-conf_thres: 0.5
+conf_thres: 0.1
 task: "instance_segmentation"
 
 sheet_names:

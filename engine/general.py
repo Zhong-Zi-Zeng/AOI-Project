@@ -7,6 +7,9 @@ import numpy as np
 import os
 import yaml
 import json
+import re
+import ast
+import astor
 
 ROOT = os.getcwd()
 
@@ -34,6 +37,35 @@ def load_python(path: str) -> dict:
     del data['__builtins__']
 
     return data
+
+def update_python_file(old_python_file_path, new_python_file_path, variables):
+    """使用AST来更新Python配置文件中的变量。"""
+
+    assert old_python_file_path.endswith('.py'), "old_python_file_path must be a python file."
+    assert new_python_file_path.endswith('.py'), "new_python_file_path must be a python file."
+
+    with open(old_python_file_path, 'r') as file:
+        content = file.read()
+
+    tree = ast.parse(content)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in variables:
+                    value = variables[target.id]
+                    if isinstance(value, str):
+                        node.value = ast.Str(s=value)
+                    elif isinstance(value, int):
+                        node.value = ast.Num(n=value)
+                    elif isinstance(value, list):
+                        node.value = ast.List(elts=[ast.Str(s=elt) for elt in value], ctx=ast.Load())
+
+    new_content = astor.to_source(tree)
+
+    with open(new_python_file_path, 'w') as file:
+        file.write(new_content)
 
 
 def load_yaml(path: str) -> dict:
