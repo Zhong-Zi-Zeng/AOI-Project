@@ -23,13 +23,13 @@ warmup_end = 3
 optimizer = 'SGD'
 backend_args = None
 
-# optimizer
+# ==========optimizer==========
 optim_wrapper = dict(
     _delete_=True,
     type='OptimWrapper',
     optimizer=dict(type=optimizer, lr=lr, betas=(0.937, 0.999), weight_decay=0.0005))
 
-# scheduler
+# ==========scheduler==========
 param_scheduler = [
     dict(type='LinearLR',
          start_factor=start_factor,
@@ -44,6 +44,7 @@ param_scheduler = [
          )
 ]
 
+# ==========train_pipeline==========
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
@@ -59,8 +60,11 @@ test_pipeline = [
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
                    'scale_factor'))
 ]
+
+# ==========train_cfg==========
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=1)
 
+# ==========model==========
 model = dict(
     # Head
     roi_head=dict(
@@ -86,6 +90,7 @@ model = dict(
     )
 )
 
+# ==========dataloader==========
 train_dataloader = dict(
     batch_size=batch_size,
     num_workers=2,

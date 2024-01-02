@@ -89,14 +89,32 @@ data_preprocessor = dict(
     pad_seg=False,
     batch_augments=batch_augments)
 model = dict(
+    backbone=dict(
+        _delete_=True,
+        type='SwinTransformer',
+        embed_dims=96,
+        depths=[2, 2, 6, 2],
+        num_heads=[3, 6, 12, 24],
+        window_size=7,
+        mlp_ratio=4,
+        qkv_bias=True,
+        qk_scale=None,
+        drop_rate=0.,
+        attn_drop_rate=0.,
+        drop_path_rate=0.3,
+        patch_norm=True,
+        out_indices=(0, 1, 2, 3),
+        with_cp=False,
+        convert_weights=True,
+        frozen_stages=-1,
+        init_cfg=dict(type='Pretrained', checkpoint='https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth')),
     data_preprocessor=data_preprocessor,
     panoptic_head=dict(
-        num_things_classes=num_things_classes,
-        num_stuff_classes=num_stuff_classes,
-        loss_cls=dict(class_weight=[1.0] * num_classes + [0.1])),
+        type='Mask2FormerHead', in_channels=[96, 192, 384, 768]),
     panoptic_fusion_head=dict(
         num_things_classes=num_things_classes,
         num_stuff_classes=num_stuff_classes),
+    init_cfg=None,
     test_cfg=dict(panoptic_on=False))
 
 # ==========dataloader==========

@@ -144,51 +144,6 @@ model = dict(
         filter_low_score=True),
     init_cfg=None)
 
-# dataset settings
-# data_root = 'data/coco/'
-# train_pipeline = [
-#     dict(
-#         type='LoadImageFromFile',
-#         to_float32=True,
-#         backend_args=None),
-#     dict(
-#         type='LoadPanopticAnnotations',
-#         with_bbox=True,
-#         with_mask=True,
-#         with_seg=True,
-#         backend_args=None),
-#     dict(type='RandomFlip', prob=0.5),
-#     # large scale jittering
-#     dict(
-#         type='RandomResize',
-#         scale=image_size,
-#         ratio_range=(0.1, 2.0),
-#         keep_ratio=True),
-#     dict(
-#         type='RandomCrop',
-#         crop_size=image_size,
-#         crop_type='absolute',
-#         recompute_bbox=True,
-#         allow_negative_crop=True),
-#     dict(type='PackDetInputs')
-# ]
-
-# train_dataloader = dict(dataset=dict(pipeline=train_pipeline))
-#
-# val_evaluator = [
-#     dict(
-#         type='CocoPanopticMetric',
-#         ann_file=data_root + 'annotations/panoptic_val2017.json',
-#         seg_prefix=data_root + 'annotations/panoptic_val2017/',
-#     ),
-#     dict(
-#         type='CocoMetric',
-#         ann_file=data_root + 'annotations/instances_val2017.json',
-#         metric=['bbox', 'segm'],
-#         )
-# ]
-# test_evaluator = val_evaluator
-
 # optimizer
 embed_multi = dict(lr_mult=1.0, decay_mult=0.0)
 optim_wrapper = dict(
@@ -232,17 +187,3 @@ train_cfg = dict(
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
-# default_hooks = dict(
-#     checkpoint=dict(
-#         type='CheckpointHook',
-#         by_epoch=False,
-#         save_last=True,
-#         max_keep_ckpts=3,
-#         interval=interval))
-# log_processor = dict(type='LogProcessor', window_size=50, by_epoch=False)
-
-# Default setting for scaling LR automatically
-#   - `enable` means enable scaling LR automatically
-#       or not by default.
-#   - `base_batch_size` = (8 GPUs) x (2 samples per GPU).
-auto_scale_lr = dict(enable=False, base_batch_size=16)

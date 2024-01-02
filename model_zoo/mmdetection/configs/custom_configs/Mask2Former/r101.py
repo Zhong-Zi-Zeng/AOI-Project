@@ -89,6 +89,10 @@ data_preprocessor = dict(
     pad_seg=False,
     batch_augments=batch_augments)
 model = dict(
+    backbone=dict(
+        depth=101,
+        init_cfg=dict(type='Pretrained',
+                      checkpoint='torchvision://resnet101')),
     data_preprocessor=data_preprocessor,
     panoptic_head=dict(
         num_things_classes=num_things_classes,
