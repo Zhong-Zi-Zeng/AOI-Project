@@ -3,20 +3,24 @@ _base_: [
 ]
 
 nms_thres: 0.5
-conf_thres: 0.1
+conf_thres: 0.5
 task: "object_detection"
+
 sheet_names:
-  - "All"
-  - "Each class(Precision, Box)"
-  - "Each class(Recall, Box)"
+  - "All classes"
+  - "Each class(Recall, Image)"
+  - "Each class(FPR, Image)"
+  - "Each class(Recall, Defect)"
+  - "Each class(FPR, Defect)"
 
 metrics_for_all:
-  - "Precision(Box)"
-  - "Recall(Box)"
-  - "mAP_0.5(Box)"
-  - "mAP_0.75(Box)"
-  - "mAP_0.5:0.95(Box)"
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"
 
 metrics_for_each:
-  - "Precision(Box)"
-  - "Recall(Box)"
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"

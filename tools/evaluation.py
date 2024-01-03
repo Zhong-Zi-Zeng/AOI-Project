@@ -6,7 +6,6 @@ sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
 from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
@@ -51,45 +50,25 @@ class Logger:
 
         self._start = False
 
-    def print_for_all(self,
-                      all_boxes_result: Optional[list] = None,
-                      all_masks_result: Optional[list] = None):
-        print("For all classes:")
+    def print_message(self,
+                      value_for_all: list,
+                      value_for_each: dict):
+        # 對於所有類別
+        data = {title: [value]
+                for title, value in zip(self.cfg['metrics_for_all'], value_for_all)}
 
-        if all_boxes_result is not None and \
-                all_masks_result is not None:
-            length = len(all_boxes_result) + len(all_masks_result)
-            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
-            print(("%20.3f" * length) % (*all_boxes_result, *all_masks_result))
+        df = pd.DataFrame(data)
+        print('For all classes:')
+        print(df.to_string(index=False))
+        print('\n' * 2)
 
-        elif all_boxes_result is not None:
-            length = len(all_boxes_result)
-            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
-            print(("%20.3f" * length) % (tuple(all_boxes_result)))
+        # 對於每一個類別
+        data = {"Metrics": self.cfg['metrics_for_each']}
+        data.update(value_for_each)
 
-        elif all_masks_result is not None:
-            length = len(all_masks_result)
-            print(("%20s" * length) % (tuple(self.cfg['metrics_for_all'])))
-            print(("%20.3f" * length) % (tuple(all_masks_result)))
-
-    def print_for_each(self,
-                       cls_name: str,
-                       box_result: list = [],
-                       mask_result: list = []):
-        length = len(box_result) + len(mask_result)
-
-        if not self._start:
-            print("\n\nFor each class:")
-            print(("%25s" + " %20s" * length) % ("Class", *self.cfg['metrics_for_each']))
-            self._start = True
-
-        if box_result is not None and \
-                mask_result is not None:
-            print(("%25s" + " %20.3f" * length) % (cls_name, *box_result, *mask_result))
-        elif box_result is not None:
-            print(("%25s" + " %20.3f" * length) % (cls_name, *box_result))
-        elif mask_result is not None:
-            print(("%25s" + " %20.3f" * length) % (cls_name, *mask_result))
+        df = pd.DataFrame(data)
+        print('For each class:')
+        print(df.to_string(index=False))
 
 
 class Writer:
@@ -240,12 +219,12 @@ class Evaluator:
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
-    def _get_precision_recall(self,
-                              coco_de: COCO,
-                              iouType: str,
-                              threshold_iou: float = 0.5) -> dict:
+    def _get_recall_fpr(self,
+                        coco_de: COCO,
+                        iouType: str,
+                        threshold_iou: float = 0.3) -> dict:
         """
-            產生confusion matrix後計算整體和各個類別的Precision、Recall、MR、FPR
+            計算檢出率、過殺率
 
             Args:
                 coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
@@ -253,153 +232,134 @@ class Evaluator:
                 threshold_iou (float): IoU 閥值
 
             Returns:
-                precision_recall (dict[list]): 整體和個別的precision、recall、tp、fp、fn
-                    {
-                        "All" : [total_precision, total_recall, total_MR, total_FPR],
+                Image 為以圖片為單位 Defect 為以瑕疵為單位
 
-                        "Class_1": [precision, recall, MR, FPR],
-                        "Class_2": [precision, recall, MR, FPR],
-                        "Class_3": [precision, recall, MR, FPR]
-                        ...
-                    }
+                {
+                    "All": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
+                    "Each": {
+                                "Class 1": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
+                                "Class 2": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
+                                ...
+                            }
+                }
         """
-        results = PreviewResults(
-            self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iouType, useCats=False
-        )
+        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iouType, useCats=False)
 
-        confusion_matrix_with_fp_fn = results.compute_confusion_matrix()  # (Number of Class, Number of Class + 2)
-        confusion_matrix = confusion_matrix_with_fp_fn[..., :-2]  # (Number of Class, Number of Class)
+        cat_ids = self.coco_gt.getCatIds()
+        img_ids = self.coco_gt.getImgIds()
+        ann_ids = self.coco_gt.getAnnIds()
 
-        tp = np.diag(confusion_matrix)  # ((Number of Class, )
-        fp = confusion_matrix_with_fp_fn[:, -2]  # ((Number of Class, )
-        fn = confusion_matrix_with_fp_fn[:, -1]  # ((Number of Class, )
+        # ==========不使用patch==========
+        if not self.cfg['use_patch']:
+            sum_tp_for_image = 0
+            sum_fp_for_image = 0
 
-        # For all classes
-        total_precision = np.sum(tp) / np.sum(tp + fp) # 精確率
-        total_recall = np.sum(tp) / np.sum(tp + fn) # 檢出率
-        total_miss_rate = np.sum(fn) / np.sum(tp + fn) # 漏檢率
-        total_false_positive_rate = np.sum(fp) / np.sum(tp + fp) # 過殺率
+            each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
 
-        precision_recall = {
-            "All": [round(total_precision.astype(float) * 100, 2),
-                    round(total_recall.astype(float) * 100, 2),
-                    round(total_miss_rate.astype(float) * 100, 2),
-                    round(total_false_positive_rate.astype(float) * 100, 2)],
-        }
+            each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
 
-        # For each class
-        for idx, cls_name in enumerate(self.cfg['class_names']):
-            precision_recall.update({cls_name:
-                                         [round((tp[idx] / (tp + fp)[idx]).astype(float) * 100, 2), # 精確率
-                                          round((tp[idx] / (tp + fn)[idx]).astype(float) * 100, 2), # 檢出率
-                                          round((fn[idx] / (tp + fn)[idx]).astype(float) * 100, 2), # 漏檢率
-                                          round((fp[idx] / (tp + fp)[idx]).astype(float) * 100, 2)]}# 過殺率
-                                    )
+            for img_id in img_ids:
+                tp, fp, fn = eval.get_tp_fp_fn(image_id=img_id)
 
-        return precision_recall
+                sum_tp = np.sum(tp)
+                sum_fp = np.sum(fp)
 
-    def _coco_eval(self,
-                   coco_de: COCO,
-                   iouType: str,
-                   class_id: Optional[int] = None) -> list:
-        """
-            依照給定的task使用coco內建的eval api進行評估，並返回各項評估數值
+                # 針對每一個類別
+                for cat_id in cat_ids:
+                    each_class_tp_for_image[cat_id] += 1 if tp[cat_id] > 0 else 0
+                    each_class_fp_for_image[cat_id] += 1 if fp[cat_id] > 0 else 0
+                    each_class_fn_for_image[cat_id] += 1 if fn[cat_id] > 0 else 0
 
-            Args:
-                coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
-                iouType (str): 指定評估的型態 ex['bbox', 'segm']
-                class_id (int): 如果有給定的話，則是返回給定類別的評估結果，用於想得知每一個類別的評估數據
-            Return:
-                stats[0] : AP at IoU=.50:.05:.95
-                stats[1] : AP at IoU=.50
-                stats[2] : AP at IoU=.75
-                stats[3] : AP for small objects: area < 32^2
-                stats[4] : AP for medium objects: 32^2 < area < 96^2
-                stats[5] : AP for large objects: area > 96^2
-                stats[6] : AR given 1 detection per image
-                stats[7] : AR given 10 detections per image
-                stats[8] : AR given 100 detections per image
-                stats[9] : AR for small objects: area < 32^2
-                stats[10] : AR for medium objects: 32^2 < area < 96^2
-                stats[11] : AR for large objects: area > 96^2
-        """
-        coco_eval = COCOeval(self.coco_gt, coco_de, iouType)
+                each_class_tp_for_defect += tp
+                each_class_fp_for_defect += fp
+                each_class_fn_for_defect += fn
 
-        if class_id is not None:
-            coco_eval.params.catIds = class_id
+                # 針對全部類別
+                sum_tp_for_image += 1 if sum_tp > 0 else 0
+                sum_fp_for_image += 1 if sum_fp > 0 else 0
 
-        coco_eval.evaluate()
-        coco_eval.accumulate()
-        stats = coco_eval.summarize(show=False)
-        stats = [round(val, 3) for val in stats]
+            sum_tp_for_defect = np.sum(each_class_tp_for_defect)
+            sum_fp_for_defect = np.sum(each_class_fp_for_defect)
 
-        # 依照不同的task取出需要的metrics
-        if self.cfg['task'] == 'instance_segmentation' or self.cfg['task'] == 'object_detection':
-            return [stats[1], stats[2], stats[0]]
-        elif self.cfg['task'] == 'semantic_segmentation':
-            # TODO: semantic_segmentation evaluation value
-            pass
+            # ==========依圖片為單位==========
+            # 檢出率 (全部類別)
+            image_recall_all_classes = round((sum_tp_for_image / len(img_ids)) * 100, 2)
+
+            # 過殺率 (全部類別)
+            image_fpr_all_classes = round((sum_fp_for_image / len(img_ids)) * 100, 2)
+
+            # 檢出率 (各個類別)
+            image_recall_each_class = [round(v * 100, 2) for v in
+                                       np.divide(each_class_tp_for_image,
+                                                 each_class_tp_for_image + each_class_fn_for_image,
+                                                 out=np.zeros_like(each_class_tp_for_image),
+                                                 where=(each_class_tp_for_image + each_class_fn_for_image) != 0)]
+            # 過殺率 (各個類別)
+            image_fpr_each_class = [round(v * 100, 2) for v in
+                                    np.divide(each_class_fp_for_image,
+                                              each_class_fp_for_image + each_class_tp_for_image,
+                                              out=np.zeros_like(each_class_fp_for_image),
+                                              where=(each_class_fp_for_image + each_class_tp_for_image) != 0)]
+
+            # ==========依瑕疵為單位==========
+            # 檢出率 (全部類別)
+            defect_recall_all_classes = round((sum_tp_for_defect / len(ann_ids)) * 100, 2)  # 檢出率(全部類別)
+
+            # TODO: 會大於1!!!
+            # 過殺率 (全部類別)
+            defect_fpr_all_classes = round((sum_fp_for_defect / len(ann_ids)) * 100, 2)  # 檢出率(全部類別)
+
+            # 檢出率 (各個類別)
+            defect_recall_each_class = [round(v * 100, 2) for v in
+                                        np.divide(each_class_tp_for_defect,
+                                                  each_class_tp_for_defect + each_class_fn_for_defect,
+                                                  out=np.zeros_like(each_class_tp_for_defect),
+                                                  where=(each_class_tp_for_defect + each_class_fn_for_defect,) != 0)]
+            # 過殺率 (各個類別)
+            defect_fpr_each_class = [round(v * 100, 2) for v in
+                                     np.divide(each_class_fp_for_defect,
+                                               each_class_fp_for_defect + each_class_tp_for_defect,
+                                               out=np.zeros_like(each_class_fp_for_defect),
+                                               where=(each_class_fp_for_defect + each_class_tp_for_defect) != 0)]
+
+            return {
+                "All": [image_recall_all_classes,
+                        image_fpr_all_classes,
+                        defect_recall_all_classes,
+                        defect_fpr_all_classes],
+                "Each": {cls_name:
+                             [image_recall_each_class[idx],
+                              image_fpr_each_class[idx],
+                              defect_recall_each_class[idx],
+                              defect_fpr_each_class[idx]]
+                         for idx, cls_name in
+                         zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
+            }
+
+        # ==========使用patch==========
         else:
-            raise ValueError('Can not find the task type of {}'.format(self.cfg['task']))
-
-        return stats
+            pass
 
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
-            # =========Evaluate all classes=========
-            bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
-            mask_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='segm')
+            # Evaluate
+            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iouType='bbox')
 
             # Print information
-            self.logger.print_for_all(bbox_precision_recall["All"],
-                                      mask_precision_recall["All"])
+            self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +
-                                  bbox_precision_recall["All"] +
-                                  mask_precision_recall["All"],
+                                  recall_and_fpr['All'],
                                   sheet_name=self.cfg['sheet_names'][0])
 
-            # =========Evaluate each class=========
-            _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
-
-            for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                box_result = bbox_precision_recall[cls_name]
-                mask_result = mask_precision_recall[cls_name]
-                _value[cls_name] = box_result + mask_result
-
-                # Print information
-                self.logger.print_for_each(cls_name, box_result, mask_result)
-
-            # Store value
-            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-                self.writer.write_col(self.writer.common_metrics + [val[idx] for val in _value.values()],
-                                      sheet_name=sheet_name)
-
-    def _object_detection_eval(self, predicted_coco: COCO):
-        with self.logger:
-            # =========Evaluate all classes=========
-            bbox_precision_recall = self._get_precision_recall(coco_de=predicted_coco, iouType='bbox')
-
-            # Print information
-            self.logger.print_for_all(bbox_precision_recall["All"])
-
-            # Store value
-            self.writer.write_col(self.writer.common_metrics +
-                                  bbox_precision_recall["All"],
-                                  sheet_name=self.cfg['sheet_names'][0])
-
-            # =========Evaluate per class=========
-            _value = {cls_name: [] for cls_name in self.cfg["class_names"]}
-
-            for cls_id, cls_name in enumerate(self.cfg["class_names"]):
-                box_result = bbox_precision_recall[cls_name]
-                _value[cls_name] = box_result
-                self.logger.print_for_each(cls_name, box_result)
-
-            # Store value
-            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-                self.writer.write_col(self.writer.common_metrics + [val[idx] for val in _value.values()],
+            for cls_name, sheet_name in zip(self.cfg['class_names'], self.cfg['sheet_names'][1:]):
+                self.writer.write_col(self.writer.common_metrics +
+                                      recall_and_fpr['Each'][cls_name],
                                       sheet_name=sheet_name)
 
     def eval(self):
@@ -410,10 +370,9 @@ class Evaluator:
             # Load json
             predicted_coco = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
 
-            if self.cfg['task'] == 'instance_segmentation':
+            if self.cfg['task'] == 'instance_segmentation' or\
+                    self.cfg['task'] == 'object_detection':
                 self._instance_segmentation_eval(predicted_coco)
-            elif self.cfg['task'] == 'object_detection':
-                self._object_detection_eval(predicted_coco)
             elif self.cfg['task'] == 'semantic_segmentation':
                 # TODO: segmentation evaluation
                 pass

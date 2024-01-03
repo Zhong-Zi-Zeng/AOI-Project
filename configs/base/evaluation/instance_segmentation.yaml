@@ -3,36 +3,24 @@ _base_: [
 ]
 
 nms_thres: 0.5
-conf_thres: 0.1
+conf_thres: 0.5
 task: "instance_segmentation"
 
 sheet_names:
-  - "All"
-  - "Each class(Precision, Box)"
-  - "Each class(Recall, Box)"
-  - "Each class(MR, Box)"
-  - "Each class(FPR, Box)"
-  - "Each class(Precision, Mask)"
-  - "Each class(Recall, Mask)"
-  - "Each class(MR, Mask)"
-  - "Each class(FPR, Mask)"
+  - "All classes"
+  - "Each class(Recall, Image)"
+  - "Each class(FPR, Image)"
+  - "Each class(Recall, Defect)"
+  - "Each class(FPR, Defect)"
 
 metrics_for_all:
-  - "Precision(Box)"
-  - "Recall(Box)"
-  - "MR(Box)"
-  - "FPR(Box)"
-  - "Precision(Mask)"
-  - "Recall(Mask)"
-  - "MR(Mask)"
-  - "FPR(Mask)"
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"
 
 metrics_for_each:
-  - "Precision(Box)"
-  - "Recall(Box)"
-  - "MR(Box)"
-  - "FPR(Box)"
-  - "Precision(Mask)"
-  - "Recall(Mask)"
-  - "MR(Mask)"
-  - "FPR(Mask)"
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"
