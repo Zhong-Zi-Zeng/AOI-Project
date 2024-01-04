@@ -60,7 +60,7 @@ class BaseConverter(ABC):
 
         # Read the original image and cut the patch
         original_image = cv2.imread(image_file)
-        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/4))   # 調整stride
+        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/2))   # 調整stride
         original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
 
         # Information about defective patches
