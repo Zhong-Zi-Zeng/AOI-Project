@@ -21,12 +21,14 @@ class cocoConverter(BaseConverter):
                  classes_yaml: str,
                  dataset_type: str,
                  patch_size: Optional[int] = None,
+                 stride: Optional[int] = None,
                  store_none: bool = False):
         super().__init__(source_dir, output_dir, classes_yaml)
         self.source_dir = source_dir
         self.output_dir = output_dir
         self.patch_size = patch_size
         self.dataset_type = 'val' if dataset_type == 'test' else dataset_type
+        self.stride = stride
         self.store_none = store_none
         self._generate_dir()
 
@@ -105,7 +107,8 @@ class cocoConverter(BaseConverter):
                                                      mask,
                                                      classes,
                                                      bboxes,
-                                                     polygons, self.patch_size, self.store_none)
+                                                     polygons,
+                                                     self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
