@@ -19,7 +19,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: /home/miislab-server2/Heng/Heng_shared/AOI-Project/work_dirs/train/Yolov7inSeg_2/weights/best.pt
+weight: "D:/Heng_shared/AOI-Project/work_dirs/train/Yolov7inSeg_2/weights/best.pt"
 start_epoch: 0
 end_epoch: 100
 warmup_epoch: 3

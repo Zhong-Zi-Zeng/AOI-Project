@@ -219,16 +219,92 @@ class Evaluator:
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
+    @staticmethod
+    def calculate_metrics(eval: PreviewResults,
+                          img_ids: list,
+                          cat_ids: list):
+        """
+        Args:
+            eval (PreviewResults): 以計算完畢的faster-coco-eval
+            img_ids (list):　存放dataset中所有image的id
+            cat_ids (list):　存放dataset中所有class的id
+
+        Returns:
+             sum_tp_for_image (float): 所有類別, 以圖片為單位的TP
+             sum_fp_for_image (float): 所有類別, 以圖片為單位的TP
+             each_class_tp_for_image list[float]: 各個類別, 以圖片為單位的TP
+             each_class_fp_for_image list[float]: 各個類別, 以圖片為單位的FP
+             each_class_fn_for_image list[float]: 各個類別, 以圖片為單位的FN
+             each_class_tp_for_defect list[float]: 各個類別, 以瑕疵為單位的TP
+             each_class_fp_for_defect list[float]: 各個類別, 以瑕疵為單位的FP
+             each_class_fn_for_defect list[float]: 各個類別, 以瑕疵為單位的FN
+        """
+
+        sum_tp_for_image = 0
+        sum_fp_for_image = 0
+
+        each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+        each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+        each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+
+        each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+        each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+        each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+
+        for img_id in img_ids:
+            tp, fp, fn = eval.get_tp_fp_fn(image_id=img_id)
+
+            sum_tp = np.sum(tp)
+            sum_fp = np.sum(fp)
+
+            each_class_tp_for_image += (tp > 0).astype(np.float32)
+            each_class_fp_for_image += (fp > 0).astype(np.float32)
+            each_class_fn_for_image += (fn > 0).astype(np.float32)
+
+            each_class_tp_for_defect += tp
+            each_class_fp_for_defect += fp
+            each_class_fn_for_defect += fn
+
+            sum_tp_for_image += (sum_tp > 0).astype(np.float32)
+            sum_fp_for_image += (sum_fp > 0).astype(np.float32)
+
+        return sum_tp_for_image, sum_fp_for_image, each_class_tp_for_image, each_class_fp_for_image, each_class_fn_for_image, each_class_tp_for_defect, each_class_fp_for_defect, each_class_fn_for_defect
+
+    @staticmethod
+    def calculate_metrics_percentage(denominator,
+                                     sum_tp,
+                                     sum_fp,
+                                     each_class_tp,
+                                     each_class_fp,
+                                     each_class_fn):
+        # 檢出率 (全部類別)
+        recall_all_classes = round((sum_tp / denominator) * 100, 2)
+
+        # 過殺率 (全部類別)
+        fpr_all_classes = round((sum_fp / denominator) * 100, 2)
+
+        # 檢出率 (各個類別)
+        recall_each_class = [round(v * 100, 2) for v in np.divide(each_class_tp, each_class_tp + each_class_fn,
+                                                                  out=np.zeros_like(each_class_tp),
+                                                                  where=(each_class_tp + each_class_fn) != 0)]
+
+        # 過殺率 (各個類別)
+        fpr_each_class = [round(v * 100, 2) for v in np.divide(each_class_fp, each_class_tp + each_class_fp,
+                                                               out=np.zeros_like(each_class_fp),
+                                                               where=(each_class_tp + each_class_fp) != 0)]
+
+        return recall_all_classes, fpr_all_classes, recall_each_class, fpr_each_class
+
     def _get_recall_fpr(self,
                         coco_de: COCO,
-                        iouType: str,
+                        iou_type: str,
                         threshold_iou: float = 0.3) -> dict:
         """
             計算檢出率、過殺率
 
             Args:
                 coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
-                iouType (str): 指定評估的型態 ex['bbox', 'segm']
+                iou_type (str): 指定評估的型態 ex['bbox', 'segm']
                 threshold_iou (float): IoU 閥值
 
             Returns:
@@ -243,88 +319,43 @@ class Evaluator:
                             }
                 }
         """
-        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iouType, useCats=False)
-
+        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iou_type, useCats=False)
         cat_ids = self.coco_gt.getCatIds()
         img_ids = self.coco_gt.getImgIds()
         ann_ids = self.coco_gt.getAnnIds()
 
         # ==========不使用patch==========
         if not self.cfg['use_patch']:
-            sum_tp_for_image = 0
-            sum_fp_for_image = 0
+            # 計算tp、fp、fn
+            sum_tp_for_image, \
+                sum_fp_for_image, \
+                each_class_tp_for_image, \
+                each_class_fp_for_image, \
+                each_class_fn_for_image, \
+                each_class_tp_for_defect, \
+                each_class_fp_for_defect, \
+                each_class_fn_for_defect = self.calculate_metrics(eval, img_ids, cat_ids)
 
-            each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-
-            each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-
-            for img_id in img_ids:
-                tp, fp, fn = eval.get_tp_fp_fn(image_id=img_id)
-
-                sum_tp = np.sum(tp)
-                sum_fp = np.sum(fp)
-
-                # 針對每一個類別
-                for cat_id in cat_ids:
-                    each_class_tp_for_image[cat_id] += 1 if tp[cat_id] > 0 else 0
-                    each_class_fp_for_image[cat_id] += 1 if fp[cat_id] > 0 else 0
-                    each_class_fn_for_image[cat_id] += 1 if fn[cat_id] > 0 else 0
-
-                each_class_tp_for_defect += tp
-                each_class_fp_for_defect += fp
-                each_class_fn_for_defect += fn
-
-                # 針對全部類別
-                sum_tp_for_image += 1 if sum_tp > 0 else 0
-                sum_fp_for_image += 1 if sum_fp > 0 else 0
-
-            sum_tp_for_defect = np.sum(each_class_tp_for_defect)
-            sum_fp_for_defect = np.sum(each_class_fp_for_defect)
-
-            # ==========依圖片為單位==========
-            # 檢出率 (全部類別)
-            image_recall_all_classes = round((sum_tp_for_image / len(img_ids)) * 100, 2)
-
-            # 過殺率 (全部類別)
-            image_fpr_all_classes = round((sum_fp_for_image / len(img_ids)) * 100, 2)
-
-            # 檢出率 (各個類別)
-            image_recall_each_class = [round(v * 100, 2) for v in
-                                       np.divide(each_class_tp_for_image,
-                                                 each_class_tp_for_image + each_class_fn_for_image,
-                                                 out=np.zeros_like(each_class_tp_for_image),
-                                                 where=(each_class_tp_for_image + each_class_fn_for_image) != 0)]
-            # 過殺率 (各個類別)
-            image_fpr_each_class = [round(v * 100, 2) for v in
-                                    np.divide(each_class_fp_for_image,
-                                              each_class_fp_for_image + each_class_tp_for_image,
-                                              out=np.zeros_like(each_class_fp_for_image),
-                                              where=(each_class_fp_for_image + each_class_tp_for_image) != 0)]
-
-            # ==========依瑕疵為單位==========
-            # 檢出率 (全部類別)
-            defect_recall_all_classes = round((sum_tp_for_defect / len(ann_ids)) * 100, 2)  # 檢出率(全部類別)
-
-            # TODO: 會大於1!!!
-            # 過殺率 (全部類別)
-            defect_fpr_all_classes = round((sum_fp_for_defect / len(ann_ids)) * 100, 2)  # 檢出率(全部類別)
-
-            # 檢出率 (各個類別)
-            defect_recall_each_class = [round(v * 100, 2) for v in
-                                        np.divide(each_class_tp_for_defect,
-                                                  each_class_tp_for_defect + each_class_fn_for_defect,
-                                                  out=np.zeros_like(each_class_tp_for_defect),
-                                                  where=(each_class_tp_for_defect + each_class_fn_for_defect,) != 0)]
-            # 過殺率 (各個類別)
-            defect_fpr_each_class = [round(v * 100, 2) for v in
-                                     np.divide(each_class_fp_for_defect,
-                                               each_class_fp_for_defect + each_class_tp_for_defect,
-                                               out=np.zeros_like(each_class_fp_for_defect),
-                                               where=(each_class_fp_for_defect + each_class_tp_for_defect) != 0)]
+            # 以圖片為單位的結果
+            image_recall_all_classes, \
+                image_fpr_all_classes, \
+                image_recall_each_class, \
+                image_fpr_each_class = self.calculate_metrics_percentage(len(img_ids),
+                                                                         sum_tp_for_image,
+                                                                         sum_fp_for_image,
+                                                                         each_class_tp_for_image,
+                                                                         each_class_fp_for_image,
+                                                                         each_class_fn_for_image)
+            # 以瑕疵為單位的結果
+            defect_recall_all_classes, \
+                defect_fpr_all_classes, \
+                defect_recall_each_class, \
+                defect_fpr_each_class = self.calculate_metrics_percentage(len(ann_ids),
+                                                                          np.sum(each_class_tp_for_defect),
+                                                                          np.sum(each_class_fp_for_defect),
+                                                                          each_class_tp_for_defect,
+                                                                          each_class_fp_for_defect,
+                                                                          each_class_fn_for_defect)
 
             return {
                 "All": [image_recall_all_classes,
@@ -347,7 +378,7 @@ class Evaluator:
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # Evaluate
-            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iouType='bbox')
+            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox')
 
             # Print information
             self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
@@ -370,7 +401,7 @@ class Evaluator:
             # Load json
             predicted_coco = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
 
-            if self.cfg['task'] == 'instance_segmentation' or\
+            if self.cfg['task'] == 'instance_segmentation' or \
                     self.cfg['task'] == 'object_detection':
                 self._instance_segmentation_eval(predicted_coco)
             elif self.cfg['task'] == 'semantic_segmentation':

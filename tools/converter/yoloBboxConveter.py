@@ -63,8 +63,11 @@ class yoloBboxConverter(BaseConverter):
             with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
                 for idx, bbox in enumerate(bboxes):
                     # Normalize
-                    bbox[0] /= image_width
-                    bbox[1] /= image_height
+                    x, y, w, h = bbox
+
+                    # x, y, w, h -> cx, cy, w, h
+                    bbox[0] = (x + w / 2) / image_width
+                    bbox[1] = (y + h / 2) / image_height
                     bbox[2] /= image_width
                     bbox[3] /= image_height
 
