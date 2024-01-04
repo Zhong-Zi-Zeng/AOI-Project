@@ -5,8 +5,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
 ]
 
 # ===========Model===========
-train_txt: " "
-val_txt: " "
+train_txt: "./data/yoloBbox/original_class_4/train_list.txt"
+val_txt: "./data/yoloBbox/original_class_4/val_list.txt"
 
 # ===========Dataset===========
 number_of_class: 4
@@ -18,7 +18,7 @@ class_names:
   - "Assembly"
 
 # ===========Hyperparameter===========
-optimizer: "SGD" # Adam、AdamW、SGD
+optimizer: "AdamW" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
 end_epoch: 50

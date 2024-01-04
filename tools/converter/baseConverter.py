@@ -83,7 +83,7 @@ class BaseConverter(ABC):
             cv2.fillPoly(black_canvas[idx], [polygon], color=(255, 255, 255))
 
             # Divide into patch sizes
-            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size), step=int(patch_size/4))    # 調整stride
+            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size), step=int(patch_size/2))    # 調整stride
             patches_mask = patches_mask.reshape((-1, patch_size, patch_size))  # (P, H, W)
 
             # Find the index of the patch containing the defect and save the information
