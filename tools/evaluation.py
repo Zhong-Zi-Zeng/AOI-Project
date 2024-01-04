@@ -94,7 +94,10 @@ class Writer:
                                self.cfg['imgsz'][0],
                                self.cfg['use_patch'],
                                round(TIMER[2].dt, 3),
-                               round(TIMER[3].dt, 3)]
+                               round(TIMER[3].dt, 3),
+                               self.cfg['nms_thres'],
+                               self.cfg['conf_thres'],
+                               self.cfg['iou_thres'],]
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """自動儲存"""
@@ -336,49 +339,90 @@ class Evaluator:
                 each_class_fp_for_defect, \
                 each_class_fn_for_defect = self.calculate_metrics(eval, img_ids, cat_ids)
 
-            # 以圖片為單位的結果
-            image_recall_all_classes, \
-                image_fpr_all_classes, \
-                image_recall_each_class, \
-                image_fpr_each_class = self.calculate_metrics_percentage(len(img_ids),
-                                                                         sum_tp_for_image,
-                                                                         sum_fp_for_image,
-                                                                         each_class_tp_for_image,
-                                                                         each_class_fp_for_image,
-                                                                         each_class_fn_for_image)
-            # 以瑕疵為單位的結果
-            defect_recall_all_classes, \
-                defect_fpr_all_classes, \
-                defect_recall_each_class, \
-                defect_fpr_each_class = self.calculate_metrics_percentage(len(ann_ids),
-                                                                          np.sum(each_class_tp_for_defect),
-                                                                          np.sum(each_class_fp_for_defect),
-                                                                          each_class_tp_for_defect,
-                                                                          each_class_fp_for_defect,
-                                                                          each_class_fn_for_defect)
-
-            return {
-                "All": [image_recall_all_classes,
-                        image_fpr_all_classes,
-                        defect_recall_all_classes,
-                        defect_fpr_all_classes],
-                "Each": {cls_name:
-                             [image_recall_each_class[idx],
-                              image_fpr_each_class[idx],
-                              defect_recall_each_class[idx],
-                              defect_fpr_each_class[idx]]
-                         for idx, cls_name in
-                         zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
-            }
-
         # ==========使用patch==========
         else:
-            pass
+            # 找尋原始圖片與patch對應的id
+            mother_to_sub_images = dict()
+            for img_id in img_ids:
+                image_name = self.coco_gt.loadImgs(img_id)[0]['file_name']
+                parts = image_name.split('_')
+                mother_image_id = parts[1]
+
+                if mother_image_id in mother_to_sub_images:
+                    mother_to_sub_images[mother_image_id].append(img_id)
+                else:
+                    mother_to_sub_images[mother_image_id] = [img_id]
+
+            img_ids = mother_to_sub_images
+
+            # 計算tp、fp、fn
+            sum_tp_for_image = 0
+            sum_fp_for_image = 0
+            each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+            each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
+
+            for patch_ids in mother_to_sub_images.values():
+                sum_tp_for_image_, \
+                    sum_fp_for_image_, \
+                    each_class_tp_for_image_, \
+                    each_class_fp_for_image_, \
+                    each_class_fn_for_image_, \
+                    each_class_tp_for_defect_, \
+                    each_class_fp_for_defect_, \
+                    each_class_fn_for_defect_ = self.calculate_metrics(eval, patch_ids, cat_ids)
+
+                sum_tp_for_image += (sum_tp_for_image_ > 0).astype(np.float32)
+                sum_fp_for_image += (sum_fp_for_image_ > 0).astype(np.float32)
+                each_class_tp_for_image += (each_class_tp_for_image_ > 0).astype(np.float32)
+                each_class_fp_for_image += (each_class_fp_for_image_ > 0).astype(np.float32)
+                each_class_fn_for_image += (each_class_fn_for_image_ > 0).astype(np.float32)
+                each_class_tp_for_defect += each_class_tp_for_defect_
+                each_class_fp_for_defect += each_class_fp_for_defect_
+                each_class_fn_for_defect += each_class_fn_for_defect_
+
+        # 以圖片為單位的結果
+        image_recall_all_classes, \
+            image_fpr_all_classes, \
+            image_recall_each_class, \
+            image_fpr_each_class = self.calculate_metrics_percentage(len(img_ids),
+                                                                     sum_tp_for_image,
+                                                                     sum_fp_for_image,
+                                                                     each_class_tp_for_image,
+                                                                     each_class_fp_for_image,
+                                                                     each_class_fn_for_image)
+        # 以瑕疵為單位的結果
+        defect_recall_all_classes, \
+            defect_fpr_all_classes, \
+            defect_recall_each_class, \
+            defect_fpr_each_class = self.calculate_metrics_percentage(len(ann_ids),
+                                                                      np.sum(each_class_tp_for_defect),
+                                                                      np.sum(each_class_fp_for_defect),
+                                                                      each_class_tp_for_defect,
+                                                                      each_class_fp_for_defect,
+                                                                      each_class_fn_for_defect)
+        return {
+            "All": [image_recall_all_classes,
+                    image_fpr_all_classes,
+                    defect_recall_all_classes,
+                    defect_fpr_all_classes],
+            "Each": {cls_name:
+                         [image_recall_each_class[idx],
+                          image_fpr_each_class[idx],
+                          defect_recall_each_class[idx],
+                          defect_fpr_each_class[idx]]
+                     for idx, cls_name in
+                     zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
+        }
+
 
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # Evaluate
-            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox')
+            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox', threshold_iou=self.cfg['iou_thres'])
 
             # Print information
             self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
@@ -388,9 +432,12 @@ class Evaluator:
                                   recall_and_fpr['All'],
                                   sheet_name=self.cfg['sheet_names'][0])
 
-            for cls_name, sheet_name in zip(self.cfg['class_names'], self.cfg['sheet_names'][1:]):
+            each_value = [value for value in recall_and_fpr['Each'].values()]
+            each_value = np.array(each_value).T
+
+            for idx, (cls_name, sheet_name) in enumerate(zip(self.cfg['class_names'], self.cfg['sheet_names'][1:])):
                 self.writer.write_col(self.writer.common_metrics +
-                                      recall_and_fpr['Each'][cls_name],
+                                      each_value[idx].tolist(),
                                       sheet_name=sheet_name)
 
     def eval(self):

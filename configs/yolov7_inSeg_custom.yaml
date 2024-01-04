@@ -21,7 +21,7 @@ class_names:
 optimizer: "AdamW" # Adam、AdamW、SGD
 weight: "D:/Heng_shared/AOI-Project/work_dirs/train/Yolov7inSeg_2/weights/best.pt"
 start_epoch: 0
-end_epoch: 100
+end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
