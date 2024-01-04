@@ -5,3 +5,6 @@ common:
   - "Use Patch"
   - "Inference Time(ms)"
   - "NMS Time(ms)"
+  - "NMS Threshold"
+  - "Conf Threshold"
+  - "IoU Threshold"
