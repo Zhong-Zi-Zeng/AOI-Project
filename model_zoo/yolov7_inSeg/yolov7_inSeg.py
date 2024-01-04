@@ -177,7 +177,7 @@ class Yolov7inSeg(BaseInstanceModel):
 
     def train(self):
         subprocess.run(['python',
-                        os.path.join(get_model_path(__file__), 'segment', 'train.py'),
+                        os.path.join(get_model_path(self.cfg), 'segment', 'train.py'),
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],

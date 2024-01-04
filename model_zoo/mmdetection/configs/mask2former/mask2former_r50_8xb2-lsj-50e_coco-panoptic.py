@@ -1,5 +1,6 @@
 _base_ = [
-    '../_base_/datasets/coco_panoptic.py', '../_base_/default_runtime.py'
+    '../_base_/datasets/coco_panoptic.py',
+    '../_base_/default_runtime.py'
 ]
 image_size = (1024, 1024)
 batch_augments = [

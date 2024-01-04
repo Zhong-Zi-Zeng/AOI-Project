@@ -47,7 +47,7 @@ Import:
   - configs/ld/metafile.yml
   - configs/libra_rcnn/metafile.yml
   - configs/lvis/metafile.yml
-  - configs/mask2former/metafile.yml
+  - configs/mask2former.yaml/metafile.yml
   - configs/mask_rcnn/metafile.yml
   - configs/maskformer/metafile.yml
   - configs/ms_rcnn/metafile.yml

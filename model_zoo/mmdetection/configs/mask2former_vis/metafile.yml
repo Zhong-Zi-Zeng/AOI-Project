@@ -10,7 +10,7 @@ Collections:
     Paper:
       URL: https://arxiv.org/pdf/2112.10764.pdf
       Title: Mask2Former for Video Instance Segmentation
-    README: configs/mask2former/README.md
+    README: configs/mask2former.yaml/README.md
 
 Models:
   - Name: mask2former_r50_8xb2-8e_youtubevis2021

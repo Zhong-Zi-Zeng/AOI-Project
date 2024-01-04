@@ -58,8 +58,13 @@ class BaseConverter(ABC):
         if image_height % patch_size != 0 or image_width % patch_size != 0:
             raise ValueError("patch_size cannot divide the original image.")
 
+        # Read the original image and cut the patch
+        original_image = cv2.imread(image_file)
+        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/2))   # 調整stride
+        original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
+
         # Information about defective patches
-        patch_num = (image_height // patch_size) * (image_width // patch_size)
+        patch_num = len(original_patches)
         labels = {idx: {'image_height': [],
                         'image_width': [],
                         'mask': [],
@@ -67,11 +72,6 @@ class BaseConverter(ABC):
                         'bboxes': [],
                         'polygons': []
                         } for idx in range(patch_num)}
-
-        # Read the original image and cut the patch
-        original_image = cv2.imread(image_file)
-        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/4))   # 調整stride
-        original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
 
         # Create empty masks
         N = len(polygons)  # Number of defects
@@ -83,7 +83,7 @@ class BaseConverter(ABC):
             cv2.fillPoly(black_canvas[idx], [polygon], color=(255, 255, 255))
 
             # Divide into patch sizes
-            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size), step=patch_size)
+            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size), step=int(patch_size/4))    # 調整stride
             patches_mask = patches_mask.reshape((-1, patch_size, patch_size))  # (P, H, W)
 
             # Find the index of the patch containing the defect and save the information
@@ -99,11 +99,15 @@ class BaseConverter(ABC):
                     x, y, w, h = cv2.boundingRect(patch_polygon)
 
                     # 濾掉瑕疵面積太小的patch
+                    thresholds = {
+                        256: 4000.0,
+                        512: 2000.0,
+                        1024: 1000.0
+                    }
+                    threshold = thresholds.get(patch_size)
                     defect_area = cv2.contourArea(patch_polygon)
-                    min_defect_area_threshold = 4000.0
-                    if defect_area > min_defect_area_threshold:
-                        # print(defect_area)
-                        # print(len(patch_polygon))
+
+                    if defect_area > threshold and len(patch_polygon) > 4:
                         # info
                         labels[patch_idx]['image_height'].append(patch_size)
                         labels[patch_idx]['image_width'].append(patch_size)

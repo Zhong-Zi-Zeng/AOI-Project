@@ -128,7 +128,7 @@ class BasePixelDecoder(nn.Module):
         self.maskformer_num_feature_levels = 3
 
 
-# To prevent conflicts with TransformerEncoderPixelDecoder in mask2former,
+# To prevent conflicts with TransformerEncoderPixelDecoder in mask2former.yaml,
 # we change the name to XTransformerEncoderPixelDecoder
 @MODELS.register_module()
 class XTransformerEncoderPixelDecoder(BasePixelDecoder):

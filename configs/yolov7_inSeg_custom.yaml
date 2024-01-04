@@ -5,33 +5,21 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Model===========
-train_dir: " "
-val_dir: " "
+train_dir: "./data/yoloSeg/patch_1024_class_4/train"
+val_dir: "./data/yoloSeg/patch_1024_class_4/test"
 
 # ===========Dataset===========
-number_of_class: 16
-coco_root: "./data/coco/test"
+number_of_class: 4
+coco_root: "./data/coco/patch_1024_class_4"
 class_names:
-  - "Border"
-  - "black_Marks"
-  - "Bright_Marks"
-  - "Pass"
-  - "Dirty"
+  - "Scratch"
   - "Friction"
-  - "Black_point"
-  - "Buttom_scratches"
-  - "Small_scratches"
-  - "AnotherColor"
-  - "Severe_scratches"
-  - "Glossy"
-  - "ReturnPoint"
+  - "Dirty"
   - "Assembly"
-  - "Scractches_Blackbackground"
-  - "Buttom_Friction"
 
 # ===========Hyperparameter===========
-optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+optimizer: "AdamW" # Adam、AdamW、SGD
+weight: /home/miislab-server2/Heng/Heng_shared/AOI-Project/work_dirs/train/Yolov7inSeg_4/weights/best.pt
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3
@@ -40,6 +28,6 @@ lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 8
 imgsz: [1024, 1024]
-use_patch: false
+use_patch: true
 device: "0"
 

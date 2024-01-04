@@ -7,6 +7,9 @@ import numpy as np
 import os
 import yaml
 import json
+import re
+import ast
+import astor
 
 ROOT = os.getcwd()
 
@@ -35,6 +38,41 @@ def load_python(path: str) -> dict:
 
     return data
 
+def update_python_file(old_python_file_path, new_python_file_path, variables):
+    """使用AST来更新Python配置文件中的变量。"""
+
+    assert old_python_file_path.endswith('.py'), "old_python_file_path must be a python file."
+    assert new_python_file_path.endswith('.py'), "new_python_file_path must be a python file."
+
+    with open(old_python_file_path, 'r') as file:
+        content = file.read()
+
+    tree = ast.parse(content)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in variables:
+                    value = variables[target.id]
+                    if isinstance(value, str):
+                        node.value = ast.Str(s=value)
+                    elif isinstance(value, int):
+                        node.value = ast.Num(n=value)
+                    elif isinstance(value, list):
+                        node.value = ast.List(elts=[ast.Str(s=elt) for elt in value], ctx=ast.Load())
+                    elif isinstance(value, dict):
+                        keys = [ast.Str(s=k) for k in value.keys()]
+                        values = [ast.Str(s=v) for v in value.values()]
+                        node.value = ast.Dict(keys=keys, values=values)
+                    elif isinstance(value, bool):
+                        node.value = ast.NameConstant(value=value)
+
+    new_content = astor.to_source(tree)
+
+    with open(new_python_file_path, 'w') as file:
+        file.write(new_content)
+
 
 def load_yaml(path: str) -> dict:
     assert os.path.isfile(path), 'Can not find this yaml file {}'.format(path)
@@ -56,15 +94,11 @@ def save_json(path: str,
         json.dump(data, file, indent=indent)
 
 
-def get_model_path(__file__: str) -> str:
+def get_model_path(cfg: dict) -> str:
     """
-        將原本指到py檔的路徑往前提一層
-        ex:
-            __file__ = "D://A/hello.py"
-            轉換為
-            __file__ = "D://A"
+        提取當前model的資料夾路徑
     """
-    return str(Path(__file__).parent)
+    return os.path.join(os.getcwd(), 'model_zoo', cfg['model_dir_name'])
 
 
 def get_work_dir_path(cfg: dict) -> str:

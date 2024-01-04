@@ -209,7 +209,7 @@ class Mask2FormerTrackHead(MaskFormerHead):
 
             assert len(
                 pair_gt_insatences
-            ) > 1, f'mask2former for vis need multi frames to train, \
+            ) > 1, f'mask2former.yaml for vis need multi frames to train, \
                 but you only use {len(pair_gt_insatences)} frames'
 
             _device = pair_gt_insatences[0].labels.device
