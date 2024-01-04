@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
 from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
