@@ -348,7 +348,7 @@ class MyWidget(QtWidgets.QWidget):
 
         cmd = [
             "python",
-            "C:/Users/Yeh/Desktop/AOI-Project/tools/create_data.py",    ##### 需要更改!!!!!
+            "./tools/create_data.py",    ##### 需要更改!!!!!
             "--source_dir", source_dir,
             "--output_dir", output_dir,
             "--classes_yaml", classes_yaml,

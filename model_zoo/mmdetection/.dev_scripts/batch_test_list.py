@@ -280,7 +280,7 @@ libra_rcnn = dict(
     metric=dict(bbox_mAP=38.3),
 )
 mask2former = dict(
-    config='configs/mask2former.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py',
+    config='configs/mask2former_custom.yaml/mask2former_r50_8xb2-lsj-50e_coco-panoptic.py',
     checkpoint='mask2former_r50_lsj_8x2_50e_coco-panoptic_20220326_224516-11a44721.pth', # noqa
     url='https://download.openmmlab.com/mmdetection/v2.0/mask2former/mask2former_r50_lsj_8x2_50e_coco-panoptic/mask2former_r50_lsj_8x2_50e_coco-panoptic_20220326_224516-11a44721.pth', # noqa
     eval=['bbox', 'segm', 'PQ'],

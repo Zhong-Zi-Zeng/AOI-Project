@@ -287,6 +287,7 @@ class Evaluator:
         # 過殺率 (全部類別)
         fpr_all_classes = round((sum_fp / denominator) * 100, 2)
 
+        # TODO: 如果是以圖片為單位，那麼除以此CLASS在Dataset中的數量
         # 檢出率 (各個類別)
         recall_each_class = [round(v * 100, 2) for v in np.divide(each_class_tp, each_class_tp + each_class_fn,
                                                                   out=np.zeros_like(each_class_tp),
@@ -419,11 +420,11 @@ class Evaluator:
                      zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
         }
 
-
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # Evaluate
-            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox', threshold_iou=self.cfg['iou_thres'])
+            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
+                                                  threshold_iou=self.cfg['iou_thres'])
 
             # Print information
             self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
