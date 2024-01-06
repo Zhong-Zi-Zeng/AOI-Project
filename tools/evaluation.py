@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
 from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
@@ -93,6 +94,7 @@ class Writer:
                                self.cfg['optimizer'],
                                self.cfg['imgsz'][0],
                                self.cfg['use_patch'],
+                               self.cfg['number_of_class'],
                                round(TIMER[2].dt, 3),
                                round(TIMER[3].dt, 3),
                                self.cfg['nms_thres'],
@@ -205,7 +207,6 @@ class Evaluator:
                         'score': round(score, 5),
                         'segmentation': rle
                     })
-
 
             elif self.cfg['task'] == 'object_detection':
                 class_list = result['class_list']
@@ -418,11 +419,11 @@ class Evaluator:
                      zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
         }
 
-
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # Evaluate
-            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox', threshold_iou=self.cfg['iou_thres'])
+            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
+                                                  threshold_iou=self.cfg['iou_thres'])
 
             # Print information
             self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
@@ -435,7 +436,7 @@ class Evaluator:
             each_value = [value for value in recall_and_fpr['Each'].values()]
             each_value = np.array(each_value).T
 
-            for idx, (cls_name, sheet_name) in enumerate(zip(self.cfg['class_names'], self.cfg['sheet_names'][1:])):
+            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
                 self.writer.write_col(self.writer.common_metrics +
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)

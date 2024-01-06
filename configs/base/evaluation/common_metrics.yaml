@@ -3,6 +3,7 @@ common:
   - "Optimizer"
   - "Image Size"
   - "Use Patch"
+  - "Number of Class"
   - "Inference Time(ms)"
   - "NMS Time(ms)"
   - "NMS Threshold"

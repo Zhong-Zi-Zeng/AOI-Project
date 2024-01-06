@@ -23,12 +23,14 @@ class yoloSegConverter(BaseConverter):
                  classes_yaml: str,
                  dataset_type: str,
                  patch_size: Optional[int] = None,
+                 stride: Optional[int] = None,
                  store_none: bool = False):
         super().__init__(source_dir, output_dir,  classes_yaml)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
-        self.patch_size = patch_size
         self.dataset_type = dataset_type  # train or test
+        self.patch_size = patch_size
+        self.stride = stride
         self.store_none = store_none
         self.generate_dir()
 
@@ -88,7 +90,8 @@ class yoloSegConverter(BaseConverter):
                                                      mask,
                                                      classes,
                                                      bboxes,
-                                                     polygons, self.patch_size, self.store_none)
+                                                     polygons,
+                                                     self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']

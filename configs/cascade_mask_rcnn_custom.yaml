@@ -1,4 +1,4 @@
-_base_: [ "./base/model/Mask2Former/r50.yaml", # model
+_base_: [ "./base/model/Cascade-Mask RCNN/r50.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -7,7 +7,7 @@ _base_: [ "./base/model/Mask2Former/r50.yaml", # model
 
 # ===========Dataset===========
 number_of_class: 4
-coco_root: "./data/coco/original_class_4"
+coco_root: "./data/white_controller/coco/original_class_4"
 class_names:
   - "Scratch"
   - "Friction"
@@ -15,15 +15,15 @@ class_names:
   - "Assembly"
 
 # ===========Hyperparameter===========
-optimizer: "AdamW" # Adam、AdamW、SGD
+optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 50
+end_epoch: 1
 warmup_epoch: 3
 initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
 minimum_lr: 0.0001 # Minimum learning rate
-batch_size: 4
+batch_size: 8
 imgsz: [1024, 1024]
 use_patch: false
 device: "0"

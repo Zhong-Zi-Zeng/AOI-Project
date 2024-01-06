@@ -21,12 +21,14 @@ class yoloBboxConverter(BaseConverter):
                  classes_yaml: str,
                  dataset_type: str,
                  patch_size: Optional[int] = None,
+                 stride: Optional[int] = None,
                  store_none: bool = False):
         super().__init__(source_dir, output_dir, classes_yaml)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
         self.patch_size = patch_size
         self.dataset_type = 'val' if dataset_type == 'test' else dataset_type   # train or val
+        self.stride = stride
         self.store_none = store_none
         self.generate_dir()
 
@@ -64,6 +66,11 @@ class yoloBboxConverter(BaseConverter):
                 for idx, bbox in enumerate(bboxes):
                     # Normalize
                     x, y, w, h = bbox
+
+                    x = 0 if x < 0 else x
+                    y = 0 if y < 0 else y
+                    x = image_width if x > image_width else x
+                    y = image_height if y > image_height else y
 
                     # x, y, w, h -> cx, cy, w, h
                     bbox[0] = (x + w / 2) / image_width
@@ -103,7 +110,8 @@ class yoloBboxConverter(BaseConverter):
                                                      mask,
                                                      classes,
                                                      bboxes,
-                                                     polygons, self.patch_size, self.store_none)
+                                                     polygons,
+                                                     self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']

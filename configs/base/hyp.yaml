@@ -7,7 +7,6 @@ warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-start_factor: 0.3
 batch_size: 16
 imgsz: [640, 640] # H, W
 device: '0' # cuda device, i.e. 0 or 0,1,2,3 or cpu
