@@ -1,12 +1,9 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
+_base_: [ "./base/model/Mask2Former/r50.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
 ]
 
-# ===========Model===========
-train_dir: "./data/yoloSeg/original_class_4/train"
-val_dir: "./data/yoloSeg/original_class_4/test"
 
 # ===========Dataset===========
 number_of_class: 4
@@ -19,17 +16,15 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
+weight: " "
+start_epoch: 50
+end_epoch: 1
+warmup_epoch: 3
+initial_lr: 0.0003 # Initial learning rate
+lr: 0.001 # The learning rate after warmup
+minimum_lr: 0.0001 # Minimum learning rate
+batch_size: 4
 imgsz: [1024, 1024]
 use_patch: false
-
-weight: " "
-start_epoch: 0
-end_epoch: 50
-warmup_epoch: 3
-initial_lr: 0.003 # Initial learning rate
-lr: 0.01 # The learning rate after warmup
-minimum_lr: 0.001 # Minimum learning rate
-batch_size: 8
 device: "0"
-
 

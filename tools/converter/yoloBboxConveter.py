@@ -67,6 +67,11 @@ class yoloBboxConverter(BaseConverter):
                     # Normalize
                     x, y, w, h = bbox
 
+                    x = 0 if x < 0 else x
+                    y = 0 if y < 0 else y
+                    x = image_width if x > image_width else x
+                    y = image_height if y > image_height else y
+
                     # x, y, w, h -> cx, cy, w, h
                     bbox[0] = (x + w / 2) / image_width
                     bbox[1] = (y + h / 2) / image_height

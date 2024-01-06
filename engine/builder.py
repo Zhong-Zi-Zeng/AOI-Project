@@ -7,9 +7,16 @@ import sys
 
 
 class Builder:
-    def __init__(self, config_path: str, task: str):
+    def __init__(self,
+                 config_path: str = None,
+                 yaml_dict: dict = None,
+                 task: str = None):
+
+        assert config_path is None or yaml_dict is None
+
         self.config_path = config_path
         self.task = task
+        self.custom_config = yaml_dict if yaml_dict else load_yaml(config_path)
 
     def _merge_dicts(self, base: dict, custom: dict):
         """
@@ -63,12 +70,10 @@ class Builder:
             Returns:
                 config (dict): 最後合併好的config
         """
-        custom_config = load_yaml(self.config_path)
-        # config_dir = os.path.dirname(self.config_path)
         config_dir = os.path.join(os.getcwd(), 'configs')
 
         # Load config
-        final_config = self._process_base_key(config_dir, custom_config)
+        final_config = self._process_base_key(config_dir, self.custom_config)
 
         # Create work dir
         self._create_work_dir(final_config)

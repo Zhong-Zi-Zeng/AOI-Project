@@ -157,7 +157,7 @@ class Yolov7Obj(BaseDetectModel):
 
                         # Draw bounding box
                         label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=1)
+                        plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=5)
 
             # img = cv2.resize(original_image, (512, 512))
             # cv2.imshow('', img)
