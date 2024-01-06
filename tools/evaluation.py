@@ -94,6 +94,7 @@ class Writer:
                                self.cfg['optimizer'],
                                self.cfg['imgsz'][0],
                                self.cfg['use_patch'],
+                               self.cfg['number_of_class'],
                                round(TIMER[2].dt, 3),
                                round(TIMER[3].dt, 3),
                                self.cfg['nms_thres'],
@@ -207,7 +208,6 @@ class Evaluator:
                         'segmentation': rle
                     })
 
-
             elif self.cfg['task'] == 'object_detection':
                 class_list = result['class_list']
                 score_list = result['score_list']
@@ -287,7 +287,6 @@ class Evaluator:
         # 過殺率 (全部類別)
         fpr_all_classes = round((sum_fp / denominator) * 100, 2)
 
-        # TODO: 如果是以圖片為單位，那麼除以此CLASS在Dataset中的數量
         # 檢出率 (各個類別)
         recall_each_class = [round(v * 100, 2) for v in np.divide(each_class_tp, each_class_tp + each_class_fn,
                                                                   out=np.zeros_like(each_class_tp),
@@ -437,7 +436,7 @@ class Evaluator:
             each_value = [value for value in recall_and_fpr['Each'].values()]
             each_value = np.array(each_value).T
 
-            for idx, (cls_name, sheet_name) in enumerate(zip(self.cfg['class_names'], self.cfg['sheet_names'][1:])):
+            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
                 self.writer.write_col(self.writer.common_metrics +
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)

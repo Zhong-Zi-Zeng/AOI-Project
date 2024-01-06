@@ -5,17 +5,19 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: "./data/white_controller/coco/original_class_1"
-train_dir: "./data/white_controller/yoloSeg/original_class_4/train"
-val_dir: "./data/white_controller/yoloSeg/original_class_4/test"
-number_of_class: 1
+coco_root: "./data/coco/original_class_4"
+train_dir: "./data/yoloSeg/original_class_4/train"
+val_dir: "./data/yoloSeg/original_class_4/test"
+number_of_class: 4
 class_names:
-  - "Defect"
-
+  - "Scratch"
+  - "Friction"
+  - "Dirty"
+  - "Assembly"
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/Yolov7inSeg_2/weights/best.pt"
+weight: " "
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3
