@@ -15,7 +15,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: "C:/Users/鐘子恒/Desktop/best.pt"
+weight: " "
 start_epoch: 0
 end_epoch: 50
 warmup_epoch: 3
