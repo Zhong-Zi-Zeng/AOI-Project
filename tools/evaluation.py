@@ -30,6 +30,9 @@ def get_args_parser():
                              'If given the file, this script will append new value in the given file.'
                              'Otherwise, this script will create a new Excel file depending on the task type.')
 
+    parser.add_argument('--dir_name', type=str,
+                        help='The name of work dir.')
+
     return parser
 
 
@@ -463,7 +466,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=args.config, task='eval')
+    builder = Builder(config_path=args.config, task='train', work_dir_name=args.dir_name)
 
     # Build config
     cfg = builder.build_config()

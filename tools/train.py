@@ -19,6 +19,9 @@ def get_args_parser():
     parser.add_argument('--config', '-c', type=str, required=True,
                         help='The path of config.')
 
+    parser.add_argument('--dir_name', type=str,
+                        help='The name of work dir.')
+
     return parser
 
 
@@ -28,7 +31,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=args.config, task='train')
+    builder = Builder(config_path=args.config, task='train', work_dir_name=args.dir_name)
 
     # Build config
     cfg = builder.build_config()

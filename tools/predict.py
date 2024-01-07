@@ -20,6 +20,9 @@ def get_args_parser():
     parser.add_argument('--source', '-s', type=str, required=True,
                         help='An image path or a directory path')
 
+    parser.add_argument('--dir_name', type=str,
+                        help='The name of work dir.')
+
     parser.add_argument('--show', action='store_true',
                         help='Whether show the resulting image.')
 
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=args.config, task='predict')
+    builder = Builder(config_path=args.config, task='train', work_dir_name=args.dir_name)
 
     # Build config
     cfg = builder.build_config()

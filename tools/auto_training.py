@@ -275,7 +275,7 @@ experiment_order = {
          "use_patch": True},
 
         # 8 ~ 15
-        {"coco_root": "./data/white_controller/white_controller/coco/original_class_4",
+        {"coco_root": "./data/white_controller/coco/original_class_4",
          "train_txt": "./data/white_controller/yoloBbox/original_class_4/train_list.txt",
          "val_txt": "./data/white_controller/yoloBbox/original_class_4/val_list.txt",
          "number_of_class": 4,
@@ -285,7 +285,7 @@ experiment_order = {
          "imgsz": [1024, 1024],
          "use_patch": False},
 
-        {"coco_root": "./data/white_controller/white_controller/coco/original_class_1",
+        {"coco_root": "./data/white_controller/coco/original_class_1",
          "train_txt": "./data/white_controller/yoloBbox/original_class_1/train_list.txt",
          "val_txt": "./data/white_controller/yoloBbox/original_class_1/val_list.txt",
          "number_of_class": 1,
