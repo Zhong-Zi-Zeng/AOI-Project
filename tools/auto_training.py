@@ -358,6 +358,7 @@ experiment_order = {
     ]
 }
 
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Model auto training script.', add_help=False)
 
@@ -373,7 +374,6 @@ def get_args_parser():
     return parser
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Model evaluation script.',
                                      parents=[get_args_parser()])
@@ -384,7 +384,7 @@ if __name__ == "__main__":
     model_name = args.model_name
     experiment_length = len(experiment_order[model_name])
 
-    assert end_id <=  experiment_length
+    assert end_id <= experiment_length
 
     for idx in range(start_id, end_id + 1):
         # Load template config
@@ -413,5 +413,3 @@ if __name__ == "__main__":
                         ])
 
         torch.cuda.empty_cache()
-
-
