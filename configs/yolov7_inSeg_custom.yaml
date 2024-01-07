@@ -5,13 +5,15 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: "D:/AOI/solovision_vs_yolov8/1500_Dataset_coco"
-train_dir: "D:/AOI/solovision_vs_yolov8/1500_Dataset_inSeg/train"
-val_dir: "D:/AOI/solovision_vs_yolov8/1500_Dataset_inSeg/test"
-number_of_class: 2
+coco_root: "./data/white_controller/coco/original_class_4"
+train_dir: "./data/white_controller/yoloSeg/original_class_4/train"
+val_dir: "./data/white_controller/yoloSeg/original_class_4/test"
+number_of_class: 4
 class_names:
-  - "Pass"
-  - "Defect"
+  - "Scratch"
+  - "Friction"
+  - "Dirty"
+  - "Assembly"
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD

@@ -309,7 +309,7 @@ class MyWidget(QtWidgets.QWidget):
         # print(folderPath)
 
     def openFile(self, input_line):
-        filePath, _  = QtWidgets.QFileDialog.getOpenFileName()
+        filePath, _ = QtWidgets.QFileDialog.getOpenFileName()
         input_line.setText(filePath)
         # print(filePath)
 

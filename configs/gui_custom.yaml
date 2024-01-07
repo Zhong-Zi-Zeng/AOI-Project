@@ -1,0 +1,28 @@
+_base_:
+- ./base/model/YOLO-v7/yolov7_inSeg_base.yaml
+- ./base/evaluation/instance_segmentation.yaml
+- ./base/dataset.yaml
+- ./base/hyp.yaml
+batch_size: 8
+class_names:
+- Scratch
+- Friction
+- Dirty
+- Assembly
+coco_root: Z:/Student_Work/Heng/AOI-Dataset/white_controller/coco/patch_1024_class_4
+device: '0'
+end_epoch: 50
+imgsz:
+- 1024
+- 1024
+initial_lr: 0.003
+lr: 0.01
+minimum_lr: 0.001
+number_of_class: 4
+optimizer: Adam
+start_epoch: 0
+train_dir: Z:/Student_Work/Heng/AOI-Dataset/white_controller/yoloSeg/patch_1024_class_4/train
+use_patch: false
+val_dir: Z:/Student_Work/Heng/AOI-Dataset/white_controller/yoloSeg/patch_1024_class_4/test
+warmup_epoch: 3
+weight: C:/Users/Yeh/Desktop/best.pt
