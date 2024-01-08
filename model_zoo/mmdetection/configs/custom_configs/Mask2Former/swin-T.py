@@ -21,6 +21,8 @@ start_factor = 0.3
 minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
+nms_threshold = 0.7
+check_interval = 1
 optimizer = 'SGD'
 backend_args = None
 
@@ -115,7 +117,7 @@ model = dict(
         num_things_classes=num_things_classes,
         num_stuff_classes=num_stuff_classes),
     init_cfg=None,
-    test_cfg=dict(panoptic_on=False))
+    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold))
 
 # ==========dataloader==========
 dataset_type = 'CocoDataset'
@@ -153,5 +155,5 @@ test_evaluator = val_evaluator
 
 # ==========Hook==========
 default_hooks = dict(
-    checkpoint=dict(type='CheckpointHook', interval=1),
+    checkpoint=dict(type='CheckpointHook', interval=check_interval),
 )
