@@ -40,7 +40,7 @@ class CascadeMaskRCNN(BaseInstanceModel):
         variables = {
             '_base_': new_base,
             'data_root': self.cfg['coco_root'],
-            'classes': tuple(self.cfg['class_names']),
+            'classes': self.cfg['class_names'],
             'batch_size': self.cfg['batch_size'],
             'epoch': self.cfg['end_epoch'],
             'height': self.cfg['imgsz'][0],
@@ -54,6 +54,7 @@ class CascadeMaskRCNN(BaseInstanceModel):
             'optim_wrapper': optimizer,
             'default_hooks': dict(checkpoint=dict(type='CheckpointHook', interval=self.cfg['save_period']))
         }
+
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
 
@@ -78,6 +79,7 @@ class CascadeMaskRCNN(BaseInstanceModel):
                  ) -> dict:
         if not hasattr(self, 'model'):
             self._load_model()
+
 
         with TIMER[0]:
             result = self.model(source, show=False, print_result=False, return_vis=True)
