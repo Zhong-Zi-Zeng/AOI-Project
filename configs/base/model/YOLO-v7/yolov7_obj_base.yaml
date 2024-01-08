@@ -5,7 +5,7 @@ train_txt: ''
 val_txt: ''
 data_file: "./model_zoo/yolov7_obj/data/coco.yaml"
 hyp_file: "./model_zoo/yolov7_obj/data/hyp.scratch.p6.yaml"
-cfg_file: "./model_zoo/yolov7_obj/cfg/training/yolov7-d6.yaml"
+cfg_file: "./model_zoo/yolov7_obj/cfg/training/yolov7.yaml"
 
 
 

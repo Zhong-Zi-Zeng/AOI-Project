@@ -66,7 +66,7 @@ class Yolov7Obj(BaseDetectModel):
         """
 
         subprocess.run(['python',
-                        os.path.join(get_model_path(self.cfg), 'train_aux.py'),
+                        os.path.join(get_model_path(self.cfg), 'train.py'),
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
@@ -77,6 +77,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--optimizer', self.cfg['optimizer'],
                         '--device', self.cfg['device'],
                         '--name', './',
+                        '--save_period', str(self.cfg['save_period']),
                         '--img', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
                         ]

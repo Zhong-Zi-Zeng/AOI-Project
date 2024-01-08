@@ -188,6 +188,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--optimizer', self.cfg['optimizer'],
                         '--imgsz', str(self.cfg['imgsz'][0]),
                         '--device', self.cfg['device'],
+                        '--save-period', str(self.cfg['save_period']),
                         '--exist-ok',
                         '--cos-lr'
                         ]

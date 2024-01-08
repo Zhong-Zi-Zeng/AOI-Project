@@ -60,7 +60,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create builder
-    builder = Builder(config_path=args.config, task='train', work_dir_name=args.dir_name)
+    builder = Builder(config_path=args.config, task='predict', work_dir_name=args.dir_name)
 
     # Build config
     cfg = builder.build_config()
