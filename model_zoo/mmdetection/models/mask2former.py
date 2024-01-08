@@ -40,7 +40,7 @@ class Mask2Former(BaseInstanceModel):
         variables = {
             '_base_': new_base,
             'data_root': self.cfg['coco_root'],
-            'classes': tuple(self.cfg['class_names']),
+            'classes': self.cfg['class_names'],
             'batch_size':  self.cfg['batch_size'],
             'epochs':  self.cfg['end_epoch'],
             'height':  self.cfg['imgsz'][0],
@@ -53,7 +53,6 @@ class Mask2Former(BaseInstanceModel):
             'warmup_end':  self.cfg['warmup_epoch'],
             'optim_wrapper': optimizer,
             'default_hooks': dict(checkpoint=dict(type='CheckpointHook', interval=self.cfg['save_period']))
-
         }
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
