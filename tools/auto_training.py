@@ -275,7 +275,7 @@ experiment_order = {
          "use_patch": True},
 
         # 8 ~ 15
-        {"coco_root": "./data/white_controller/white_controller/coco/original_class_4",
+        {"coco_root": "./data/white_controller/coco/original_class_4",
          "train_txt": "./data/white_controller/yoloBbox/original_class_4/train_list.txt",
          "val_txt": "./data/white_controller/yoloBbox/original_class_4/val_list.txt",
          "number_of_class": 4,
@@ -285,7 +285,7 @@ experiment_order = {
          "imgsz": [1024, 1024],
          "use_patch": False},
 
-        {"coco_root": "./data/white_controller/white_controller/coco/original_class_1",
+        {"coco_root": "./data/white_controller/coco/original_class_1",
          "train_txt": "./data/white_controller/yoloBbox/original_class_1/train_list.txt",
          "val_txt": "./data/white_controller/yoloBbox/original_class_1/val_list.txt",
          "number_of_class": 1,
@@ -355,8 +355,140 @@ experiment_order = {
          "imgsz": [256, 256],
          "use_patch": True},
 
+    ],
+    "CascadeMaskRCNN": [
+        # 0 ~ 7
+        {"coco_root": "./data/white_controller/coco/original_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": False},
+
+        {"coco_root": "./data/white_controller/coco/original_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": False},
+
+        {"coco_root": "./data/white_controller/coco/patch_1024_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_1024_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_512_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [512, 512],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_512_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [512, 512],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_256_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [256, 256],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_256_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "SGD",
+         "weight": " ",
+         "imgsz": [256, 256],
+         "use_patch": True},
+
+        # 8 ~ 15
+        {"coco_root": "./data/white_controller/coco/original_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": False},
+
+        {"coco_root": "./data/white_controller/coco/original_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": False},
+
+        {"coco_root": "./data/white_controller/coco/patch_1024_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_1024_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [1024, 1024],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_512_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [512, 512],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_512_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [512, 512],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_256_class_4",
+         "number_of_class": 4,
+         "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [256, 256],
+         "use_patch": True},
+
+        {"coco_root": "./data/white_controller/coco/patch_256_class_1",
+         "number_of_class": 1,
+         "class_names": ["Defect"],
+         "optimizer": "AdamW",
+         "weight": " ",
+         "imgsz": [256, 256],
+         "use_patch": True},
     ]
 }
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Model auto training script.', add_help=False)
@@ -373,7 +505,6 @@ def get_args_parser():
     return parser
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Model evaluation script.',
                                      parents=[get_args_parser()])
@@ -384,7 +515,7 @@ if __name__ == "__main__":
     model_name = args.model_name
     experiment_length = len(experiment_order[model_name])
 
-    assert end_id <=  experiment_length
+    assert end_id <= experiment_length
 
     for idx in range(start_id, end_id + 1):
         # Load template config
@@ -413,5 +544,3 @@ if __name__ == "__main__":
                         ])
 
         torch.cuda.empty_cache()
-
-

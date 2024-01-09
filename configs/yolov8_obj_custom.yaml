@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
+_base_: [ "./base/model/YOLO-v8/yolov8_obj_base.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -15,7 +15,7 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "D:/Heng_shared/AOI-Project/best.pt"
 start_epoch: 0
 end_epoch: 200
 warmup_epoch: 3
@@ -23,7 +23,7 @@ initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 16
-imgsz: [1024, 1024]
+imgsz: [640, 640]
 use_patch: false
 device: "0"
 

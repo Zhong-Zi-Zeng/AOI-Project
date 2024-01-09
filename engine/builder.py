@@ -10,12 +10,14 @@ class Builder:
     def __init__(self,
                  config_path: str = None,
                  yaml_dict: dict = None,
-                 task: str = None):
+                 task: str = None,
+                 work_dir_name: str = None):
 
         assert config_path is None or yaml_dict is None
 
         self.config_path = config_path
         self.task = task
+        self.work_dir_name = work_dir_name
         self.custom_config = yaml_dict if yaml_dict else load_yaml(config_path)
 
     def _merge_dicts(self, base: dict, custom: dict):
@@ -32,22 +34,27 @@ class Builder:
                 base[key] = custom[key]
 
     def _create_work_dir(self, cfg: dict):
-        cfg['work_dir_name'] = os.path.join(self.task, cfg['model_name'])
-        work_dir_path = get_work_dir_path(cfg)
-
-        if not os.path.isdir(work_dir_path):
+        if self.work_dir_name is not None:
+            cfg['work_dir_name'] = os.path.join(self.task, self.work_dir_name)
+            work_dir_path = get_work_dir_path(cfg)
             os.makedirs(work_dir_path)
         else:
-            index = 2
-            while True:
-                new_work_dir_name = f"{cfg['work_dir_name']}_{index}"
-                new_work_dir_path = os.path.join(get_works_dir_path(), new_work_dir_name)
-                if not os.path.exists(new_work_dir_path):
-                    os.makedirs(new_work_dir_path)
-                    cfg['work_dir_name'] = new_work_dir_name
-                    break
-                else:
-                    index += 1
+            cfg['work_dir_name'] = os.path.join(self.task, cfg['model_name'])
+            work_dir_path = get_work_dir_path(cfg)
+
+            if not os.path.isdir(work_dir_path):
+                os.makedirs(work_dir_path)
+            else:
+                index = 2
+                while True:
+                    new_work_dir_name = f"{cfg['work_dir_name']}_{index}"
+                    new_work_dir_path = os.path.join(get_works_dir_path(), new_work_dir_name)
+                    if not os.path.exists(new_work_dir_path):
+                        os.makedirs(new_work_dir_path)
+                        cfg['work_dir_name'] = new_work_dir_name
+                        break
+                    else:
+                        index += 1
 
     def _process_base_key(self, config_dir, config):
         """

@@ -80,7 +80,7 @@ class yoloBboxConverter(BaseConverter):
                     bbox[3] /= image_height
 
                     # Extract the class label without the '#'
-                    class_name = classes[idx][1:]
+                    class_name = classes[idx].replace("#", '')
 
                     # Find the index of a class label
                     # class_idx = self.classes_name.index(class_name)
@@ -142,14 +142,16 @@ class yoloBboxConverter(BaseConverter):
                 if len(classes) != 0:
                     with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
                         for idx, bbox in enumerate(bboxes):
-                            # Normalize
-                            bbox[0] /= image_width
-                            bbox[1] /= image_height
+                            x, y, w, h = bbox
+
+                            # Normalize xywh -> cxcywh
+                            bbox[0] = (x + w / 2) / image_width
+                            bbox[1] = (y + h / 2) / image_height
                             bbox[2] /= image_width
                             bbox[3] /= image_height
 
                             # Extract the class label without the '#'
-                            class_name = classes[idx][1:]
+                            class_name = classes[idx].replace("#", '')
 
                             # Find the index of a class label
                             # class_idx = self.classes_name.index(class_name)

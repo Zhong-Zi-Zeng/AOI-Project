@@ -20,6 +20,8 @@ start_factor = 0.3
 minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
+nms_threshold = 0.7
+check_interval = 1
 optimizer = 'SGD'
 backend_args = None
 
@@ -40,7 +42,7 @@ param_scheduler = [
          by_epoch=True,
          begin=warmup_end,
          end=epochs,
-         eta_min = minimum_lr
+         eta_min=minimum_lr
          )
 ]
 
@@ -62,7 +64,7 @@ test_pipeline = [
 ]
 
 # ==========train_cfg==========
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=1)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=10)
 
 # ==========model==========
 model = dict(
@@ -87,6 +89,11 @@ model = dict(
             type='FCNMaskHead',
             num_classes=num_classes
         )
+    ),
+
+    # ==========test_cfg==========
+    test_cfg=dict(
+        rcnn=dict(nms=dict(type='nms', iou_threshold=nms_threshold))
     )
 )
 
@@ -122,8 +129,5 @@ test_evaluator = val_evaluator
 
 # checkpoint
 default_hooks = dict(
-    checkpoint=dict(type='CheckpointHook', interval=1),
+    checkpoint=dict(type='CheckpointHook', interval=check_interval),
 )
-
-
-

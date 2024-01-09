@@ -52,8 +52,8 @@ class Mask2Former(BaseInstanceModel):
             'warmup_begin':  self.cfg['start_epoch'],
             'warmup_end':  self.cfg['warmup_epoch'],
             'optim_wrapper': optimizer,
-            'default_hooks': dict(checkpoint=dict(type='CheckpointHook', interval=self.cfg['end_epoch']))
-
+            'check_interval': self.cfg['save_period'],
+            'nms_threshold': self.cfg['nms_thres'],
         }
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')

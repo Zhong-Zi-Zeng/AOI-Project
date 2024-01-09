@@ -63,7 +63,7 @@ class yoloSegConverter(BaseConverter):
                     normalized_polygon = polygon / np.array([image_width, image_height])
 
                     # Extract the class label without the '#'
-                    class_name = classes[idx][1:]
+                    class_name = classes[idx].replace("#", '')
 
                     # Find the index of a class label
                     # class_idx = self.classes_name.index(class_name)
@@ -119,7 +119,7 @@ class yoloSegConverter(BaseConverter):
                             normalized_polygon = polygon / np.array([image_width, image_height])
 
                             # Extract the class label without the '#'
-                            class_name = classes[idx][1:]
+                            class_name = classes[idx].replace("#", '')
 
                             # Find the index of a class label
                             # class_idx = self.classes_name.index(class_name)
