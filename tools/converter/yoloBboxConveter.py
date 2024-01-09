@@ -20,10 +20,11 @@ class yoloBboxConverter(BaseConverter):
                  output_dir: str,
                  classes_yaml: str,
                  dataset_type: str,
+                 format: str,
                  patch_size: Optional[int] = None,
                  stride: Optional[int] = None,
                  store_none: bool = False):
-        super().__init__(source_dir, output_dir, classes_yaml)
+        super().__init__(source_dir, output_dir, classes_yaml, dataset_type, format)
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
         self.patch_size = patch_size

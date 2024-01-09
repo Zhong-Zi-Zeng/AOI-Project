@@ -19,7 +19,7 @@ initial_lr: 0.003
 lr: 0.01
 minimum_lr: 0.001
 number_of_class: 4
-optimizer: Adam
+optimizer: SGD
 start_epoch: 0
 train_dir: Z:/Student_Work/Heng/AOI-Dataset/white_controller/yoloSeg/patch_1024_class_4/train
 use_patch: false
