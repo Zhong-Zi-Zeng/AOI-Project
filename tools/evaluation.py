@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
 from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
+from colorama import Fore, Back, Style, init
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
@@ -196,11 +196,23 @@ class Evaluator:
             # Inference
             result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
 
+            class_list = result['class_list']
+            score_list = result['score_list']
+            bbox_list = result['bbox_list']
+
+            # When not detect anything, append null list into detected_result
+            if not (class_list or score_list or bbox_list):
+                detected_result.append({
+                    'image_id': img_id,
+                    'category_id': None,
+                    'bbox': [],
+                    'score': None,
+                    'segmentation': []
+                })
+                continue
+
             # Analyze result
             if self.cfg['task'] == 'instance_segmentation':
-                class_list = result['class_list']
-                score_list = result['score_list']
-                bbox_list = result['bbox_list']
                 rle_list = result['rle_list']
                 for cls, score, bbox, rle in zip(class_list, score_list, bbox_list, rle_list):
                     detected_result.append({
@@ -212,9 +224,6 @@ class Evaluator:
                     })
 
             elif self.cfg['task'] == 'object_detection':
-                class_list = result['class_list']
-                score_list = result['score_list']
-                bbox_list = result['bbox_list']
                 for cls, score, bbox in zip(class_list, score_list, bbox_list):
                     detected_result.append({
                         'image_id': img_id,
@@ -222,7 +231,6 @@ class Evaluator:
                         'bbox': bbox,
                         'score': round(score, 5),
                     })
-
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
@@ -443,6 +451,9 @@ class Evaluator:
                 self.writer.write_col(self.writer.common_metrics +
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)
+
+        if (np.array(recall_and_fpr['All']) == 0).all():
+            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
 
     def eval(self):
         # Generate detected json
