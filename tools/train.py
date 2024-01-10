@@ -9,6 +9,7 @@ import numpy as np
 import argparse
 import torch
 import subprocess
+import webbrowser
 
 torch.manual_seed(10)
 np.random.seed(10)
