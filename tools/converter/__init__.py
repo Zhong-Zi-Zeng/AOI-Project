@@ -4,3 +4,4 @@ from .cocoConverter import *
 from .saConverter import *
 from .yoloSegConveter import *
 from .yoloBboxConveter import *
+from .mvtecConverter import *

@@ -102,7 +102,7 @@ class Writer:
                                round(TIMER[3].dt, 3),
                                self.cfg['nms_thres'],
                                self.cfg['conf_thres'],
-                               self.cfg['iou_thres'],]
+                               self.cfg['iou_thres'], ]
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """自動儲存"""
@@ -200,17 +200,6 @@ class Evaluator:
             score_list = result['score_list']
             bbox_list = result['bbox_list']
 
-            # When not detect anything, append null list into detected_result
-            if not (class_list or score_list or bbox_list):
-                detected_result.append({
-                    'image_id': img_id,
-                    'category_id': None,
-                    'bbox': [],
-                    'score': None,
-                    'segmentation': []
-                })
-                continue
-
             # Analyze result
             if self.cfg['task'] == 'instance_segmentation':
                 rle_list = result['rle_list']
@@ -231,6 +220,10 @@ class Evaluator:
                         'bbox': bbox,
                         'score': round(score, 5),
                     })
+
+        # When not detect anything, append null list into detected_result
+        assert len(detected_result) != 0, Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE
+
         # Save
         save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
@@ -451,9 +444,6 @@ class Evaluator:
                 self.writer.write_col(self.writer.common_metrics +
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)
-
-        if (np.array(recall_and_fpr['All']) == 0).all():
-            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
 
     def eval(self):
         # Generate detected json

@@ -20,6 +20,12 @@ def get_args_parser():
     parser.add_argument('--source', '-s', type=str, required=True,
                         help='An image path or a directory path')
 
+    parser.add_argument('--conf_thres', type=float, default=0.5,
+                        help='Confidence threshold.')
+
+    parser.add_argument('--nms_thres', type=float, default=0.5,
+                        help='NMS threshold.')
+
     parser.add_argument('--dir_name', type=str,
                         help='The name of work dir.')
 
@@ -40,8 +46,8 @@ def run():
     for image_file in tqdm(source, total=len(source)):
         image = cv2.imread(image_file)
         result = model.predict(image,
-                               conf_thres=cfg["conf_thres"],
-                               nms_thres=cfg["nms_thres"])
+                               conf_thres=args.conf_thres,
+                               nms_thres=args.nms_thres)
 
         result_image = result['result_image']
 

@@ -45,8 +45,6 @@ class Yolov8Obj(BaseDetectModel):
             self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
-        names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
-
         with TIMER[0]:
             # ------------------------------Pre-process (Start)----------------------------
             with TIMER[1]:

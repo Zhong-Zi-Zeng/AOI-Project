@@ -1,0 +1,4 @@
+model_name: 'CODETR'
+model_dir_name: 'mmdetection'
+
+cfg_file: "./model_zoo/mmdetection/configs/custom_configs/CO-DETR/r50.py"
