@@ -17,7 +17,9 @@ class BaseConverter(ABC):
     def __init__(self,
                  source_dir: str,
                  output_dir: str,
-                 classes_yaml: str):
+                 classes_yaml: str,
+                 dataset_type: str,
+                 format: str):
         # 生成初始的資料夾
         os.makedirs(output_dir, exist_ok=True)
 
@@ -26,11 +28,25 @@ class BaseConverter(ABC):
             self.classes_name = yaml.safe_load(file)  # yaml
             # self.classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
-        self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
-                                 if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
+        if format == 'mvtec':
+            if dataset_type == 'train':
+                good_folder = os.path.join(source_dir, 'good')
+                self.image_files_path = [os.path.join(good_folder, image_name) for image_name in os.listdir(good_folder)
+                                          if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有image路徑
+                self.json_files_path = []
+            else:  # test
+                defect_folder = os.path.join(source_dir, 'defect')
+                self.image_files_path = [os.path.join(defect_folder, image_name) for image_name in os.listdir(defect_folder)
+                                          if self.is_image(os.path.join(defect_folder, image_name))]  # 儲存所有image路徑
 
-        self.json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
-                                if self.is_json(os.path.join(source_dir, json_name))]  # 儲存所有image路徑
+                self.json_files_path = [os.path.join(defect_folder, json_name) for json_name in os.listdir(defect_folder)
+                                         if self.is_json(os.path.join(defect_folder, json_name))]  # 儲存所有image路徑
+        else:   # coco, yoloSeg, yoloBbox
+            self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
+                                     if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
+
+            self.json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
+                                    if self.is_json(os.path.join(source_dir, json_name))]  # 儲存所有image路徑
 
         self.processed_image_count = 0  # Record the number of times divide_to_patch is called (so that the patch name is not overwritten)
 
@@ -55,7 +71,7 @@ class BaseConverter(ABC):
                 polygons (list[np.ndarray]): 每個瑕疵對應的polygon [N, M, 2]
                 store_none (bool) : 是否儲存沒有瑕疵的patch
         """
-        stride = 1 if stride == None else stride    # 沒輸入表示 no overlap
+        # stride = 1 if stride == None else stride    # 沒輸入表示 no overlap
 
         # Check whether image_h and image_w are divisible by patch_size
         if image_height % patch_size != 0 or image_width % patch_size != 0:
