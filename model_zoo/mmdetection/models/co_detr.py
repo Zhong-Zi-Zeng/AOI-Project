@@ -44,7 +44,7 @@ class CODETR(BaseDetectModel):
             'data_root': self.cfg['coco_root'],
             'classes': self.cfg['class_names'],
             'batch_size': self.cfg['batch_size'],
-            'epoch': self.cfg['end_epoch'],
+            'epochs': self.cfg['end_epoch'],
             'height': self.cfg['imgsz'][0],
             'width': self.cfg['imgsz'][1],
             'num_classes': self.cfg['number_of_class'],
@@ -73,6 +73,15 @@ class CODETR(BaseDetectModel):
             self.cfg['cfg_file'],
             '--work-dir', get_work_dir_path(self.cfg)
         ])
+        # env = os.environ.copy()
+        # env['CUDA_VISIBLE_DEVICES'] = '1'
+        #
+        # subprocess.run([
+        #     os.path.join(get_model_path(self.cfg), 'tools', 'dist_train.sh'),
+        #     self.cfg['cfg_file'],
+        #     '2'
+        #     '--work-dir', get_work_dir_path(self.cfg),
+        # ])
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],

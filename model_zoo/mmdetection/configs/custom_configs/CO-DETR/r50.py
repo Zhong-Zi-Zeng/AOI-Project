@@ -146,7 +146,7 @@ model = dict(
                         embed_dims=256,
                         num_levels=5,
                         dropout=0.0),
-                    feedforward_channels=512,
+                    feedforward_channels=1024,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
             decoder=dict(
@@ -167,7 +167,7 @@ model = dict(
                             num_levels=5,
                             dropout=0.0),
                     ],
-                    feedforward_channels=512,
+                    feedforward_channels=1024,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')))),
@@ -335,7 +335,7 @@ model = dict(
                 nms=dict(type='nms', iou_threshold=0.5),
                 max_per_img=100)),
         dict(
-            # atss bbox head:
+                # atss bbox head:
             nms_pre=1000,
             min_bbox_size=0,
             score_thr=0.0,
