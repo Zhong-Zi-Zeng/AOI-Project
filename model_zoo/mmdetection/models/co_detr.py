@@ -73,15 +73,6 @@ class CODETR(BaseDetectModel):
             self.cfg['cfg_file'],
             '--work-dir', get_work_dir_path(self.cfg)
         ])
-        # env = os.environ.copy()
-        # env['CUDA_VISIBLE_DEVICES'] = '1'
-        #
-        # subprocess.run([
-        #     os.path.join(get_model_path(self.cfg), 'tools', 'dist_train.sh'),
-        #     self.cfg['cfg_file'],
-        #     '2'
-        #     '--work-dir', get_work_dir_path(self.cfg),
-        # ])
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
@@ -95,15 +86,43 @@ class CODETR(BaseDetectModel):
 
         with TIMER[0]:
             with TIMER[1]:
-                pass
-            with TIMER[2]:
-                pass
-            with TIMER[3]:
-                pass
+                # Load image
+                if isinstance(source, str):
+                    original_image = cv2.imread(source)
+                elif isinstance(source, np.ndarray):
+                    original_image = source
+                else:
+                    raise ValueError
+
+            result = self.model(original_image, show=False, print_result=False, return_vis=True)
+
+            class_list = []
+            score_list = []
+            bbox_list = []
+
+            predictions = result['predictions'][0]
+            vis = result['visualization'][0]
+            classes = predictions['labels']
+            scores = predictions['scores']
+            bboxes = predictions['bboxes']
+
+            for cls, conf, bbox in zip(classes, scores, bboxes):
+                if conf < conf_thres:
+                    continue
+
+                x = bbox[0]
+                y = bbox[1]
+                w = bbox[2] - x
+                h = bbox[3] - y
+
+                class_list.append(cls)
+                score_list.append(conf)
+                bbox_list.append(list(map(float, [x, y, w, h])))
+
 
         return {
-            'result_image': None,
-            'class_list': None,
-            'score_list': None,
-            'bbox_list': None
+            'result_image': vis,
+            'class_list': class_list,
+            'score_list': score_list,
+            'bbox_list': bbox_list
         }
