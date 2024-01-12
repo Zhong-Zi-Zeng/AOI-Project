@@ -40,6 +40,7 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 import segment.val as validate  # for end-of-epoch mAP
 from models.experimental import attempt_load
@@ -76,6 +77,11 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     w = save_dir / 'weights'  # weights dir
     (w.parent if evolve else w).mkdir(parents=True, exist_ok=True)  # make dir
     last, best = w / 'last.pt', w / 'best.pt'
+
+    # tensorboard
+    l = save_dir / 'log'
+    (l.parent if evolve else l).mkdir(parents=True, exist_ok=True)  # make dir
+    writer = SummaryWriter(log_dir=str(l))
 
     # Hyperparameters
     if isinstance(hyp, str):
@@ -328,6 +334,9 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             # Backward
             scaler.scale(loss).backward()
 
+            # record value on tensorboard
+            writer.add_scalar('train loss', loss.item(), ni)
+
             # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
             if ni - last_opt_step >= accumulate:
                 scaler.unscale_(optimizer)  # unscale gradients
@@ -383,6 +392,8 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                                     compute_loss=compute_loss,
                                                     mask_downsample_ratio=mask_ratio,
                                                     overlap=overlap)
+
+                writer.add_scalar('val loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
