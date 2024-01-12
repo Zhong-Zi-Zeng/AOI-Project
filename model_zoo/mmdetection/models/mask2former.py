@@ -90,7 +90,9 @@ class Mask2Former(BaseInstanceModel):
             scores = predictions['scores']
             rle_list = predictions['masks']
 
-            # TODO: 過濾score小於conf_thres的預測
+            with TIMER[3]:
+                pass
+
             _bboxes = []
             for bbox in predictions['bboxes']:
                 x = bbox[0]

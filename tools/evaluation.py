@@ -306,7 +306,8 @@ class Evaluator:
     def _get_recall_fpr(self,
                         coco_de: COCO,
                         iou_type: str,
-                        threshold_iou: float = 0.3) -> dict:
+                        threshold_iou: float = 0.3,
+                        use_cats: bool = False) -> dict:
         """
             計算檢出率、過殺率
 
@@ -314,6 +315,7 @@ class Evaluator:
                 coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
                 iou_type (str): 指定評估的型態 ex['bbox', 'segm']
                 threshold_iou (float): IoU 閥值
+                use_cats (bool): 選擇是否要去判斷class有沒有預測正確，還是單純看bbox有沒有預測到就好，預設是只看bbox有沒有預測到就好
 
             Returns:
                 Image 為以圖片為單位 Defect 為以瑕疵為單位
@@ -327,7 +329,7 @@ class Evaluator:
                             }
                 }
         """
-        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iou_type, useCats=False)
+        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iou_type, useCats=use_cats)
         cat_ids = self.coco_gt.getCatIds()
         img_ids = self.coco_gt.getImgIds()
         ann_ids = self.coco_gt.getAnnIds()
@@ -426,18 +428,21 @@ class Evaluator:
     def _instance_segmentation_eval(self, predicted_coco: COCO):
         with self.logger:
             # Evaluate
-            recall_and_fpr = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
-                                                  threshold_iou=self.cfg['iou_thres'])
+            recall_and_fpr_ignore_cats = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
+                                                              threshold_iou=self.cfg['iou_thres'], use_cats=False)
+
+            recall_and_fpr_care_cats = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
+                                                            threshold_iou=self.cfg['iou_thres'], use_cats=True)
 
             # Print information
-            self.logger.print_message(recall_and_fpr['All'], recall_and_fpr['Each'])
+            self.logger.print_message(recall_and_fpr_ignore_cats['All'], recall_and_fpr_care_cats['Each'])
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +
-                                  recall_and_fpr['All'],
+                                  recall_and_fpr_ignore_cats['All'],
                                   sheet_name=self.cfg['sheet_names'][0])
 
-            each_value = [value for value in recall_and_fpr['Each'].values()]
+            each_value = [value for value in recall_and_fpr_care_cats['Each'].values()]
             each_value = np.array(each_value).T
 
             for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
