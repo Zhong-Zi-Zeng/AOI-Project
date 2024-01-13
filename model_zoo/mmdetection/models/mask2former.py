@@ -8,6 +8,7 @@ from model_zoo.base.BaseInstanceModel import BaseInstanceModel
 from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file)
 from engine.timer import TIMER
 from mmdet.apis import DetInferencer
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import pycocotools.mask as ms
@@ -112,6 +113,8 @@ class Mask2Former(BaseInstanceModel):
                     raise ValueError
 
             fig, ax = plt.subplots(1)
+            plt.axis('off')
+            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
             ax.imshow(original_image[..., ::-1])
 
             result = self.model(original_image, show=False, print_result=False, return_vis=True)
@@ -122,7 +125,6 @@ class Mask2Former(BaseInstanceModel):
             rle_list = []
 
             predictions = result['predictions'][0]
-            vis = result['visualization'][0]
             classes = predictions['labels']
             scores = predictions['scores']
             rles = predictions['masks']
@@ -136,23 +138,22 @@ class Mask2Former(BaseInstanceModel):
 
                 for polygon in polygons:
                     poly = np.reshape(np.array(polygon), (-1, 2))
-                    color = list(np.random.random(size=(3,)))
+                    color = list(np.random.uniform(0, 255, size=(3,)))
                     x, y, w, h = cv2.boundingRect(poly)
 
                     # For mask
-                    polygon = patches.Polygon(poly, closed=True, fill=True, edgecolor='r', facecolor=color, alpha=0.5)
-                    ax.add_patch(polygon)
+                    cv2.fillPoly(original_image, [poly], color=color)
 
                     # For bbox
-                    ax.add_patch(plt.Rectangle((x, y), w, h, fill=False, color=color, linewidth=3))
-                    ax.text(x, y, self.cfg['class_names'][cls], bbox=dict(facecolor='yellow', alpha=0.5))
+                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 1, cv2.LINE_AA)
+                    cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
 
                     class_list.append(cls)
                     score_list.append(conf)
                     bbox_list.append(list(map(float, [x, y, w, h])))
                     rle_list.append(rle)
 
-        return {"result_image": vis,
+        return {"result_image": original_image,
                 "class_list": class_list,
                 "bbox_list": bbox_list,
                 "score_list": scores,

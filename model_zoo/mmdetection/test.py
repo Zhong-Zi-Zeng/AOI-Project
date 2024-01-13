@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 import numpy as np
 import cv2
 import pycocotools.mask as mask
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 
 def polygonFromMask(maskedArr):
@@ -39,6 +40,8 @@ bboxes = predictions['bboxes']
 rles = predictions['masks']
 fig, ax = plt.subplots(1)
 image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\white_controller\coco\original_class_1\val2017\0.jpg")
+plt.axis('off')
+plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
 ax.imshow(image)
 
@@ -51,24 +54,38 @@ for cls, conf, bbox, rle in zip(classes, scores, bboxes, rles):
 
     for polygon in polygons:
         poly = np.reshape(np.array(polygon), (-1, 2))
-        color = list(np.random.random(size=(3,)))
+        color = list(np.random.uniform(0, 255, size=(3,)))
 
         x, y, w, h = cv2.boundingRect(poly)
 
-        polygon = patches.Polygon(poly, closed=True, fill=True, edgecolor='r', facecolor=color, alpha=0.5)
-        ax.add_patch(polygon)
+        cv2.fillPoly(image, [poly], color=color)
 
-        ax.add_patch(plt.Rectangle((x, y), w, h,
-                                   fill=False, color=color, linewidth=3))
+        cv2.putText(image, cls_name[cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 1, cv2.LINE_AA)
+        cv2.rectangle(image, (x, y), (x + w, y + h), color=color, thickness=2)
 
-        ax.text(x, y, cls_name[cls],
-                bbox=dict(facecolor='yellow', alpha=0.5))
+        # polygon = patches.Polygon(poly, closed=True, fill=True, edgecolor='r', facecolor=color, alpha=0.5)
+        # ax.add_patch(polygon)
+        #
+        # ax.add_patch(plt.Rectangle((x, y), w, h,
+        #                            fill=False, color=color, linewidth=3))
+        #
+        # ax.text(x, y, cls_name[cls],
+        #         bbox=dict(facecolor='yellow', alpha=0.5))
 
-    # rect = patches.Rectangle((bbox[0], bbox[1]), bbox[2] - bbox[0], bbox[3] - bbox[1], linewidth=2, edgecolor='r',
-    #                          facecolor='none')
-    # ax.add_patch(rect)
-    # plt.text(bbox[0], bbox[1], cls_name[cls], fontsize=12, color='r', verticalalignment='top')
-plt.show()
+# canvas = FigureCanvas(fig)  # 使用FigureCanvasAgg
+# canvas.draw()
+# width, height = fig.get_size_inches() * fig.get_dpi()
+# image_matplotlib = np.frombuffer(canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
+# canvas = FigureCanvas(fig)  # 使用FigureCanvasAgg
+# canvas.draw()
+#
+# # 從Matplotlib圖像中獲取NumPy數組（使用frombuffer）
+# width, height = fig.get_size_inches() * fig.get_dpi()
+# image_matplotlib = np.frombuffer(canvas.tostring_rgb(), dtype=np.uint8).reshape(int(height), int(width), 3)
+
+cv2.imshow('', image)
+cv2.waitKey(0)
+# plt.show()
 # for mask in predictions['masks']:
 #     polygon = ms.decode(mask)
 #     print(polygon)
