@@ -145,7 +145,8 @@ class Mask2Former(BaseInstanceModel):
                     cv2.fillPoly(original_image, [poly], color=color)
 
                     # For bbox
-                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, color, 1, cv2.LINE_AA)
+                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1.5,
+                                color, 1, cv2.LINE_AA)
                     cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
 
                     class_list.append(cls)
