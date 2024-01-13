@@ -18,11 +18,11 @@ class_names:
 optimizer: "AdamW" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 1
+end_epoch: 500
 warmup_epoch: 3
-initial_lr: 0.0003 # Initial learning rate
-lr: 0.001 # The learning rate after warmup
-minimum_lr: 0.0001 # Minimum learning rate
+initial_lr: 0.00005 # Initial learning rate
+lr: 0.0002 # The learning rate after warmup
+minimum_lr: 0.0 # Minimum learning rate
 batch_size: 4
 imgsz: [1024, 1024]
 use_patch: false

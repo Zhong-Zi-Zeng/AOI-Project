@@ -389,9 +389,8 @@ class DetInferencer(BaseInferencer):
             for i in range(len(stuff_texts)):
                 ori_inputs[i]['stuff_text'] = stuff_texts[i]
 
-        with TIMER[1]:
-            inputs = self.preprocess(
-                ori_inputs, batch_size=batch_size, **preprocess_kwargs)
+        inputs = self.preprocess(
+            ori_inputs, batch_size=batch_size, **preprocess_kwargs)
 
         results_dict = {'predictions': [], 'visualization': []}
         for ori_imgs, data in (track(inputs, description='Inference')
@@ -411,14 +410,15 @@ class DetInferencer(BaseInferencer):
                 img_out_dir=out_dir,
                 **visualize_kwargs)
 
-            results = self.postprocess(
-                preds,
-                visualization,
-                return_datasamples=return_datasamples,
-                print_result=print_result,
-                no_save_pred=no_save_pred,
-                pred_out_dir=out_dir,
-                **postprocess_kwargs)
+            with TIMER[3]:
+                results = self.postprocess(
+                    preds,
+                    visualization,
+                    return_datasamples=return_datasamples,
+                    print_result=print_result,
+                    no_save_pred=no_save_pred,
+                    pred_out_dir=out_dir,
+                    **postprocess_kwargs)
             results_dict['predictions'].extend(results['predictions'])
             if results['visualization'] is not None:
                 results_dict['visualization'].extend(results['visualization'])

@@ -51,26 +51,6 @@ param_scheduler = [
          eta_min=minimum_lr
          )
 ]
-
-# ==========train_pipeline==========
-train_pipeline = [
-    dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(type='Resize', scale=(width, height), keep_ratio=True),
-    dict(type='PackDetInputs')
-]
-
-test_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(type='Resize', scale=(width, height), keep_ratio=True),  # diff
-    dict(type='Pad', size=(width, height), pad_val=dict(img=(114, 114, 114))),
-    dict(
-        type='PackDetInputs',
-        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
-                   'scale_factor'))
-]
-
 # ==========train_cfg==========
 train_cfg = dict(
     _delete_=True,
@@ -335,7 +315,7 @@ model = dict(
                 nms=dict(type='nms', iou_threshold=0.5),
                 max_per_img=100)),
         dict(
-                # atss bbox head:
+            # atss bbox head:
             nms_pre=1000,
             min_bbox_size=0,
             score_thr=0.0,
@@ -345,8 +325,27 @@ model = dict(
         # e.g., nms=dict(type='soft_nms', iou_threshold=0.5, min_score=0.05)
     ])
 
+# ==========train_pipeline==========
+train_pipeline = [
+    dict(type='LoadImageFromFile', backend_args=backend_args),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='Resize', scale=(width, height), keep_ratio=True),
+    dict(type='PackDetInputs')
+]
+
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='Resize', scale=(width, height), keep_ratio=True),  # diff
+    dict(type='Pad', size=(width, height), pad_val=dict(img=(114, 114, 114))),
+    dict(
+        type='PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor'))
+]
 
 # ==========dataloader==========
+
 train_dataloader = dict(
     batch_size=batch_size,
     num_workers=2,
@@ -369,14 +368,12 @@ val_dataloader = dict(
 
 test_dataloader = val_dataloader
 
-
 val_evaluator = dict(
     type='CocoMetric',
     ann_file=data_root + '/annotations/instances_val2017.json',
     metric='bbox'
 )
 test_evaluator = val_evaluator
-
 
 default_hooks = dict(
     checkpoint=dict(by_epoch=True, interval=check_interval),
