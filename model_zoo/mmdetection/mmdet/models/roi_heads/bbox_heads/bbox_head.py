@@ -19,8 +19,7 @@ from mmdet.structures.bbox import get_box_tensor, scale_boxes
 from mmdet.utils import ConfigType, InstanceList, OptMultiConfig
 import sys
 import os
-sys.path.append(os.path.join(os.getcwd()))
-from engine.timer import TIMER
+
 
 @MODELS.register_module()
 class BBoxHead(BaseModule):
@@ -561,17 +560,16 @@ class BBoxHead(BaseModule):
             results.bboxes = bboxes
             results.scores = scores
         else:
-            with TIMER[3]:
-                det_bboxes, det_labels = multiclass_nms(
-                    bboxes,
-                    scores,
-                    rcnn_test_cfg.score_thr,
-                    rcnn_test_cfg.nms,
-                    rcnn_test_cfg.max_per_img,
-                    box_dim=box_dim)
-                results.bboxes = det_bboxes[:, :-1]
-                results.scores = det_bboxes[:, -1]
-                results.labels = det_labels
+            det_bboxes, det_labels = multiclass_nms(
+                bboxes,
+                scores,
+                rcnn_test_cfg.score_thr,
+                rcnn_test_cfg.nms,
+                rcnn_test_cfg.max_per_img,
+                box_dim=box_dim)
+            results.bboxes = det_bboxes[:, :-1]
+            results.scores = det_bboxes[:, -1]
+            results.labels = det_labels
         return results
 
     def refine_bboxes(self, sampling_results: Union[List[SamplingResult],

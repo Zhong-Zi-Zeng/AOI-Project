@@ -7,8 +7,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/black_controller/coco/original_class_1"
-train_txt: "./data/black_controller/yoloBbox/original_class_1/train_list.txt"
-val_txt: "./data/black_controller/yoloBbox/original_class_1/val_list.txt"
+train_txt: "./data/white_controller/yoloBbox/original_class_1/train_list.txt"
+val_txt: "./data/white_controller/yoloBbox/original_class_1/val_list.txt"
 number_of_class: 1
 class_names:
   - "Defect"
@@ -22,7 +22,7 @@ warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 16
+batch_size: 4
 imgsz: [1024, 1024]
 use_patch: false
 device: "0"

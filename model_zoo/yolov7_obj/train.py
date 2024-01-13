@@ -264,10 +264,10 @@ def train(hyp, opt, device, tb_writer=None):
             c = torch.tensor(labels[:, 0])  # classes
             # cf = torch.bincount(c.long(), minlength=nc) + 1.  # frequency
             # model._initialize_biases(cf.to(device))
-            if plots:
-                #plot_labels(labels, names, save_dir, loggers)
-                if tb_writer:
-                    tb_writer.add_histogram('classes', c, 0)
+            # if plots:
+            #     #plot_labels(labels, names, save_dir, loggers)
+            #     if tb_writer:
+            #         tb_writer.add_histogram('classes', c, 0)
 
             # Anchors
             if not opt.noautoanchor:
@@ -374,6 +374,9 @@ def train(hyp, opt, device, tb_writer=None):
             # Backward
             scaler.scale(loss).backward()
 
+            # record value on tensorboard
+            tb_writer.add_scalar('train loss', loss.item(), ni)
+
             # Optimize
             if ni % accumulate == 0:
                 scaler.step(optimizer)  # optimizer.step
@@ -428,6 +431,7 @@ def train(hyp, opt, device, tb_writer=None):
                                                  compute_loss=compute_loss,
                                                  is_coco=is_coco,
                                                  v5_metric=opt.v5_metric)
+                tb_writer.add_scalar('val loss', np.sum(np.array(results).reshape(1, -1)[-3:]), epoch)
 
             # Write
             with open(results_file, 'a') as f:
@@ -441,8 +445,8 @@ def train(hyp, opt, device, tb_writer=None):
                     'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
                     'x/lr0', 'x/lr1', 'x/lr2']  # params
             for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
-                if tb_writer:
-                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
+                # if tb_writer:
+                #     tb_writer.add_scalar(tag, x, epoch)  # tensorboard
                 if wandb_logger.wandb:
                     wandb_logger.log({tag: x})  # W&B
 
@@ -615,7 +619,7 @@ if __name__ == '__main__':
         if opt.global_rank in [-1, 0]:
             prefix = colorstr('tensorboard: ')
             logger.info(f"{prefix}Start with 'tensorboard --logdir {opt.project}', view at http://localhost:6006/")
-            tb_writer = SummaryWriter(opt.save_dir)  # Tensorboard
+            tb_writer = SummaryWriter(log_dir=opt.save_dir + '/log')  # Tensorboard
         train(hyp, opt, device, tb_writer)
 
     # Evolve hyperparameters (optional)

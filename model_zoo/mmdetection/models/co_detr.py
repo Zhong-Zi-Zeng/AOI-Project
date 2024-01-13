@@ -25,13 +25,19 @@ class CODETR(BaseDetectModel):
         # Optimizer
         if self.cfg['optimizer'] == 'SGD':
             optimizer = dict(_delete_=True, type='OptimWrapper',
-                             optimizer=dict(type='SGD', lr=self.cfg['lr'], momentum=0.937, weight_decay=0.0005))
+                             optimizer=dict(type='SGD', lr=self.cfg['lr'], momentum=0.937, weight_decay=0.0001),
+                             clip_grad=dict(max_norm=0.1, norm_type=2),
+                             paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)}))
         elif self.cfg['optimizer'] == 'Adam':
             optimizer = dict(_delete_=True, type='OptimWrapper',
-                             optimizer=dict(type='Adam', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0005))
+                             optimizer=dict(type='Adam', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0001),
+                             clip_grad=dict(max_norm=0.1, norm_type=2),
+                             paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)}))
         else:
             optimizer = dict(_delete_=True, type='OptimWrapper',
-                             optimizer=dict(type='AdamW', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0005))
+                             optimizer=dict(type='AdamW', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0001),
+                             clip_grad=dict(max_norm=0.1, norm_type=2),
+                             paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)}))
 
         # Update base file path
         new_base = []
@@ -44,7 +50,7 @@ class CODETR(BaseDetectModel):
             'data_root': self.cfg['coco_root'],
             'classes': self.cfg['class_names'],
             'batch_size': self.cfg['batch_size'],
-            'epoch': self.cfg['end_epoch'],
+            'epochs': self.cfg['end_epoch'],
             'height': self.cfg['imgsz'][0],
             'width': self.cfg['imgsz'][1],
             'num_classes': self.cfg['number_of_class'],
@@ -86,15 +92,42 @@ class CODETR(BaseDetectModel):
 
         with TIMER[0]:
             with TIMER[1]:
-                pass
-            with TIMER[2]:
-                pass
-            with TIMER[3]:
-                pass
+                # Load image
+                if isinstance(source, str):
+                    original_image = cv2.imread(source)
+                elif isinstance(source, np.ndarray):
+                    original_image = source
+                else:
+                    raise ValueError
+
+            result = self.model(original_image, show=False, print_result=False, return_vis=True)
+
+            class_list = []
+            score_list = []
+            bbox_list = []
+
+            predictions = result['predictions'][0]
+            vis = result['visualization'][0]
+            classes = predictions['labels']
+            scores = predictions['scores']
+            bboxes = predictions['bboxes']
+
+            for cls, conf, bbox in zip(classes, scores, bboxes):
+                if conf < conf_thres:
+                    continue
+
+                x = bbox[0]
+                y = bbox[1]
+                w = bbox[2] - x
+                h = bbox[3] - y
+
+                class_list.append(cls)
+                score_list.append(conf)
+                bbox_list.append(list(map(float, [x, y, w, h])))
 
         return {
-            'result_image': None,
-            'class_list': None,
-            'score_list': None,
-            'bbox_list': None
+            'result_image': vis,
+            'class_list': class_list,
+            'score_list': score_list,
+            'bbox_list': bbox_list
         }
