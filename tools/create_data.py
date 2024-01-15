@@ -17,7 +17,7 @@ def get_args_parser():
                         help='For training dataset or testing dataset.')
     parser.add_argument('--format', type=str, choices=['coco', 'yoloSeg', 'yoloBbox', 'mvtec'], required=True,
                         help='Which output format do you want?')
-    parser.add_argument('--patch_size', type=int, choices=[256, 512, 1024], 
+    parser.add_argument('--patch_size', type=int, choices=[256, 512, 1024],
                         help='The size of the patch needs to be divisible by width and height. '
                              'If you assign the value, the script will generate a patch dataset')
     parser.add_argument('--stride', type=int, choices=[1, 2], default='1',
