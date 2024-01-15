@@ -12,6 +12,7 @@ __pycache__/
 *.bmp
 *.pt
 *.pth
+*.ckpt
 *.json
 .idea/
 *.xlsx
