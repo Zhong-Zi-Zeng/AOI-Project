@@ -1,0 +1,4 @@
+model_name: 'EfficientDet'
+model_dir_name: 'mmdetection'
+
+cfg_file: "./model_zoo/mmdetection/configs/custom_configs/EfficientDet/d0.py"

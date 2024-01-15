@@ -4,21 +4,17 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
-from model_zoo.base.BaseInstanceModel import BaseInstanceModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file,
-                            mask_to_polygon)
+from model_zoo.base.BaseDetectModel import BaseDetectModel
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file)
 from engine.timer import TIMER
 from mmdet.apis import DetInferencer
-from torchvision.ops import nms
-import matplotlib.pyplot as plt
-import pycocotools.mask as ms
 import numpy as np
-import torch
 import subprocess
 import cv2
+import torch
 
 
-class Mask2Former(BaseInstanceModel):
+class EfficientDet(BaseDetectModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg=cfg)
         self.cfg = cfg
@@ -57,7 +53,7 @@ class Mask2Former(BaseInstanceModel):
             'epochs': self.cfg['end_epoch'],
             'height': self.cfg['imgsz'][0],
             'width': self.cfg['imgsz'][1],
-            'num_things_classes': self.cfg['number_of_class'],
+            'num_classes': self.cfg['number_of_class'],
             'lr': self.cfg['lr'],
             'start_factor': self.cfg['initial_lr'] / self.cfg['lr'],
             'minimum_lr': self.cfg['minimum_lr'],
@@ -67,6 +63,7 @@ class Mask2Former(BaseInstanceModel):
             'check_interval': self.cfg['save_period'],
             'nms_threshold': self.cfg['nms_thres'],
         }
+
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
 
@@ -77,7 +74,8 @@ class Mask2Former(BaseInstanceModel):
 
     def train(self):
         subprocess.run([
-            'python', os.path.join(get_model_path(self.cfg), 'tools', 'train.py'),
+            'python',
+            os.path.join(get_model_path(self.cfg), 'tools', 'train.py'),
             self.cfg['cfg_file'],
             '--work-dir', get_work_dir_path(self.cfg)
         ])
@@ -106,62 +104,30 @@ class Mask2Former(BaseInstanceModel):
 
             class_list = []
             score_list = []
-            bbox_xywh_list = []
-            bbox_xxyy_list = []
-            rle_list = []
-            polygon_list = []
+            bbox_list = []
 
             predictions = result['predictions'][0]
+            vis = result['visualization'][0]
             classes = predictions['labels']
             scores = predictions['scores']
-            rles = predictions['masks']
+            bboxes = predictions['bboxes']
 
-            for cls, conf, rle in zip(classes, scores, rles):
+            for cls, conf, bbox in zip(classes, scores, bboxes):
                 if conf < conf_thres:
                     continue
 
-                polygons = mask_to_polygon(ms.decode(rle))
+                x = bbox[0]
+                y = bbox[1]
+                w = bbox[2] - x
+                h = bbox[3] - y
 
-                for polygon in polygons:
-                    poly = np.reshape(np.array(polygon), (-1, 2))
-                    x, y, w, h = cv2.boundingRect(poly)
-                    x1, y1, x2, y2 = x, y, x + w, y + h
+                class_list.append(cls)
+                score_list.append(conf)
+                bbox_list.append(list(map(float, [x, y, w, h])))
 
-                    class_list.append(cls)
-                    score_list.append(conf)
-                    bbox_xywh_list.append(list(map(float, [x, y, w, h])))
-                    bbox_xxyy_list.append(list(map(float, [x1, y1, x2, y2])))
-                    rle_list.append(rle)
-                    polygon_list.append(poly)
-
-            # NMS
-            if bbox_xxyy_list and class_list and score_list and class_list:
-                with TIMER[3]:
-                    indices = nms(boxes=torch.FloatTensor(bbox_xxyy_list),
-                                  scores=torch.FloatTensor(score_list),
-                                  iou_threshold=nms_thres).cpu().numpy()
-
-                class_list = np.array(class_list)[indices].tolist()
-                bbox_xywh_list = np.array(bbox_xywh_list)[indices].tolist()
-                score_list = np.array(score_list)[indices].tolist()
-                rle_list = np.array(rle_list)[indices].tolist()
-                polygon_list = np.array(polygon_list)[indices]
-
-                for cls, bbox, poly in zip(class_list, bbox_xywh_list, polygon_list):
-                    color = list(np.random.uniform(0, 255, size=(3,)))
-
-                    # For mask
-                    cv2.fillPoly(original_image, [poly], color=color)
-
-                    # For text
-                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN,
-                                1.5, color, 1, cv2.LINE_AA)
-
-                    # For bbox
-                    cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
-
-        return {"result_image": original_image,
-                "class_list": class_list,
-                "bbox_list": bbox_xywh_list,
-                "score_list": score_list,
-                "rle_list": rle_list}
+        return {
+            'result_image': vis,
+            'class_list': class_list,
+            'score_list': score_list,
+            'bbox_list': bbox_list
+        }

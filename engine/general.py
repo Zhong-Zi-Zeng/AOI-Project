@@ -10,12 +10,25 @@ import json
 import re
 import ast
 import astor
+import cv2
+import torch
 
 ROOT = os.getcwd()
 
 
 def check_path(path: str) -> bool:
     return os.path.exists(path)
+
+
+def mask_to_polygon(mask: np.ndarray) -> list:
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    polygons = []
+    for contour in contours:
+        if contour.size >= 6:
+            polygons.append(contour.flatten().tolist())
+
+    return polygons
 
 
 def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:
@@ -37,6 +50,7 @@ def load_python(path: str) -> dict:
     del data['__builtins__']
 
     return data
+
 
 def update_python_file(old_python_file_path, new_python_file_path, variables):
     """使用AST来更新Python配置文件中的变量。"""
@@ -67,7 +81,6 @@ def update_python_file(old_python_file_path, new_python_file_path, variables):
                         node.value = ast.Dict(keys=keys, values=values)
                     elif isinstance(value, bool):
                         node.value = ast.NameConstant(value=value)
-
 
     new_content = astor.to_source(tree)
 
