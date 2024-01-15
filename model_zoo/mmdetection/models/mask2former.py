@@ -5,14 +5,15 @@ import os
 
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file)
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file,
+                            mask_to_polygon, xywh2xyxy)
 from engine.timer import TIMER
 from mmdet.apis import DetInferencer
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from torchvision.ops import nms
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import pycocotools.mask as ms
 import numpy as np
+import torch
 import subprocess
 import cv2
 
@@ -81,17 +82,6 @@ class Mask2Former(BaseInstanceModel):
             '--work-dir', get_work_dir_path(self.cfg)
         ])
 
-    @staticmethod
-    def _mask_to_polygon(mask: np.ndarray) -> list:
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        polygons = []
-        for contour in contours:
-            if contour.size >= 6:
-                polygons.append(contour.flatten().tolist())
-
-        return polygons
-
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
                  conf_thres: float = 0.25,
@@ -112,50 +102,66 @@ class Mask2Former(BaseInstanceModel):
                 else:
                     raise ValueError
 
-            fig, ax = plt.subplots(1)
-            plt.axis('off')
-            plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-            ax.imshow(original_image[..., ::-1])
-
             result = self.model(original_image, show=False, print_result=False, return_vis=True)
 
             class_list = []
             score_list = []
-            bbox_list = []
+            bbox_xywh_list = []
+            bbox_xxyy_list = []
             rle_list = []
+            polygon_list = []
 
             predictions = result['predictions'][0]
             classes = predictions['labels']
             scores = predictions['scores']
             rles = predictions['masks']
-            bboxes = predictions['bboxes']
 
-            for cls, conf, bbox, rle in zip(classes, scores, bboxes, rles):
+            for cls, conf, rle in zip(classes, scores, rles):
                 if conf < conf_thres:
                     continue
 
-                polygons = self._mask_to_polygon(ms.decode(rle))
+                polygons = mask_to_polygon(ms.decode(rle))
 
                 for polygon in polygons:
                     poly = np.reshape(np.array(polygon), (-1, 2))
-                    color = list(np.random.uniform(0, 255, size=(3,)))
                     x, y, w, h = cv2.boundingRect(poly)
+                    x1, y1, x2, y2 = x, y, x + w, y + h
+
+                    class_list.append(cls)
+                    score_list.append(conf)
+                    bbox_xywh_list.append(list(map(float, [x, y, w, h])))
+                    bbox_xxyy_list.append(list(map(float, [x1, y1, x2, y2])))
+                    rle_list.append(rle)
+                    polygon_list.append(poly)
+
+            # NMS
+            if bbox_xxyy_list and class_list and score_list and class_list:
+                with TIMER[3]:
+                    indices = nms(boxes=torch.FloatTensor(bbox_xxyy_list),
+                                  scores=torch.FloatTensor(score_list),
+                                  iou_threshold=nms_thres).cpu().numpy()
+
+                class_list = np.array(class_list)[indices].tolist()
+                bbox_xywh_list = np.array(bbox_xywh_list)[indices].tolist()
+                score_list = np.array(score_list)[indices].tolist()
+                rle_list = np.array(rle_list)[indices].tolist()
+                polygon_list = np.array(polygon_list)[indices]
+
+                for cls, bbox, poly in zip(class_list, bbox_xywh_list, polygon_list):
+                    color = list(np.random.uniform(0, 255, size=(3,)))
 
                     # For mask
                     cv2.fillPoly(original_image, [poly], color=color)
 
-                    # For bbox
-                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 1.5,
-                                color, 1, cv2.LINE_AA)
-                    cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
+                    # For text
+                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN,
+                                1.5, color, 1, cv2.LINE_AA)
 
-                    class_list.append(cls)
-                    score_list.append(conf)
-                    bbox_list.append(list(map(float, [x, y, w, h])))
-                    rle_list.append(rle)
+                    # For bbox
+                    cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
 
         return {"result_image": original_image,
                 "class_list": class_list,
-                "bbox_list": bbox_list,
-                "score_list": scores,
+                "bbox_list": bbox_xywh_list,
+                "score_list": score_list,
                 "rle_list": rle_list}
