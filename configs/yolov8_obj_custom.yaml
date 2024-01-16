@@ -7,15 +7,13 @@ _base_: [ "./base/model/YOLO-v8/yolov8_obj_base.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/black_controller/coco/original_class_1"
-train_txt: "./data/black_controller/yoloBbox/original_class_1/train_list.txt"
-val_txt: "./data/black_controller/yoloBbox/original_class_1/val_list.txt"
 number_of_class: 1
 class_names:
   - "Defect"
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/best.pt"
+weight: " "
 start_epoch: 0
 end_epoch: 200
 warmup_epoch: 3
