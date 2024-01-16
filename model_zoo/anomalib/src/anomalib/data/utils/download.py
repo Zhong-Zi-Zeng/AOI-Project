@@ -295,7 +295,7 @@ def download_and_extract(root: Path, info: DownloadInfo) -> None:
     else:
         downloaded_file_path = root / info.url.split("/")[-1]
 
-    downloaded_file_path = Path('./model_zoo/anomalib/imagenette/imagenette2')
+    # downloaded_file_path = Path('./model_zoo/anomalib/imagenette/imagenette2')
 
     if downloaded_file_path.exists():
         logger.info("Existing dataset archive found. Skipping download stage.")

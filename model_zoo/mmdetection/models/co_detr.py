@@ -1,20 +1,18 @@
 from __future__ import annotations
-from typing import Optional, Union, Any
+from typing import Union, Any
 import sys
 import os
 
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
 from model_zoo.base.BaseDetectModel import BaseDetectModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file)
+from .BaseMMdetection import BaseMMdetection
+from engine.general import (get_work_dir_path, get_model_path, load_python, update_python_file)
 from engine.timer import TIMER
-from mmdet.apis import DetInferencer
 import numpy as np
-import subprocess
 import cv2
-import torch
 
 
-class CODETR(BaseDetectModel):
+class CODETR(BaseMMdetection, BaseDetectModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg=cfg)
         self.cfg = cfg
@@ -66,19 +64,6 @@ class CODETR(BaseDetectModel):
 
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
-
-    def _load_model(self):
-        self.model = DetInferencer(model=self.cfg['cfg_file'],
-                                   weights=self.cfg['weight'],
-                                   show_progress=False)
-
-    def train(self):
-        subprocess.run([
-            'python',
-            os.path.join(get_model_path(self.cfg), 'tools', 'train.py'),
-            self.cfg['cfg_file'],
-            '--work-dir', get_work_dir_path(self.cfg)
-        ])
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
