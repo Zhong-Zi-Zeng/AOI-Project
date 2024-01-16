@@ -6,11 +6,13 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 
 
 # ===========Dataset===========
-number_of_class: 2
-coco_root: /home/miislab-server2/MiiSLab_NAS/Student_Work/Heng/Backup/DESKTOP-AP518TL/D/AOI/solovision_vs_yolov8/1500_Dataset_coco
+number_of_class: 4
+coco_root: "./data/white_controller/coco/original_class_4"
 class_names:
-  - "Pass"
-  - "Defect"
+  - "Scratch"
+  - "Friction"
+  - "Dirty"
+  - "Assembly"
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
