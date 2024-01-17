@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from engine.general import get_work_dir_path
+from threading import Thread
 import numpy as np
 import argparse
 import torch
@@ -25,6 +26,15 @@ def get_args_parser():
 
     return parser
 
+def open_tensorboard():
+    # Open web
+    webbrowser.open("http://localhost:6007/")
+
+    # Open tensorboard
+    subprocess.run(['tensorboard',
+                    '--logdir', get_work_dir_path(cfg),
+                    '--port', '6007'])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Model evaluation script.',
@@ -40,12 +50,15 @@ if __name__ == "__main__":
     # Build model
     model = builder.build_model(cfg)
 
+    # Open tensorboard and web
+    Thread(target=open_tensorboard).start()
+
     # Training
     model.train()
 
     # Generate training curve
-    subprocess.run(['python', "./tools/training_curve.py",
-                    '--model_type', cfg['model_name'],
-                    '--result_path', get_work_dir_path(cfg),
-                    '--output_path', get_work_dir_path(cfg),
-                    ])
+    # subprocess.run(['python', "./tools/training_curve.py",
+    #                 '--model_type', cfg['model_name'],
+    #                 '--result_path', get_work_dir_path(cfg),
+    #                 '--output_path', get_work_dir_path(cfg),
+    #                 ])

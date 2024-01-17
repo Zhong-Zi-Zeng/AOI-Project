@@ -17,7 +17,7 @@ from utils.loggers.wandb.wandb_utils import WandbLogger
 from utils.plots import plot_images, plot_labels, plot_results
 from utils.torch_utils import de_parallel
 
-LOGGERS = ('csv', 'tb', 'wandb', 'clearml')  # *.csv, TensorBoard, Weights & Biases, ClearML
+LOGGERS = ('csv', 'tb', 'clearml')  # *.csv, TensorBoard, Weights & Biases, ClearML
 RANK = int(os.getenv('RANK', -1))
 
 try:
@@ -251,13 +251,13 @@ class GenericLogger:
             self.console_logger.info(
                 f"{prefix}Start with 'tensorboard --logdir {self.save_dir.parent}', view at http://localhost:6006/")
             self.tb = SummaryWriter(str(self.save_dir))
-
-        if wandb and 'wandb' in self.include:
-            self.wandb = wandb.init(project=web_project_name(str(opt.project)),
-                                    name=None if opt.name == "exp" else opt.name,
-                                    config=opt)
-        else:
-            self.wandb = None
+        self.wandb = None
+        # if wandb and 'wandb' in self.include:
+        #     self.wandb = wandb.init(project=web_project_name(str(opt.project)),
+        #                             name=None if opt.name == "exp" else opt.name,
+        #                             config=opt)
+        # else:
+        #     self.wandb = None
 
     def log_metrics(self, metrics, epoch):
         # Log metrics dictionary to all loggers
