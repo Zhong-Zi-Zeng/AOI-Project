@@ -64,7 +64,7 @@ test_pipeline = [
 ]
 
 # ==========train_cfg==========
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=10)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=check_interval)
 
 # ==========model==========
 model = dict(

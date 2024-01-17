@@ -494,6 +494,8 @@ experiment_order = {
          "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [1024, 1024],
          "use_patch": False},
 
@@ -502,6 +504,8 @@ experiment_order = {
          "class_names": ["Defect"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [1024, 1024],
          "use_patch": False},
 
@@ -510,6 +514,8 @@ experiment_order = {
          "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [1024, 1024],
          "use_patch": True},
 
@@ -518,6 +524,8 @@ experiment_order = {
          "class_names": ["Defect"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [1024, 1024],
          "use_patch": True},
 
@@ -526,6 +534,8 @@ experiment_order = {
          "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [512, 512],
          "use_patch": True},
 
@@ -534,6 +544,8 @@ experiment_order = {
          "class_names": ["Defect"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [512, 512],
          "use_patch": True},
 
@@ -542,6 +554,8 @@ experiment_order = {
          "class_names": ["Scratch", "Friction", "Dirty", "Assembly"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [256, 256],
          "use_patch": True},
 
@@ -550,6 +564,8 @@ experiment_order = {
          "class_names": ["Defect"],
          "optimizer": "SGD",
          "weight": " ",
+         "lr": 0.000015,
+         "initial_lr": 0.00001,
          "imgsz": [256, 256],
          "use_patch": True},
 

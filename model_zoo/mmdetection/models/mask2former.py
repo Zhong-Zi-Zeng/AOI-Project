@@ -28,7 +28,6 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
         if self.cfg['optimizer'] == 'SGD':
             optimizer = dict(_delete_=True, type='OptimWrapper',
                              optimizer=dict(type='SGD', lr=self.cfg['lr'], momentum=0.937, weight_decay=0.0001),
-                             # clip_grad=dict(max_norm=0.1, norm_type=2),
                              paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)}))
         elif self.cfg['optimizer'] == 'Adam':
             optimizer = dict(_delete_=True, type='OptimWrapper',

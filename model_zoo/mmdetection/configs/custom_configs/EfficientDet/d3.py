@@ -54,7 +54,7 @@ train_cfg = dict(
     _delete_=True,
     type='EpochBasedTrainLoop',
     max_epochs=epochs,
-    val_interval=10)
+    val_interval=check_interval)
 
 # ==========model==========
 batch_augments = [
