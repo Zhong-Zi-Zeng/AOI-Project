@@ -55,10 +55,3 @@ if __name__ == "__main__":
 
     # Training
     model.train()
-
-    # Generate training curve
-    # subprocess.run(['python', "./tools/training_curve.py",
-    #                 '--model_type', cfg['model_name'],
-    #                 '--result_path', get_work_dir_path(cfg),
-    #                 '--output_path', get_work_dir_path(cfg),
-    #                 ])

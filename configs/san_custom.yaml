@@ -1,0 +1,29 @@
+_base_: [ "./base/model/SAN/vit-b.yaml", # model
+          "./base/evaluation/semantic_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
+]
+
+# ===========Dataset===========
+number_of_class: 4
+coco_root: "./data/white_controller/coco_stuff"
+class_names:
+  - "Scratch"
+  - "Friction"
+  - "Dirty"
+  - "Assembly"
+
+# ===========Hyperparameter===========
+optimizer: "AdamW" # Adam、AdamW、SGD
+weight: " "
+start_epoch: 0
+end_epoch: 50
+warmup_epoch: 3
+initial_lr: 0.00005 # Initial learning rate
+lr: 0.0002 # The learning rate after warmup
+minimum_lr: 0.0 # Minimum learning rate
+batch_size: 4
+imgsz: [1024, 1024]
+use_patch: false
+device: "0"
+

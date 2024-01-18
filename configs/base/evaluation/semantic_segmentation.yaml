@@ -1,1 +1,27 @@
+_base_: [
+  "./base/evaluation/common_metrics.yaml"
+]
+
+nms_thres: 0.5
+conf_thres: 0.5
+iou_thres: 0.1
 task: "semantic_segmentation"
+
+sheet_names:
+  - "All classes"
+  - "Each class(Recall, Image)"
+  - "Each class(FPR, Image)"
+  - "Each class(Recall, Defect)"
+  - "Each class(FPR, Defect)"
+
+metrics_for_all:
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"
+
+metrics_for_each:
+  - "[Task: Recall, Unit: Image ]"
+  - "[Task: FPR,    Unit: Image ]"
+  - "[Task: Recall, Unit: Defect]"
+  - "[Task: FPR,    Unit: Defect]"
