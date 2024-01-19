@@ -35,12 +35,16 @@ class BaseConverter(ABC):
                                           if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有image路徑
                 self.json_files_path = []
             else:  # test
+                good_folder = os.path.join(source_dir, 'good')
+                self.good_image_files_path = [os.path.join(good_folder, image_name) for image_name in os.listdir(good_folder)
+                                         if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有good資料夾中image路徑
+
                 defect_folder = os.path.join(source_dir, 'defect')
-                self.image_files_path = [os.path.join(defect_folder, image_name) for image_name in os.listdir(defect_folder)
-                                          if self.is_image(os.path.join(defect_folder, image_name))]  # 儲存所有image路徑
+                self.defect_image_files_path = [os.path.join(defect_folder, image_name) for image_name in os.listdir(defect_folder)
+                                          if self.is_image(os.path.join(defect_folder, image_name))]  # 儲存defect資料夾中所有image路徑
 
                 self.json_files_path = [os.path.join(defect_folder, json_name) for json_name in os.listdir(defect_folder)
-                                         if self.is_json(os.path.join(defect_folder, json_name))]  # 儲存所有image路徑
+                                         if self.is_json(os.path.join(defect_folder, json_name))]  # 儲存所有json路徑
         else:   # coco, yoloSeg, yoloBbox
             self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                                      if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑

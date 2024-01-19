@@ -1,16 +1,17 @@
 import subprocess
 import os
+from threading import Thread
 
 
-training_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite\train"
-testing_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite\test"
-output_root = r"C:\Users\Yeh\Desktop\anomalib\datasets\white controller\mvtec"
+training_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite_selected\train"
+testing_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite_selected\test"
+output_root = r"C:\Users\Yeh\Desktop\anomalib\datasets\white_controller_selected"
 class_yaml_1 = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\class_1_white.yaml"
 class_yaml_4 = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\class_4_white.yaml"
 format = 'mvtec'
 
 type = [
-    # original_class_3
+    # original_class_4
     {'source_dir': training_dataset,
      'output_dir': os.path.join(output_root, 'original_class_4'),
      'classes_yaml': class_yaml_4,
@@ -36,7 +37,7 @@ type = [
      'dataset_type': 'test',
      'format': format},
 
-    # patch_1024_class_3
+    # patch_1024_class_4
     {'source_dir': training_dataset,
      'output_dir': os.path.join(output_root, 'patch_1024_class_4'),
      'classes_yaml': class_yaml_4,
@@ -72,7 +73,7 @@ type = [
      'stride': "2",
      'store_none': True},
 
-    # patch_512_class_3
+    # patch_512_class_4
     {'source_dir': training_dataset,
      'output_dir': os.path.join(output_root, 'patch_512_class_4'),
      'classes_yaml': class_yaml_4,
@@ -108,7 +109,7 @@ type = [
      'stride': "2",
      'store_none': True},
 
-    # patch_256_class_3
+    # patch_256_class_4
     {'source_dir': training_dataset,
      'output_dir': os.path.join(output_root, 'patch_256_class_4'),
      'classes_yaml': class_yaml_4,

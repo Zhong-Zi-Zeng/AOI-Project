@@ -6,7 +6,7 @@ _base_: [ "./base/model/EfficientAD/efficient_ad_base.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/white_controller/coco/original_class_4"
-dataset_dir: './data/mvtec/white_original_class_4'
+dataset_dir: './data/mvtec/original_class_4'
 number_of_class: 4
 class_names:
   - "Scratch"
@@ -15,10 +15,10 @@ class_names:
   - "Assembly"
 
 # ===========Hyperparameter===========
-#optimizer: "AdamW" # Adam、AdamW、SGD
+optimizer: "SGD" # AdamW、SGD
 #weight: " "
 start_epoch: 0
-end_epoch: 1
+end_epoch: 2
 #warmup_epoch: 3
 #initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
