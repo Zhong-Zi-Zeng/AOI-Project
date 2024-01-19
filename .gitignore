@@ -9,6 +9,8 @@ __pycache__/
 # Heng
 *.jpg
 *.png
+*.jpeg
+*.JPEG
 *.bmp
 *.pt
 *.pth

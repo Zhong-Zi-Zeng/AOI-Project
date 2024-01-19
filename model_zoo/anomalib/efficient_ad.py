@@ -2,6 +2,7 @@ from __future__ import annotations, absolute_import
 
 import os
 import sys
+
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'anomalib'))
 
 from typing import Union, Any
@@ -32,7 +33,7 @@ class EfficientAD(BaseDetectModel):
             config['dataset']['mask_dir'].append(f'mask/defect/{cls_name}')
 
         config['model']['lr'] = self.cfg['lr']
-        config['project']['path'] = os.path.join(get_work_dir_path(self.cfg))   # result
+        config['project']['path'] = os.path.join(get_work_dir_path(self.cfg))  # result
         config['trainer']['min_epochs'] = self.cfg['start_epoch']
         config['trainer']['max_epochs'] = self.cfg['end_epoch']
         config['dataset']['train_batch_size'] = self.cfg['batch_size']
@@ -44,8 +45,6 @@ class EfficientAD(BaseDetectModel):
         # 修改後的config儲存在work_dir
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml'), config)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml')
-
-        pass
 
     def train(self):
         """
@@ -109,13 +108,17 @@ class EfficientAD(BaseDetectModel):
             # ----------------------------Post-process (Start)----------------------------
             # For evaluation
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09e3771ca2ef036af4ebf4e591fa6869ad444937
             return {
                 'result_image': None,
                 'class_list': None,
                 'score_list': None,     # confidence = 1
                 'bbox_list': None
             }
+<<<<<<< HEAD
 
 """
         1. Inference和Evaluation時會用到
@@ -134,3 +137,5 @@ class EfficientAD(BaseDetectModel):
                 bbox_list (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
             }
 """
+=======
+>>>>>>> 09e3771ca2ef036af4ebf4e591fa6869ad444937

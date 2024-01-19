@@ -3,23 +3,34 @@ import os
 from threading import Thread
 
 
+<<<<<<< HEAD
 training_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite_selected\train"
 testing_dataset = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\soure_mvtec_splite_selected\test"
 output_root = r"C:\Users\Yeh\Desktop\anomalib\datasets\white_controller_selected"
 class_yaml_1 = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\class_1_white.yaml"
 class_yaml_4 = r"C:\Users\Yeh\Desktop\AOI-Dataset\Soure_mvtec\class_4_white.yaml"
 format = 'mvtec'
+=======
+training_dataset = r"D:\AOI-New-Dataset\500_training"
+testing_dataset = r"D:\AOI-New-Dataset\testing_dataset"
+output_root = r"D:\AOI-New-Dataset\500\coco"
+
+class_yaml_1 = r"D:\AOI\solovision_vs_yolov8\class_1_white.yaml"
+class_yaml_4 = r"D:\AOI\solovision_vs_yolov8\class_2_white.yaml"
+
+format = 'coco'
+>>>>>>> 09e3771ca2ef036af4ebf4e591fa6869ad444937
 
 type = [
     # original_class_4
     {'source_dir': training_dataset,
-     'output_dir': os.path.join(output_root, 'original_class_4'),
+     'output_dir': os.path.join(output_root, 'original_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'train',
      'format': format},
 
     {'source_dir': testing_dataset,
-     'output_dir': os.path.join(output_root, 'original_class_4'),
+     'output_dir': os.path.join(output_root, 'original_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'test',
      'format': format},
@@ -39,7 +50,7 @@ type = [
 
     # patch_1024_class_4
     {'source_dir': training_dataset,
-     'output_dir': os.path.join(output_root, 'patch_1024_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_1024_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'train',
      'format': format,
@@ -47,7 +58,7 @@ type = [
      'stride': "2"},
 
     {'source_dir': testing_dataset,
-     'output_dir': os.path.join(output_root, 'patch_1024_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_1024_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'test',
      'format': format,
@@ -75,7 +86,7 @@ type = [
 
     # patch_512_class_4
     {'source_dir': training_dataset,
-     'output_dir': os.path.join(output_root, 'patch_512_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_512_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'train',
      'format': format,
@@ -83,7 +94,7 @@ type = [
      'stride': "2"},
 
     {'source_dir': testing_dataset,
-     'output_dir': os.path.join(output_root, 'patch_512_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_512_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'test',
      'format': format,
@@ -111,7 +122,7 @@ type = [
 
     # patch_256_class_4
     {'source_dir': training_dataset,
-     'output_dir': os.path.join(output_root, 'patch_256_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_256_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'train',
      'format': format,
@@ -119,7 +130,7 @@ type = [
      'stride': "2"},
 
     {'source_dir': testing_dataset,
-     'output_dir': os.path.join(output_root, 'patch_256_class_4'),
+     'output_dir': os.path.join(output_root, 'patch_256_class_2'),
      'classes_yaml': class_yaml_4,
      'dataset_type': 'test',
      'format': format,

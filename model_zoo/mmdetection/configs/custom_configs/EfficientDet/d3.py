@@ -54,7 +54,7 @@ train_cfg = dict(
     _delete_=True,
     type='EpochBasedTrainLoop',
     max_epochs=epochs,
-    val_interval=10)
+    val_interval=check_interval)
 
 # ==========model==========
 batch_augments = [
@@ -91,7 +91,7 @@ model = dict(
         norm_cfg=norm_cfg),
     bbox_head=dict(
         type='EfficientDetSepBNHead',
-        num_classes=80,
+        num_classes=num_classes,
         num_ins=5,
         in_channels=160,
         feat_channels=160,

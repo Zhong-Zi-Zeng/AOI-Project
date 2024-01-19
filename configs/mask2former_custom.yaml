@@ -15,13 +15,13 @@ class_names:
   - "Assembly"
 
 # ===========Hyperparameter===========
-optimizer: "AdamW" # Adam、AdamW、SGD
+optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 500
+end_epoch: 50
 warmup_epoch: 3
-initial_lr: 0.00005 # Initial learning rate
-lr: 0.0002 # The learning rate after warmup
+initial_lr: 0.00001 # Initial learning rate
+lr: 0.000015 # The learning rate after warmup
 minimum_lr: 0.0 # Minimum learning rate
 batch_size: 4
 imgsz: [1024, 1024]

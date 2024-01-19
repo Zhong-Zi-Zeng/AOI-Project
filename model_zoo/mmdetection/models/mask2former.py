@@ -1,24 +1,22 @@
 from __future__ import annotations
-from typing import Optional, Union, Any
+from typing import Union, Any
 import sys
 import os
 
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, load_python, update_python_file,
+from .BaseMMdetection import BaseMMdetection
+from engine.general import (get_work_dir_path, get_model_path, load_python, update_python_file,
                             mask_to_polygon)
 from engine.timer import TIMER
-from mmdet.apis import DetInferencer
 from torchvision.ops import nms
-import matplotlib.pyplot as plt
 import pycocotools.mask as ms
 import numpy as np
 import torch
-import subprocess
 import cv2
 
 
-class Mask2Former(BaseInstanceModel):
+class Mask2Former(BaseMMdetection, BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg=cfg)
         self.cfg = cfg
@@ -30,7 +28,6 @@ class Mask2Former(BaseInstanceModel):
         if self.cfg['optimizer'] == 'SGD':
             optimizer = dict(_delete_=True, type='OptimWrapper',
                              optimizer=dict(type='SGD', lr=self.cfg['lr'], momentum=0.937, weight_decay=0.0001),
-                             clip_grad=dict(max_norm=0.1, norm_type=2),
                              paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)}))
         elif self.cfg['optimizer'] == 'Adam':
             optimizer = dict(_delete_=True, type='OptimWrapper',
@@ -69,18 +66,6 @@ class Mask2Former(BaseInstanceModel):
         }
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
-
-    def _load_model(self):
-        self.model = DetInferencer(model=self.cfg['cfg_file'],
-                                   weights=self.cfg['weight'],
-                                   show_progress=False)
-
-    def train(self):
-        subprocess.run([
-            'python', os.path.join(get_model_path(self.cfg), 'tools', 'train.py'),
-            self.cfg['cfg_file'],
-            '--work-dir', get_work_dir_path(self.cfg)
-        ])
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
@@ -148,6 +133,8 @@ class Mask2Former(BaseInstanceModel):
                 polygon_list = np.array(polygon_list)[indices]
 
                 for cls, bbox, poly in zip(class_list, bbox_xywh_list, polygon_list):
+                    x, y, w, h = list(map(int, bbox))
+
                     color = list(np.random.uniform(0, 255, size=(3,)))
 
                     # For mask
