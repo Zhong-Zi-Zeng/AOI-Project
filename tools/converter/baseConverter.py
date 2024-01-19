@@ -75,6 +75,7 @@ class BaseConverter(ABC):
 
         # Check whether image_h and image_w are divisible by patch_size
         if image_height % patch_size != 0 or image_width % patch_size != 0:
+            print(image_file)
             raise ValueError("patch_size cannot divide the original image.")
 
         # Read the original image and cut the patch

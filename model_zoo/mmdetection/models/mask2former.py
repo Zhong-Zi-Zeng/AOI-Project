@@ -133,6 +133,8 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                 polygon_list = np.array(polygon_list)[indices]
 
                 for cls, bbox, poly in zip(class_list, bbox_xywh_list, polygon_list):
+                    x, y, w, h = list(map(int, bbox))
+
                     color = list(np.random.uniform(0, 255, size=(3,)))
 
                     # For mask
