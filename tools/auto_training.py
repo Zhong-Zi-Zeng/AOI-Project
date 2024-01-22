@@ -27,7 +27,7 @@ model_config_template = {
     "Mask2Former": "./configs/template/mask2former_custom.yaml"
 }
 
-experiment_order = {
+experiment_order_old = {
     "Yolov7inSeg": [
         # 0 ~ 7
         {"coco_root": "./data/white_controller/coco/original_class_4",
@@ -636,6 +636,7 @@ experiment_order = {
     ]
 }
 
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Model auto training script.', add_help=False)
 
@@ -648,6 +649,7 @@ def get_args_parser():
 
     parser.add_argument('--end_id', type=int, default=15,
                         help='Stop from which experiment id.')
+
     return parser
 
 
@@ -659,7 +661,7 @@ if __name__ == "__main__":
     start_id = args.start_id
     end_id = args.end_id
     model_name = args.model_name
-    experiment_length = len(experiment_order[model_name])
+    experiment_length = len(experiment_order_old[model_name])
 
     assert end_id <= experiment_length
 
@@ -668,7 +670,7 @@ if __name__ == "__main__":
         template_config = load_yaml(model_config_template[model_name])
 
         # Update config
-        template_config.update(experiment_order[model_name][idx])
+        template_config.update(experiment_order_old[model_name][idx])
 
         # Create builder
         builder = Builder(yaml_dict=template_config, task='train')

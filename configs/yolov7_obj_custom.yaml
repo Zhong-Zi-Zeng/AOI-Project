@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_x.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -6,23 +6,25 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/black_controller/coco/original_class_1"
-train_txt: "./data/white_controller/yoloBbox/original_class_1/train_list.txt"
-val_txt: "./data/white_controller/yoloBbox/original_class_1/val_list.txt"
-number_of_class: 1
+coco_root: "./data/1500/coco/original_class_2"
+train_txt: "./data/1500/yoloBbox/original_class_2/train_list.txt"
+val_txt: "./data/1500/yoloBbox/original_class_2/val_list.txt"
+number_of_class: 2
 class_names:
+  - "Pass"
   - "Defect"
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 50
+end_epoch: 250
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 4
+batch_size: 8
+save_period: 10
 imgsz: [1024, 1024]
 use_patch: false
 device: "0"

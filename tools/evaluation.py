@@ -33,6 +33,9 @@ def get_args_parser():
     parser.add_argument('--dir_name', type=str,
                         help='The name of work dir.')
 
+    parser.add_argument('--multi_conf', action="store_true",
+                        help='Using multi confidence threshold lie in range 0.3 to 0.9.')
+
     return parser
 
 
@@ -174,16 +177,16 @@ class Evaluator:
         self.model = model
         self.cfg = cfg
         self.coco_root = cfg["coco_root"]
-        self.nms_thres = cfg["nms_thres"]
-        self.conf_thres = cfg["conf_thres"]
+
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
         self.logger = Logger(cfg)
 
-    def _generate_det(self):
-        """
-            對給定的model輸入測試圖片，並將結果轉換成coco eval格式的json檔
-        """
+    def _generate_det(self,
+                      conf_thres: float,
+                      nms_thres: float,
+                      file_name: str):
+
         img_id_list = self.coco_gt.getImgIds()
         detected_result = []
 
@@ -194,7 +197,7 @@ class Evaluator:
             image = cv2.imread(os.path.join(self.coco_root, 'val2017', img_file))
 
             # Inference
-            result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
+            result = self.model.predict(image, conf_thres=conf_thres, nms_thres=nms_thres)
 
             class_list = result['class_list']
             score_list = result['score_list']
@@ -225,7 +228,7 @@ class Evaluator:
         assert len(detected_result) != 0, Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE
 
         # Save
-        save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
+        save_json(os.path.join(get_work_dir_path(self.cfg), file_name), detected_result, indent=2)
 
     @staticmethod
     def calculate_metrics(eval: PreviewResults,
@@ -450,9 +453,24 @@ class Evaluator:
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)
 
-    def eval(self):
+    def eval(self, **kwargs):
+        """
+            對給定的model輸入測試圖片，並將結果轉換成coco eval格式的json檔
+            Args:
+                conf_thres (float): 信心閥值
+                nms_thres (float): NMS閥值
+                file_name (str): coco檢測格式的輸出檔名，預設為detected.json
+        """
+
         # Generate detected json
-        self._generate_det()
+        conf_thres = kwargs.get('conf_thres', self.cfg['conf_thres'])
+        nms_thres = kwargs.get('nms_thres', self.cfg['nms_thres'])
+        file_name = kwargs.get('file_name', 'detected.json')
+        self._generate_det(conf_thres, nms_thres, file_name)
+
+        print('=' * 40)
+        print(Fore.BLUE + "Confidence score: {:.1}".format(conf_thres) + Fore.WHITE)
+        print('=' * 40)
 
         with self.writer:
             # Load json
@@ -482,4 +500,11 @@ if __name__ == "__main__":
 
     # Build evaluator
     evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel)
-    evaluator.eval()
+
+    # Use multi confidence threshold
+    if args.multi_conf:
+        confidences = np.arange(0.3, 1.0, 0.1)
+        for conf in confidences:
+            evaluator.eval(conf_thres=conf)
+    else:
+        evaluator.eval()

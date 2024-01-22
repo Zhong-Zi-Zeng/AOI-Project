@@ -66,7 +66,7 @@ class Yolov7Obj(BaseDetectModel):
         """
 
         subprocess.run(['python',
-                        os.path.join(get_model_path(self.cfg), 'train.py'),
+                        os.path.join(get_model_path(self.cfg), 'train_aux.py'),
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],

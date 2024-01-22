@@ -70,7 +70,7 @@ WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictionary
     save_dir, epochs, batch_size, weights, single_cls, evolve, data, cfg, resume, noval, nosave, workers, freeze, mask_ratio = \
         Path(opt.save_dir), opt.epochs, opt.batch_size, opt.weights, opt.single_cls, opt.evolve, opt.data, opt.cfg, \
-        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze, opt.mask_ratio
+            opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze, opt.mask_ratio
     # callbacks.run('on_pretrain_routine_start')
 
     # Directories
@@ -335,7 +335,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             scaler.scale(loss).backward()
 
             # record value on tensorboard
-            writer.add_scalar('train loss', loss.item(), ni)
+            writer.add_scalar('Training loss', loss.item(), ni)
 
             # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
             if ni - last_opt_step >= accumulate:
@@ -380,20 +380,20 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
             if not noval or final_epoch:  # Calculate mAP
                 results, maps, _ = validate.run(data_dict,
-                                                    batch_size=batch_size // WORLD_SIZE * 2,
-                                                    imgsz=imgsz,
-                                                    half=amp,
-                                                    model=ema.ema,
-                                                    single_cls=single_cls,
-                                                    dataloader=val_loader,
-                                                    save_dir=save_dir,
-                                                    plots=False,
-                                                    callbacks=callbacks,
-                                                    compute_loss=compute_loss,
-                                                    mask_downsample_ratio=mask_ratio,
-                                                    overlap=overlap)
+                                                batch_size=batch_size // WORLD_SIZE * 2,
+                                                imgsz=imgsz,
+                                                half=amp,
+                                                model=ema.ema,
+                                                single_cls=single_cls,
+                                                dataloader=val_loader,
+                                                save_dir=save_dir,
+                                                plots=False,
+                                                callbacks=callbacks,
+                                                compute_loss=compute_loss,
+                                                mask_downsample_ratio=mask_ratio,
+                                                overlap=overlap)
 
-                writer.add_scalar('val loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
+                writer.add_scalar('Validation loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
@@ -541,8 +541,8 @@ def main(opt, callbacks=Callbacks()):
     # Checks
     if RANK in {-1, 0}:
         print_args(vars(opt))
-        #check_git_status()
-        #check_requirements()
+        # check_git_status()
+        # check_requirements()
 
     # Resume
     if opt.resume and not opt.evolve:  # resume from specified or most recent last.pt
