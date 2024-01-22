@@ -44,26 +44,30 @@ class mvtecConverter(BaseConverter):
 
     def generate_original(self):
             if self.dataset_type == 'train':
+                # =====good=====
                 for idx, image_file in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
-
                     image_name = Path(image_file).stem
                     shutil.copy(image_file,
                                 os.path.join(self.output_dir, 'train', 'good', image_name + '.jpg'))
+            else:   # test
+                # =====good=====
+                for idx, image_file in enumerate(tqdm(self.good_image_files_path, total=len(self.good_image_files_path))):
+                    image_name = Path(image_file).stem
                     shutil.copy(image_file,
                                 os.path.join(self.output_dir, 'test', 'good', image_name + '.jpg'))
-            else:   # test
+                # =====defect=====
                 # 依 super 分類
                 super_info = {entry['super']: {'super': entry['super'], 'id': entry['id']}
                                 for entry in self.classes_name.values()}
                 super_info_sort = sorted(list(super_info.items()), key=lambda x: x[1]['id'])
-                super_cls = [entry[1]['super'] for entry in super_info_sort]    # ['Scratch', 'Friction', 'Dirty', 'Assembly']
+                super_cls = [entry[1]['super'] for entry in super_info_sort]    # ['Scratch', 'Friction', 'Dirty', 'Assembly']  # ['Defect']
                 # 創建每個瑕疵的folder
                 for super_cls_name in super_cls:
                     os.makedirs(os.path.join(self.output_dir, 'mask', 'defect', super_cls_name), exist_ok=True)
                     os.makedirs(os.path.join(self.output_dir, 'test', 'defect', super_cls_name), exist_ok=True)
 
                 for idx, (image_file, json_file) in enumerate(
-                        tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
+                        tqdm(zip(self.defect_image_files_path, self.json_files_path), total=len(self.defect_image_files_path))):
                     # 解析json
                     _, _, mask, classes, _, _ = jsonParser(json_file).parse()
 
@@ -82,6 +86,7 @@ class mvtecConverter(BaseConverter):
 
     def generate_patch(self):
             if self.dataset_type == 'train':
+                # =====good=====
                 for idx, image_file in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
                     # 切 patch
                     original_image = cv2.imread(image_file)
@@ -90,14 +95,21 @@ class mvtecConverter(BaseConverter):
 
                     for i, image_patch in enumerate(original_patches):
                         image_name = f"patch_{idx}_{i}"
-
                         train_path = os.path.join(self.output_dir, 'train', 'good', image_name + '.jpg')
                         cv2.imwrite(train_path, cv2.cvtColor(image_patch, cv2.COLOR_BGR2RGB))
-
-                        test_path = os.path.join(self.output_dir, 'test', 'good', image_name + '.jpg')
-                        cv2.imwrite(test_path, cv2.cvtColor(image_patch, cv2.COLOR_BGR2RGB))
-
             else:   # test
+                # =====good=====
+                for idx, image_file in enumerate(tqdm(self.good_image_files_path, total=len(self.good_image_files_path))):
+                    # 切 patch
+                    original_image = cv2.imread(image_file)
+                    original_patches = patchify(original_image, (self.patch_size, self.patch_size, 3), step=int(self.patch_size / self.stride))
+                    original_patches = original_patches.reshape((-1, self.patch_size, self.patch_size, 3))
+
+                    for i, image_patch in enumerate(original_patches):
+                        image_name = f"patch_{idx}_{i}"
+                        train_path = os.path.join(self.output_dir, 'test', 'good', image_name + '.jpg')
+                        cv2.imwrite(train_path, cv2.cvtColor(image_patch, cv2.COLOR_BGR2RGB))
+                # =====defect=====
                 # 依 super 分類
                 super_info = {entry['super']: {'super': entry['super'], 'id': entry['id']}
                                 for entry in self.classes_name.values()}
@@ -110,7 +122,7 @@ class mvtecConverter(BaseConverter):
 
 
                 for idx, (image_file, json_file) in enumerate(
-                        tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
+                        tqdm(zip(self.defect_image_files_path, self.json_files_path), total=len(self.defect_image_files_path))):
                     # 解析json
                     image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 

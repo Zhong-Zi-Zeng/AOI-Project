@@ -1,7 +1,7 @@
 dataset:
   name: Results
   format: folder
-  path: ./datasets/white_original_class_4
+  path: ./datasets/original_class_4
   normal_dir:   # name of the folder containing normal images.
     - train/good
     - test/good
@@ -75,6 +75,7 @@ optimization:
   export_mode: torch # options: torch, onnx, openvino
 # PL Trainer Args. Don't add extra parameter here.
 trainer:
+  # optimizer: "AdamW"  # AdamW、SGD
   enable_checkpointing: true
   default_root_dir: null
   gradient_clip_val: 0

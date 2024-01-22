@@ -193,11 +193,10 @@ class Evaluator:
         for img_id in tqdm(img_id_list):
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]
-            img_file = img_info['file_name']
-            image = cv2.imread(os.path.join(self.coco_root, 'val2017', img_file))
+            img_file = os.path.join(self.coco_root, 'val2017', img_info['file_name'])
 
             # Inference
-            result = self.model.predict(image, conf_thres=conf_thres, nms_thres=nms_thres)
+            result = self.model.predict(img_file, conf_thres=conf_thres, nms_thres=nms_thres)
 
             class_list = result['class_list']
             score_list = result['score_list']

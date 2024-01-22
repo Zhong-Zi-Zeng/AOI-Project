@@ -44,8 +44,7 @@ def run():
         ValueError("Cannot find the source file {}".format(args.source))
 
     for image_file in tqdm(source, total=len(source)):
-        image = cv2.imread(image_file)
-        result = model.predict(image,
+        result = model.predict(image_file,
                                conf_thres=args.conf_thres,
                                nms_thres=args.nms_thres)
 
