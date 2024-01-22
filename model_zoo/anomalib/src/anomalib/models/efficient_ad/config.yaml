@@ -75,7 +75,7 @@ optimization:
   export_mode: torch # options: torch, onnx, openvino
 # PL Trainer Args. Don't add extra parameter here.
 trainer:
-  optimizer: "AdamW"  # AdamW、SGD
+  # optimizer: "AdamW"  # AdamW、SGD
   enable_checkpointing: true
   default_root_dir: null
   gradient_clip_val: 0

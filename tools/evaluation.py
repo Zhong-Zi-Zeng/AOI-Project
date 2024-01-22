@@ -1,12 +1,13 @@
 from __future__ import annotations
-import sys
+
 import os
+import sys
 
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
 from typing import Optional
 from pycocotools.coco import COCO
-from colorama import Fore, Back, Style, init
+from colorama import Fore
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from engine.general import (get_work_dir_path, save_json)
@@ -190,11 +191,10 @@ class Evaluator:
         for img_id in tqdm(img_id_list):
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]
-            img_file = img_info['file_name']
-            image = cv2.imread(os.path.join(self.coco_root, 'val2017', img_file))
+            img_file = os.path.join(self.coco_root, 'val2017', img_info['file_name'])
 
             # Inference
-            result = self.model.predict(image, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
+            result = self.model.predict(img_file, conf_thres=self.conf_thres, nms_thres=self.nms_thres)
 
             class_list = result['class_list']
             score_list = result['score_list']

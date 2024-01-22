@@ -20,6 +20,7 @@ __pycache__/
 *.xlsx
 /data
 !data/.gitkeep
+/datasets/imagenette/imagenette2.tgz
 /work_dirs
 
 # Distribution / packaging
