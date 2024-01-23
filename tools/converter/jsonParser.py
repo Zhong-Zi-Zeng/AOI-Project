@@ -13,8 +13,7 @@ class jsonParser:
         assert os.path.isfile(json_file_path), "{} can not find this json file".format(json_file_path)
 
         self.json_file_path = json_file_path
-
-        with open(json_file_path, 'r') as file:
+        with open(json_file_path, 'r', encoding="utf-8") as file:
             self.text = json.loads(file.read())
 
     def check_json(self) -> bool:

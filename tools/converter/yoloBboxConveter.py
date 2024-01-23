@@ -28,7 +28,7 @@ class yoloBboxConverter(BaseConverter):
         self.source_dir = os.path.join(source_dir, dataset_type)
         self.output_dir = output_dir
         self.patch_size = patch_size
-        self.dataset_type = 'val' if dataset_type == 'test' else dataset_type   # train or val
+        self.dataset_type = 'val' if dataset_type == 'test' else dataset_type  # train or val
         self.stride = stride
         self.store_none = store_none
         self.generate_dir()
@@ -44,12 +44,7 @@ class yoloBboxConverter(BaseConverter):
     def generate_original(self):
         image_paths = []
 
-        for idx, (image_file, json_file) in enumerate(
-                tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
-            # 解析json
-            image_height, image_width, _, classes, bboxes, _ = jsonParser(json_file).parse()
-
-            # <images & labels train> or <images & labels val>
+        for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
             # image
             image_name = Path(image_file).stem
             shutil.copy(image_file,
@@ -57,10 +52,19 @@ class yoloBboxConverter(BaseConverter):
 
             # 存所有train or val圖片的路徑
             image_paths.append(os.path.join('./', 'images', self.dataset_type, image_name + '.jpg'))
+
             # train_list.txt or val_list.txt
             with open(os.path.join(self.output_dir, self.dataset_type + '_list.txt'), 'w') as file:
                 file.write('\n'.join(image_paths).replace('\\', '/'))
 
+            # 依照image file去找對應的json檔，如果沒有找到就跳過
+            json_file = image_file.replace(Path(image_file).suffix, '.json')
+
+            if not os.path.isfile(json_file):
+                continue
+
+            # 解析json
+            image_height, image_width, _, classes, bboxes, _ = jsonParser(json_file).parse()
 
             # label
             with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
@@ -82,9 +86,6 @@ class yoloBboxConverter(BaseConverter):
                     # Extract the class label without the '#'
                     class_name = classes[idx].replace("#", '')
 
-                    # Find the index of a class label
-                    # class_idx = self.classes_name.index(class_name)
-
                     # Find the index of a superclass label
                     superclass_idx = self.classes_name[class_name]['id']
 
@@ -93,12 +94,14 @@ class yoloBboxConverter(BaseConverter):
                     yolo_bbox = [str(superclass_idx)] + list(map(str, bbox))
                     file.write(" ".join(yolo_bbox) + "\n")
 
-
     def generate_patch(self):
         image_paths = []
 
-        for idx, (image_file, json_file) in enumerate(
-                tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
+        for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
+            # 依照image file去找對應的json檔，如果沒有找到就跳過
+            json_file = image_file.replace('jpg', 'json')
+            if not os.path.isfile(json_file):
+                continue
 
             # 解析json
             image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
@@ -119,10 +122,8 @@ class yoloBboxConverter(BaseConverter):
 
                 image_height = results[i]['label']['image_height'][0]
                 image_width = results[i]['label']['image_width'][0]
-                mask = np.array(results[i]['label']['mask'])
                 classes = results[i]['label']['classes']
                 bboxes = results[i]['label']['bboxes']
-                polygons = results[i]['label']['polygons']
 
                 processed_image_count = results[i]['processed_image_count']
 
@@ -140,7 +141,8 @@ class yoloBboxConverter(BaseConverter):
 
                 # label
                 if len(classes) != 0:
-                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
+                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'),
+                              'w') as file:
                         for idx, bbox in enumerate(bboxes):
                             x, y, w, h = bbox
 
@@ -164,5 +166,21 @@ class yoloBboxConverter(BaseConverter):
                             yolo_bbox = [str(superclass_idx)] + list(map(str, bbox))
                             file.write(" ".join(yolo_bbox) + "\n")
                 else:
-                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'), 'w') as file:
+                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'),
+                              'w') as file:
                         pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

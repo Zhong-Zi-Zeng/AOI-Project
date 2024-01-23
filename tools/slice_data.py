@@ -57,7 +57,6 @@ def check_file(source_dir: str):
     json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
                        if is_json(os.path.join(source_dir, json_name))]
 
-    # image_files_copy = deepcopy(image_files_path)
     json_files_copy = deepcopy(json_files_path)
 
     # 對檔案進行匹配

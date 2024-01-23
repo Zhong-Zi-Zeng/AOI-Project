@@ -32,20 +32,25 @@ class BaseConverter(ABC):
             if dataset_type == 'train':
                 good_folder = os.path.join(source_dir, 'good')
                 self.image_files_path = [os.path.join(good_folder, image_name) for image_name in os.listdir(good_folder)
-                                          if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有image路徑
+                                         if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有image路徑
                 self.json_files_path = []
             else:  # test
                 good_folder = os.path.join(source_dir, 'good')
-                self.good_image_files_path = [os.path.join(good_folder, image_name) for image_name in os.listdir(good_folder)
-                                         if self.is_image(os.path.join(good_folder, image_name))]  # 儲存所有good資料夾中image路徑
+                self.good_image_files_path = [os.path.join(good_folder, image_name) for image_name in
+                                              os.listdir(good_folder)
+                                              if self.is_image(
+                        os.path.join(good_folder, image_name))]  # 儲存所有good資料夾中image路徑
 
                 defect_folder = os.path.join(source_dir, 'defect')
-                self.defect_image_files_path = [os.path.join(defect_folder, image_name) for image_name in os.listdir(defect_folder)
-                                          if self.is_image(os.path.join(defect_folder, image_name))]  # 儲存defect資料夾中所有image路徑
+                self.defect_image_files_path = [os.path.join(defect_folder, image_name) for image_name in
+                                                os.listdir(defect_folder)
+                                                if self.is_image(
+                        os.path.join(defect_folder, image_name))]  # 儲存defect資料夾中所有image路徑
 
-                self.json_files_path = [os.path.join(defect_folder, json_name) for json_name in os.listdir(defect_folder)
-                                         if self.is_json(os.path.join(defect_folder, json_name))]  # 儲存所有json路徑
-        else:   # coco, yoloSeg, yoloBbox
+                self.json_files_path = [os.path.join(defect_folder, json_name) for json_name in
+                                        os.listdir(defect_folder)
+                                        if self.is_json(os.path.join(defect_folder, json_name))]  # 儲存所有json路徑
+        else:  # coco, yoloSeg, yoloBbox
             self.image_files_path = [os.path.join(source_dir, image_name) for image_name in os.listdir(source_dir)
                                      if self.is_image(os.path.join(source_dir, image_name))]  # 儲存所有image路徑
 
@@ -77,14 +82,18 @@ class BaseConverter(ABC):
         """
         # stride = 1 if stride == None else stride    # 沒輸入表示 no overlap
 
-        # Check whether image_h and image_w are divisible by patch_size
-        if image_height % patch_size != 0 or image_width % patch_size != 0:
-            print(image_file)
-            raise ValueError("patch_size cannot divide the original image.")
-
         # Read the original image and cut the patch
         original_image = cv2.imread(image_file)
-        original_patches = patchify(original_image, (patch_size, patch_size, 3), step=int(patch_size/stride))   # 調整stride
+
+        # Check whether image_h and image_w are divisible by patch_size
+        if image_height % patch_size != 0 or image_width % patch_size != 0:
+            pad_height = patch_size - (image_height % patch_size)
+            pad_width = patch_size - (image_width % patch_size)
+            original_image = np.pad(original_image, ((0, pad_height), (0, pad_width), (0, 0)), mode='constant')
+
+        # Divide to patch
+        original_patches = patchify(original_image, (patch_size, patch_size, 3),
+                                    step=int(patch_size / stride))  # 調整stride
         original_patches = original_patches.reshape((-1, patch_size, patch_size, 3))
 
         # Information about defective patches
@@ -107,7 +116,8 @@ class BaseConverter(ABC):
             cv2.fillPoly(black_canvas[idx], [polygon], color=(255, 255, 255))
 
             # Divide into patch sizes
-            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size), step=int(patch_size/stride))    # 調整stride
+            patches_mask = view_as_windows(black_canvas[idx], (patch_size, patch_size),
+                                           step=int(patch_size / stride))  # 調整stride
             patches_mask = patches_mask.reshape((-1, patch_size, patch_size))  # (P, H, W)
 
             # Find the index of the patch containing the defect and save the information

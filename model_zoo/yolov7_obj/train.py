@@ -431,7 +431,6 @@ def train(hyp, opt, device, tb_writer=None):
                                                  compute_loss=compute_loss,
                                                  is_coco=is_coco,
                                                  v5_metric=opt.v5_metric)
-                tb_writer.add_scalar('val loss', np.sum(np.array(results).reshape(1, -1)[-3:]), epoch)
 
             # Write
             with open(results_file, 'a') as f:
@@ -445,8 +444,8 @@ def train(hyp, opt, device, tb_writer=None):
                     'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
                     'x/lr0', 'x/lr1', 'x/lr2']  # params
             for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
-                # if tb_writer:
-                #     tb_writer.add_scalar(tag, x, epoch)  # tensorboard
+                if tb_writer:
+                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
                 if wandb_logger.wandb:
                     wandb_logger.log({tag: x})  # W&B
 

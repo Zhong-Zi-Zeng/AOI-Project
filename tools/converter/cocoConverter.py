@@ -49,22 +49,28 @@ class cocoConverter(BaseConverter):
 
         anns_count = 0
 
-        for idx, (image_file, json_file) in enumerate(
-                tqdm(zip(self.image_files_path, self.json_files_path), total=len(self.image_files_path))):
-            h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
-
+        for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
             # image
             image_name = Path(image_file).stem
             shutil.copy(image_file,
                         os.path.join(self.output_dir, self.dataset_type + '2017', image_name + '.jpg'))
 
-            # Label
+            # 依照image file去找對應的json檔，如果沒有找到就跳過
+            json_file = image_file.replace(Path(image_file).suffix, '.json')
+            image = cv2.imread(image_file)
+            h, w, _ = image.shape
             images.append({
                 'file_name': image_name + '.jpg',
                 'height': h,
                 'width': w,
                 'id': idx
             })
+
+            if not os.path.isfile(json_file):
+                continue
+
+            # Label
+            h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             for cls, bbox, polygon in zip(classes, bboxes, polygons):
                 class_name = cls.replace('#', '')
