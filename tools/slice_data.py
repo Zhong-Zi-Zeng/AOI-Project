@@ -57,7 +57,7 @@ def check_file(source_dir: str):
     json_files_path = [os.path.join(source_dir, json_name) for json_name in os.listdir(source_dir)
                        if is_json(os.path.join(source_dir, json_name))]
 
-    image_files_copy = deepcopy(image_files_path)
+    # image_files_copy = deepcopy(image_files_path)
     json_files_copy = deepcopy(json_files_path)
 
     # 對檔案進行匹配
@@ -69,17 +69,15 @@ def check_file(source_dir: str):
         if correspond_json_file not in json_files_path:
             continue
 
-        # 檢查對應的json檔內容是否正確
+        # 檢查對應的json檔是否有label訊息，沒有的話則將圖片移動到normal資料夾下
         if not jsonParser(correspond_json_file).check_json():
+            os.rename(image_file, os.path.join(source_dir, 'normal', Path(image_file).name))
             continue
 
         # 將對應到的檔案從copy list中移除
-        image_files_copy.remove(image_file)
         json_files_copy.remove(correspond_json_file)
 
-    # 把剩下在的檔案移動到delete資料夾下
-    for except_image_file in image_files_copy:
-        os.rename(except_image_file, os.path.join(source_dir, 'delete', Path(except_image_file).name))
+    # 把沒有對應到圖片的json移動到delete資料夾下
     for except_json_file in json_files_copy:
         os.rename(except_json_file, os.path.join(source_dir, 'delete', Path(except_json_file).name))
 
@@ -139,6 +137,7 @@ if __name__ == '__main__':
     os.mkdir(os.path.join(args.source_dir, 'train'))
     os.mkdir(os.path.join(args.source_dir, 'test'))
     os.mkdir(os.path.join(args.source_dir, 'delete'))
+    os.mkdir(os.path.join(args.source_dir, 'normal'))
 
     check_file(args.source_dir)
     slice_file(source_dir=args.source_dir,
