@@ -6,13 +6,15 @@ _base_: [ "./base/model/Cascade-Mask RCNN/r50.yaml", # model
 
 
 # ===========Dataset===========
-number_of_class: 4
-coco_root: "./data/white_controller/coco/original_class_4"
+number_of_class: 2
+coco_root: "./data/1000/coco/original_class_2"
+# patch_1024_class_2
+# original_class_2
 class_names:
-  - "Scratch"
-  - "Friction"
-  - "Dirty"
-  - "Assembly"
+  - "Pass"
+  - "Defect"
+
+
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
@@ -23,7 +25,7 @@ warmup_epoch: 3
 initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
 minimum_lr: 0.0001 # Minimum learning rate
-batch_size: 2
+batch_size: 8
 imgsz: [1024, 1024]
 use_patch: false
 device: "0"

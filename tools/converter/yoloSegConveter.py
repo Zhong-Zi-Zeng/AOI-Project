@@ -82,7 +82,7 @@ class yoloSegConverter(BaseConverter):
     def generate_patch(self):
         for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
             # 依照image file去找對應的json檔，如果沒有找到就跳過
-            json_file = image_file.replace('jpg', 'json')
+            json_file = image_file.replace(Path(image_file).suffix, '.json')
             if not os.path.isfile(json_file):
                 continue
 
@@ -90,24 +90,21 @@ class yoloSegConverter(BaseConverter):
             image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # 切patch
-            results = BaseConverter._divide_to_patch(self,
-                                                     image_file,
-                                                     image_height,
-                                                     image_width,
-                                                     mask,
-                                                     classes,
-                                                     bboxes,
-                                                     polygons,
-                                                     self.patch_size, self.stride, self.store_none)
+            results = self.process_patch(image_file,
+                                         image_height,
+                                         image_width,
+                                         mask,
+                                         classes,
+                                         bboxes,
+                                         polygons,
+                                         self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
 
                 image_height = results[i]['label']['image_height'][0]
                 image_width = results[i]['label']['image_width'][0]
-                mask = np.array(results[i]['label']['mask'])
                 classes = results[i]['label']['classes']
-                bboxes = results[i]['label']['bboxes']
                 polygons = results[i]['label']['polygons']
 
                 processed_image_count = results[i]['processed_image_count']
@@ -119,7 +116,8 @@ class yoloSegConverter(BaseConverter):
 
                 # label
                 if len(classes) != 0:
-                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
+                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'),
+                              'w') as file:
                         for idx, polygon in enumerate(polygons):
                             # Normalize polygon to be between 0-1
                             normalized_polygon = polygon / np.array([image_width, image_height])
@@ -138,6 +136,6 @@ class yoloSegConverter(BaseConverter):
 
                             file.write(" ".join(yolo_coords) + "\n")
                 else:
-                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'), 'w') as file:
+                    with open(os.path.join(self.output_dir, self.dataset_type, 'labels', image_name + '.txt'),
+                              'w') as file:
                         pass
-

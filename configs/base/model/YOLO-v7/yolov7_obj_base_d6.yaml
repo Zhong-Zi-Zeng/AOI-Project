@@ -1,4 +1,4 @@
-model_name: 'Yolov7Obj'
+model_name: 'Yolov7D6Obj'
 model_dir_name: 'yolov7_obj'
 
 train_txt: ''

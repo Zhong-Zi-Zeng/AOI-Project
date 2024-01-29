@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
-from typing import Optional
+from typing import Optional, Tuple
 from pycocotools.coco import COCO
 from colorama import Fore, Back, Style, init
 from model_zoo import BaseInstanceModel
@@ -176,16 +176,17 @@ class Evaluator:
                  excel_path: Optional[str] = None):
         self.model = model
         self.cfg = cfg
-        self.coco_root = cfg["coco_root"]
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
         self.logger = Logger(cfg)
 
-    def _generate_det(self,
-                      conf_thres: float,
-                      nms_thres: float,
-                      file_name: str):
+    @classmethod
+    def build_by_config(cls, cfg: dict):
+        model = Builder.build_model(cfg)
+        return cls(model=model, cfg=cfg)
+
+    def _generate_det(self) -> list:
 
         img_id_list = self.coco_gt.getImgIds()
         detected_result = []
@@ -193,10 +194,10 @@ class Evaluator:
         for img_id in tqdm(img_id_list):
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]
-            img_file = os.path.join(self.coco_root, 'val2017', img_info['file_name'])
+            img_file = os.path.join(self.cfg['coco_root'], 'val2017', img_info['file_name'])
 
             # Inference
-            result = self.model.predict(img_file, conf_thres=conf_thres, nms_thres=nms_thres)
+            result = self.model.predict(img_file, conf_thres=self.cfg['conf_thres'], nms_thres=self.cfg['nms_thres'])
 
             class_list = result['class_list']
             score_list = result['score_list']
@@ -223,11 +224,10 @@ class Evaluator:
                         'score': round(score, 5),
                     })
 
-        # When not detect anything, append null list into detected_result
-        assert len(detected_result) != 0, Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE
+        # Save detected file
+        save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
 
-        # Save
-        save_json(os.path.join(get_work_dir_path(self.cfg), file_name), detected_result, indent=2)
+        return detected_result
 
     @staticmethod
     def calculate_metrics(eval: PreviewResults,
@@ -427,7 +427,7 @@ class Evaluator:
                      zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
         }
 
-    def _instance_segmentation_eval(self, predicted_coco: COCO):
+    def _instance_segmentation_eval(self, predicted_coco: COCO) -> Tuple[dict, dict]:
         with self.logger:
             # Evaluate
             recall_and_fpr_ignore_cats = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
@@ -452,35 +452,37 @@ class Evaluator:
                                       each_value[idx].tolist(),
                                       sheet_name=sheet_name)
 
-    def eval(self, **kwargs):
+            return recall_and_fpr_ignore_cats, recall_and_fpr_care_cats
+
+    def eval(self):
         """
             對給定的model輸入測試圖片，並將結果轉換成coco eval格式的json檔
-            Args:
-                conf_thres (float): 信心閥值
-                nms_thres (float): NMS閥值
-                file_name (str): coco檢測格式的輸出檔名，預設為detected.json
         """
-
         # Generate detected json
-        conf_thres = kwargs.get('conf_thres', self.cfg['conf_thres'])
-        nms_thres = kwargs.get('nms_thres', self.cfg['nms_thres'])
-        file_name = kwargs.get('file_name', 'detected.json')
-        self._generate_det(conf_thres, nms_thres, file_name)
+        detected_result = self._generate_det()
+
+        # When not detect anything, append null list into detected_result
+        if len(detected_result) == 0:
+            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
+            return [0] * 4
 
         print('=' * 40)
-        print(Fore.BLUE + "Confidence score: {:.1}".format(conf_thres) + Fore.WHITE)
+        print(Fore.BLUE + "Confidence score: {:.1}".format(self.cfg['conf_thres']) + Fore.WHITE)
         print('=' * 40)
 
         with self.writer:
             # Load json
-            predicted_coco = self.coco_gt.loadRes(os.path.join(get_work_dir_path(self.cfg), 'detected.json'))
+            predicted_coco = self.coco_gt.loadRes(detected_result)
 
             if self.cfg['task'] == 'instance_segmentation' or \
                     self.cfg['task'] == 'object_detection':
-                self._instance_segmentation_eval(predicted_coco)
+                recall_and_fpr_ignore_cats, _ = self._instance_segmentation_eval(predicted_coco)
             elif self.cfg['task'] == 'semantic_segmentation':
                 # TODO: segmentation evaluation
                 pass
+
+        return recall_and_fpr_ignore_cats['All']
+
 
 
 if __name__ == "__main__":
@@ -497,13 +499,16 @@ if __name__ == "__main__":
     # Build model
     model = builder.build_model(cfg)
 
-    # Build evaluator
-    evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel)
-
     # Use multi confidence threshold
     if args.multi_conf:
         confidences = np.arange(0.3, 1.0, 0.1)
-        for conf in confidences:
-            evaluator.eval(conf_thres=conf)
     else:
+        confidences = [cfg['conf_thres']]
+
+    for conf in confidences:
+        cfg['conf_thres'] = conf
+
+        # Build evaluator
+        evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel)
+
         evaluator.eval()

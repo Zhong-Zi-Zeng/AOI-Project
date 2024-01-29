@@ -99,7 +99,7 @@ class yoloBboxConverter(BaseConverter):
 
         for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
             # 依照image file去找對應的json檔，如果沒有找到就跳過
-            json_file = image_file.replace('jpg', 'json')
+            json_file = image_file.replace(Path(image_file).suffix, '.json')
             if not os.path.isfile(json_file):
                 continue
 
@@ -107,15 +107,14 @@ class yoloBboxConverter(BaseConverter):
             image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # 切patch
-            results = BaseConverter._divide_to_patch(self,
-                                                     image_file,
-                                                     image_height,
-                                                     image_width,
-                                                     mask,
-                                                     classes,
-                                                     bboxes,
-                                                     polygons,
-                                                     self.patch_size, self.stride, self.store_none)
+            results = self.process_patch(image_file,
+                                         image_height,
+                                         image_width,
+                                         mask,
+                                         classes,
+                                         bboxes,
+                                         polygons,
+                                         self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']
@@ -140,47 +139,26 @@ class yoloBboxConverter(BaseConverter):
                     file.write('\n'.join(image_paths).replace('\\', '/'))
 
                 # label
-                if len(classes) != 0:
-                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'),
-                              'w') as file:
-                        for idx, bbox in enumerate(bboxes):
-                            x, y, w, h = bbox
+                with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'),
+                          'w') as file:
+                    for idx, bbox in enumerate(bboxes):
+                        x, y, w, h = bbox
 
-                            # Normalize xywh -> cxcywh
-                            bbox[0] = (x + w / 2) / image_width
-                            bbox[1] = (y + h / 2) / image_height
-                            bbox[2] /= image_width
-                            bbox[3] /= image_height
+                        # Normalize xywh -> cxcywh
+                        bbox[0] = (x + w / 2) / image_width
+                        bbox[1] = (y + h / 2) / image_height
+                        bbox[2] /= image_width
+                        bbox[3] /= image_height
 
-                            # Extract the class label without the '#'
-                            class_name = classes[idx].replace("#", '')
+                        # Extract the class label without the '#'
+                        class_name = classes[idx].replace("#", '')
 
-                            # Find the index of a class label
-                            # class_idx = self.classes_name.index(class_name)
+                        # Find the index of a superclass label
+                        superclass_idx = self.classes_name[class_name]['id']
 
-                            # Find the index of a superclass label
-                            superclass_idx = self.classes_name[class_name]['id']
-
-                            # Add the coordinates of each vertex to a list in YOLO format
-                            # class, x, y, w, h(Normalize 0–1)
-                            yolo_bbox = [str(superclass_idx)] + list(map(str, bbox))
-                            file.write(" ".join(yolo_bbox) + "\n")
-                else:
-                    with open(os.path.join(self.output_dir, 'labels', self.dataset_type, image_name + '.txt'),
-                              'w') as file:
-                        pass
-
-
-
-
-
-
-
-
-
-
-
-
-
+                        # Add the coordinates of each vertex to a list in YOLO format
+                        # class, x, y, w, h(Normalize 0–1)
+                        yolo_bbox = [str(superclass_idx)] + list(map(str, bbox))
+                        file.write(" ".join(yolo_bbox) + "\n")
 
 
