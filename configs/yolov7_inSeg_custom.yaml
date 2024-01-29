@@ -5,16 +5,13 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: "./data/white_controller/coco/original_class_4"
-train_dir: "./data/white_controller/yoloSeg/original_class_4/train"
-val_dir: "./data/white_controller/yoloSeg/original_class_4/test"
-number_of_class: 4
+coco_root: "./data/1500/coco/original_class_2"
+train_dir: "./data/500/yoloSeg/original_class_2/train"
+val_dir: "./data/500/yoloSeg/original_class_2/test"
+number_of_class: 2
 class_names:
-  - "Scratch"
-  - "Friction"
-  - "Dirty"
-  - "Assembly"
-
+  - "Pass"
+  - "Defect"
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
@@ -25,7 +22,7 @@ warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 4
+batch_size: 8
 imgsz: [1024, 1024]
 use_patch: false
 device: "0"

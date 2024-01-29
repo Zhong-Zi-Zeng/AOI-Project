@@ -127,15 +127,15 @@ class mvtecConverter(BaseConverter):
                     image_height, image_width, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
                     # 切patch
-                    results = BaseConverter._divide_to_patch(self,
-                                                             image_file,
-                                                             image_height,
-                                                             image_width,
-                                                             mask,
-                                                             classes,
-                                                             bboxes,
-                                                             polygons,
-                                                             self.patch_size, self.stride, self.store_none)
+                    results = BaseConverter.process_patch(self,
+                                                          image_file,
+                                                          image_height,
+                                                          image_width,
+                                                          mask,
+                                                          classes,
+                                                          bboxes,
+                                                          polygons,
+                                                          self.patch_size, self.stride, self.store_none)
                     # 取有瑕疵的patch
                     for i in range(len(results)):
                         image_patch = results[i]['image']

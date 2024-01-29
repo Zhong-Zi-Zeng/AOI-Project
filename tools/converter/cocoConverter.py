@@ -102,20 +102,24 @@ class cocoConverter(BaseConverter):
         anns_count = 0
         img_id = 0
 
-        for image_file, json_file in tqdm(zip(self.image_files_path, self.json_files_path),
-                                          total=len(self.image_files_path)):
+        for idx, (image_file) in enumerate(tqdm(self.image_files_path, total=len(self.image_files_path))):
+            # 依照image file去找對應的json檔，如果沒有找到就跳過
+            json_file = image_file.replace(Path(image_file).suffix, '.json')
+            if not os.path.isfile(json_file):
+                continue
+
             h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
             # 切patch
-            results = BaseConverter._divide_to_patch(self,
-                                                     image_file,
-                                                     h,
-                                                     w,
-                                                     mask,
-                                                     classes,
-                                                     bboxes,
-                                                     polygons,
-                                                     self.patch_size, self.stride, self.store_none)
+            results = BaseConverter.process_patch(self,
+                                                  image_file,
+                                                  h,
+                                                  w,
+                                                  mask,
+                                                  classes,
+                                                  bboxes,
+                                                  polygons,
+                                                  self.patch_size, self.stride, self.store_none)
             # 取有瑕疵的patch
             for i in range(len(results)):
                 image_patch = results[i]['image']

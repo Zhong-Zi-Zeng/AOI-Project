@@ -2,6 +2,10 @@ import argparse
 import logging
 import math
 import os
+import sys
+import os
+
+sys.path.append(os.path.join(os.getcwd()))
 import random
 import time
 from copy import deepcopy
@@ -20,6 +24,8 @@ from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+from engine.general import load_yaml
+from tools.evaluation import Evaluator
 
 import test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
@@ -50,6 +56,9 @@ def train(hyp, opt, device, tb_writer=None):
     best = wdir / 'best.pt'
     results_file = save_dir / 'results.txt'
 
+    # Final config path
+    final_config = load_yaml(str(save_dir / 'final_config.yaml'))
+
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
         yaml.dump(hyp, f, sort_keys=False)
@@ -68,7 +77,8 @@ def train(hyp, opt, device, tb_writer=None):
     loggers = {'wandb': None}  # loggers dict
     if rank in [-1, 0]:
         opt.hyp = hyp  # add hyperparameters
-        run_id = torch.load(weights, map_location=device).get('wandb_id') if weights.endswith('.pt') and os.path.isfile(weights) else None
+        run_id = torch.load(weights, map_location=device).get('wandb_id') if weights.endswith('.pt') and os.path.isfile(
+            weights) else None
         wandb_logger = WandbLogger(opt, Path(opt.save_dir).stem, run_id, data_dict)
         loggers['wandb'] = wandb_logger.wandb
         data_dict = wandb_logger.data_dict
@@ -99,7 +109,8 @@ def train(hyp, opt, device, tb_writer=None):
     test_path = data_dict['val']
 
     # Freeze
-    freeze = [f'model.{x}.' for x in (freeze if len(freeze) > 1 else range(freeze[0]))]  # parameter names to freeze (full or partial)
+    freeze = [f'model.{x}.' for x in
+              (freeze if len(freeze) > 1 else range(freeze[0]))]  # parameter names to freeze (full or partial)
     for k, v in model.named_parameters():
         v.requires_grad = True  # train all layers
         if any(x in k for x in freeze):
@@ -121,60 +132,60 @@ def train(hyp, opt, device, tb_writer=None):
         elif hasattr(v, 'weight') and isinstance(v.weight, nn.Parameter):
             pg1.append(v.weight)  # apply decay
         if hasattr(v, 'im'):
-            if hasattr(v.im, 'implicit'):           
+            if hasattr(v.im, 'implicit'):
                 pg0.append(v.im.implicit)
             else:
                 for iv in v.im:
                     pg0.append(iv.implicit)
         if hasattr(v, 'imc'):
-            if hasattr(v.imc, 'implicit'):           
+            if hasattr(v.imc, 'implicit'):
                 pg0.append(v.imc.implicit)
             else:
                 for iv in v.imc:
                     pg0.append(iv.implicit)
         if hasattr(v, 'imb'):
-            if hasattr(v.imb, 'implicit'):           
+            if hasattr(v.imb, 'implicit'):
                 pg0.append(v.imb.implicit)
             else:
                 for iv in v.imb:
                     pg0.append(iv.implicit)
         if hasattr(v, 'imo'):
-            if hasattr(v.imo, 'implicit'):           
+            if hasattr(v.imo, 'implicit'):
                 pg0.append(v.imo.implicit)
             else:
                 for iv in v.imo:
                     pg0.append(iv.implicit)
         if hasattr(v, 'ia'):
-            if hasattr(v.ia, 'implicit'):           
+            if hasattr(v.ia, 'implicit'):
                 pg0.append(v.ia.implicit)
             else:
                 for iv in v.ia:
                     pg0.append(iv.implicit)
         if hasattr(v, 'attn'):
-            if hasattr(v.attn, 'logit_scale'):   
+            if hasattr(v.attn, 'logit_scale'):
                 pg0.append(v.attn.logit_scale)
-            if hasattr(v.attn, 'q_bias'):   
+            if hasattr(v.attn, 'q_bias'):
                 pg0.append(v.attn.q_bias)
-            if hasattr(v.attn, 'v_bias'):  
+            if hasattr(v.attn, 'v_bias'):
                 pg0.append(v.attn.v_bias)
-            if hasattr(v.attn, 'relative_position_bias_table'):  
+            if hasattr(v.attn, 'relative_position_bias_table'):
                 pg0.append(v.attn.relative_position_bias_table)
         if hasattr(v, 'rbr_dense'):
-            if hasattr(v.rbr_dense, 'weight_rbr_origin'):  
+            if hasattr(v.rbr_dense, 'weight_rbr_origin'):
                 pg0.append(v.rbr_dense.weight_rbr_origin)
-            if hasattr(v.rbr_dense, 'weight_rbr_avg_conv'): 
+            if hasattr(v.rbr_dense, 'weight_rbr_avg_conv'):
                 pg0.append(v.rbr_dense.weight_rbr_avg_conv)
-            if hasattr(v.rbr_dense, 'weight_rbr_pfir_conv'):  
+            if hasattr(v.rbr_dense, 'weight_rbr_pfir_conv'):
                 pg0.append(v.rbr_dense.weight_rbr_pfir_conv)
-            if hasattr(v.rbr_dense, 'weight_rbr_1x1_kxk_idconv1'): 
+            if hasattr(v.rbr_dense, 'weight_rbr_1x1_kxk_idconv1'):
                 pg0.append(v.rbr_dense.weight_rbr_1x1_kxk_idconv1)
-            if hasattr(v.rbr_dense, 'weight_rbr_1x1_kxk_conv2'):   
+            if hasattr(v.rbr_dense, 'weight_rbr_1x1_kxk_conv2'):
                 pg0.append(v.rbr_dense.weight_rbr_1x1_kxk_conv2)
-            if hasattr(v.rbr_dense, 'weight_rbr_gconv_dw'):   
+            if hasattr(v.rbr_dense, 'weight_rbr_gconv_dw'):
                 pg0.append(v.rbr_dense.weight_rbr_gconv_dw)
-            if hasattr(v.rbr_dense, 'weight_rbr_gconv_pw'):   
+            if hasattr(v.rbr_dense, 'weight_rbr_gconv_pw'):
                 pg0.append(v.rbr_dense.weight_rbr_gconv_pw)
-            if hasattr(v.rbr_dense, 'vector'):   
+            if hasattr(v.rbr_dense, 'vector'):
                 pg0.append(v.rbr_dense.vector)
 
     if opt.optimizer == 'Adam':
@@ -438,17 +449,6 @@ def train(hyp, opt, device, tb_writer=None):
             if len(opt.name) and opt.bucket:
                 os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-            # Log
-            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                    'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
-                    'x/lr0', 'x/lr1', 'x/lr2']  # params
-            for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
-                if tb_writer:
-                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
-                if wandb_logger.wandb:
-                    wandb_logger.log({tag: x})  # W&B
-
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
             if fi > best_fitness:
@@ -472,17 +472,33 @@ def train(hyp, opt, device, tb_writer=None):
                     torch.save(ckpt, best)
                 if (best_fitness == fi) and (epoch >= 200):
                     torch.save(ckpt, wdir / 'best_{:03d}.pt'.format(epoch))
-                if epoch == 0:
-                    torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
-                elif ((epoch+1) % 25) == 0:
-                    torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
-                elif epoch >= (epochs-5):
+                if opt.save_period > 0 and epoch % opt.save_period == 0:
                     torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
                 if wandb_logger.wandb:
                     if ((epoch + 1) % opt.save_period == 0 and not final_epoch) and opt.save_period != -1:
                         wandb_logger.log_model(
                             last.parent, opt, epoch, fi, best_model=best_fitness == fi)
                 del ckpt
+
+            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+                final_config.update({'weight': last})
+                evaluator = Evaluator.build_by_config(cfg=final_config)
+                recall_and_fpr_for_all = evaluator.eval()
+                tags = ["Recall(image)", "FPR(image)", "Recall(defect)", "FPR(defect)"]
+                for x, tag in zip(recall_and_fpr_for_all, tags):
+                    tb_writer.add_scalar(tag, x, epoch)
+
+            # Log
+            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
+                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                    'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
+                    'x/lr0', 'x/lr1', 'x/lr2']  # params
+
+            for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
+                if tb_writer:
+                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
+                if wandb_logger.wandb:
+                    wandb_logger.log({tag: x})  # W&B
 
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training
@@ -565,8 +581,10 @@ if __name__ == '__main__':
     parser.add_argument('--upload_dataset', action='store_true', help='Upload dataset as W&B artifact table')
     parser.add_argument('--bbox_interval', type=int, default=-1, help='Set bounding-box image logging interval for W&B')
     parser.add_argument('--save_period', type=int, default=-1, help='Log model after every "save_period" epoch')
+    parser.add_argument('--eval_period', type=int, default=-1, help='Eval model after every "eval_period" epoch')
     parser.add_argument('--artifact_alias', type=str, default="latest", help='version of dataset artifact to be used')
-    parser.add_argument('--freeze', nargs='+', type=int, default=[0], help='Freeze layers: backbone of yolov7=50, first3=0 1 2')
+    parser.add_argument('--freeze', nargs='+', type=int, default=[0],
+                        help='Freeze layers: backbone of yolov7=50, first3=0 1 2')
     parser.add_argument('--v5-metric', action='store_true', help='assume maximum recall as 1.0 in AP calculation')
     opt = parser.parse_args()
 
@@ -574,7 +592,7 @@ if __name__ == '__main__':
     opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1
     opt.global_rank = int(os.environ['RANK']) if 'RANK' in os.environ else -1
     set_logging(opt.global_rank)
-    #if opt.global_rank in [-1, 0]:
+    # if opt.global_rank in [-1, 0]:
     #    check_git_status()
     #    check_requirements()
 
@@ -651,15 +669,15 @@ if __name__ == '__main__':
                 'flipud': (1, 0.0, 1.0),  # image flip up-down (probability)
                 'fliplr': (0, 0.0, 1.0),  # image flip left-right (probability)
                 'mosaic': (1, 0.0, 1.0),  # image mixup (probability)
-                'mixup': (1, 0.0, 1.0),   # image mixup (probability)
+                'mixup': (1, 0.0, 1.0),  # image mixup (probability)
                 'copy_paste': (1, 0.0, 1.0),  # segment copy-paste (probability)
-                'paste_in': (1, 0.0, 1.0)}    # segment copy-paste (probability)
-        
+                'paste_in': (1, 0.0, 1.0)}  # segment copy-paste (probability)
+
         with open(opt.hyp, errors='ignore') as f:
             hyp = yaml.safe_load(f)  # load hyps dict
             if 'anchors' not in hyp:  # anchors commented in hyp.yaml
                 hyp['anchors'] = 3
-                
+
         assert opt.local_rank == -1, 'DDP mode not implemented for --evolve'
         opt.notest, opt.nosave = True, True  # only test/save final epoch
         # ei = [isinstance(x, (int, float)) for x in hyp.values()]  # evolvable indices

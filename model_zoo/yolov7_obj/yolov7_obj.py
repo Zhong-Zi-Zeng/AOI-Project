@@ -38,8 +38,20 @@ class Yolov7Obj(BaseDetectModel):
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['initial_lr'] / self.cfg['warmup_epoch'] / hyp_file['warmup_bias_lr']
         hyp_file['lrf'] = self.cfg['minimum_lr'] / hyp_file['lr0']
+        hyp_file['hsv_h'] = self.cfg['hsv_h']
+        hyp_file['hsv_s'] = self.cfg['hsv_s']
+        hyp_file['hsv_v'] = self.cfg['hsv_v']
+        hyp_file['degrees'] = self.cfg['degrees']
+        hyp_file['translate'] = self.cfg['translate']
+        hyp_file['scale'] = self.cfg['scale']
+        hyp_file['shear'] = self.cfg['shear']
+        hyp_file['perspective'] = self.cfg['perspective']
+        hyp_file['flipud'] = self.cfg['flipud']
+        hyp_file['fliplr'] = self.cfg['fliplr']
+        hyp_file['mosaic'] = self.cfg['mosaic']
+        hyp_file['mixup'] = self.cfg['mixup']
+        hyp_file['copy_paste'] = self.cfg['copy_paste']
 
-        # TODO: Augmentation
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
@@ -66,7 +78,7 @@ class Yolov7Obj(BaseDetectModel):
         """
 
         subprocess.run(['python',
-                        os.path.join(get_model_path(self.cfg), 'train_aux.py'),
+                        os.path.join(get_model_path(self.cfg), 'train.py'),
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
@@ -78,6 +90,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--device', self.cfg['device'],
                         '--name', './',
                         '--save_period', str(self.cfg['save_period']),
+                        '--eval_period', str(self.cfg['eval_period']),
                         '--img', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
                         ]
@@ -159,10 +172,6 @@ class Yolov7Obj(BaseDetectModel):
                         # Draw bounding box
                         label = f'{names[int(cls)]} {conf:.2f}'
                         plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=5)
-
-            # img = cv2.resize(original_image, (512, 512))
-            # cv2.imshow('', img)
-            # cv2.waitKey(0)
 
             return {
                 'result_image': original_image,

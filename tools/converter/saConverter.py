@@ -35,7 +35,7 @@ class saConverter(BaseConverter):
         os.makedirs(os.path.join(self.output_dir, 'test', 'image'), exist_ok=True)
         os.makedirs(os.path.join(self.output_dir, 'test', 'label'), exist_ok=True)
 
-    def _divide_to_patch(self, large_image: np.ndarray[np.uint8]) -> np.ndarray[np.uint8]:
+    def process_patch(self, large_image: np.ndarray[np.uint8]) -> np.ndarray[np.uint8]:
         """
             將傳入的圖片拆成patch
             Return:
@@ -76,8 +76,8 @@ class saConverter(BaseConverter):
                                             total=len(self.image_files_path)):
             h, w, mask, classes, bboxes, polygons = jsonParser(json_file).parse()
 
-            patch_mask = self._divide_to_patch(mask)
-            patch_image = self._divide_to_patch(cv2.imread(image_file))
+            patch_mask = self.process_patch(mask)
+            patch_image = self.process_patch(cv2.imread(image_file))
 
             # 將沒有異常mask的地方去掉
             valid_indices = [i for i, mask in enumerate(patch_mask) if mask.max() != 0]

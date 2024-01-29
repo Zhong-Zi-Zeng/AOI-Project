@@ -59,17 +59,17 @@ class BaseConverter(ABC):
 
         self.processed_image_count = 0  # Record the number of times divide_to_patch is called (so that the patch name is not overwritten)
 
-    def _divide_to_patch(self,
-                         image_file,
-                         image_height,
-                         image_width,
-                         mask,
-                         classes,
-                         bboxes,
-                         polygons,
-                         patch_size,
-                         stride,
-                         store_none=False):
+    def process_patch(self,
+                      image_file,
+                      image_height,
+                      image_width,
+                      mask,
+                      classes,
+                      bboxes,
+                      polygons,
+                      patch_size,
+                      stride,
+                      store_none=False):
         """
             Returns:
                 h (int): 圖片的高
