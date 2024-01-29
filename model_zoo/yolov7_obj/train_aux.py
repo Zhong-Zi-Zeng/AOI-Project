@@ -1,12 +1,15 @@
 import argparse
 import logging
 import math
-import os
 import random
 import time
 from copy import deepcopy
 from pathlib import Path
 from threading import Thread
+import sys
+import os
+
+sys.path.append(os.path.join(os.getcwd()))
 
 import numpy as np
 import torch.distributed as dist
@@ -20,6 +23,8 @@ from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+from engine.general import load_yaml
+from tools.evaluation import Evaluator
 
 import test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
@@ -49,6 +54,9 @@ def train(hyp, opt, device, tb_writer=None):
     last = wdir / 'last.pt'
     best = wdir / 'best.pt'
     results_file = save_dir / 'results.txt'
+
+    # Final config path
+    final_config = load_yaml(str(save_dir / 'final_config.yaml'))
 
     # Save run settings
     with open(save_dir / 'hyp.yaml', 'w') as f:
@@ -465,11 +473,7 @@ def train(hyp, opt, device, tb_writer=None):
                     torch.save(ckpt, best)
                 if (best_fitness == fi) and (epoch >= 200):
                     torch.save(ckpt, wdir / 'best_{:03d}.pt'.format(epoch))
-                if epoch == 0:
-                    torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
-                elif ((epoch+1) % 25) == 0:
-                    torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
-                elif epoch >= (epochs-5):
+                if opt.save_period > 0 and epoch % opt.save_period == 0:
                     torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
                 if wandb_logger.wandb:
                     if ((epoch + 1) % opt.save_period == 0 and not final_epoch) and opt.save_period != -1:
@@ -477,7 +481,15 @@ def train(hyp, opt, device, tb_writer=None):
                             last.parent, opt, epoch, fi, best_model=best_fitness == fi)
                 del ckpt
 
-        # end epoch ----------------------------------------------------------------------------------------------------
+            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+                final_config.update({'weight': last})
+                evaluator = Evaluator.build_by_config(cfg=final_config)
+                recall_and_fpr_for_all = evaluator.eval()
+                tags = ["Recall(image)", "FPR(image)", "Recall(defect)", "FPR(defect)"]
+                for x, tag in zip(recall_and_fpr_for_all, tags):
+                    tb_writer.add_scalar(tag, x, epoch)
+
+    # end epoch ----------------------------------------------------------------------------------------------------
     # end training
     if rank in [-1, 0]:
         # Plots
@@ -558,6 +570,7 @@ if __name__ == '__main__':
     parser.add_argument('--upload_dataset', action='store_true', help='Upload dataset as W&B artifact table')
     parser.add_argument('--bbox_interval', type=int, default=-1, help='Set bounding-box image logging interval for W&B')
     parser.add_argument('--save_period', type=int, default=-1, help='Log model after every "save_period" epoch')
+    parser.add_argument('--eval_period', type=int, default=-1, help='Eval model after every "eval_period" epoch')
     parser.add_argument('--artifact_alias', type=str, default="latest", help='version of dataset artifact to be used')
     parser.add_argument('--v5-metric', action='store_true', help='assume maximum recall as 1.0 in AP calculation')
     opt = parser.parse_args()

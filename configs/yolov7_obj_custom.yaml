@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/augmentation.yaml", # Augmentation
@@ -40,7 +40,7 @@ initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 4
-save_period: 25
+save_period: 3
 eval_period: 1
 imgsz: [1024, 1024]
 use_patch: false
