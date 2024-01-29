@@ -30,6 +30,10 @@ def get_args_parser():
                              'If given the file, this script will append new value in the given file.'
                              'Otherwise, this script will create a new Excel file depending on the task type.')
 
+    parser.add_argument('--detected_result', '-d', type=str,
+                        help='Existing detected file.'
+                             'If given the file, this script will be evaluate directly.')
+
     parser.add_argument('--dir_name', type=str,
                         help='The name of work dir.')
 
@@ -173,9 +177,11 @@ class Evaluator:
     def __init__(self,
                  model: BaseInstanceModel,
                  cfg: dict,
+                 detected_result: Optional[str] = None,
                  excel_path: Optional[str] = None):
         self.model = model
         self.cfg = cfg
+        self.detected_result = detected_result
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
@@ -459,10 +465,11 @@ class Evaluator:
             對給定的model輸入測試圖片，並將結果轉換成coco eval格式的json檔
         """
         # Generate detected json
-        detected_result = self._generate_det()
+        if self.detected_result is None:
+            self.detected_result = self._generate_det()
 
         # When not detect anything, append null list into detected_result
-        if len(detected_result) == 0:
+        if len(self.detected_result) == 0:
             print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
             return [0] * 4
 
@@ -472,7 +479,7 @@ class Evaluator:
 
         with self.writer:
             # Load json
-            predicted_coco = self.coco_gt.loadRes(detected_result)
+            predicted_coco = self.coco_gt.loadRes(self.detected_result)
 
             if self.cfg['task'] == 'instance_segmentation' or \
                     self.cfg['task'] == 'object_detection':
@@ -482,7 +489,6 @@ class Evaluator:
                 pass
 
         return recall_and_fpr_ignore_cats['All']
-
 
 
 if __name__ == "__main__":
@@ -509,6 +515,6 @@ if __name__ == "__main__":
         cfg['conf_thres'] = conf
 
         # Build evaluator
-        evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel)
+        evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel, detected_result=args.detected_result)
 
         evaluator.eval()

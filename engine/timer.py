@@ -7,6 +7,7 @@ class Profile(contextlib.ContextDecorator):
     def __init__(self, name: str, t=0.0):
         self.name = name
         self.t = t
+        self.dt = 0
         self.cuda = torch.cuda.is_available()
 
     def __enter__(self):
