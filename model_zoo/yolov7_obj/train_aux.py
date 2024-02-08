@@ -485,9 +485,10 @@ def train(hyp, opt, device, tb_writer=None):
                 final_config.update({'weight': last})
                 evaluator = Evaluator.build_by_config(cfg=final_config)
                 recall_and_fpr_for_all = evaluator.eval()
-                tags = ["Recall(image)", "FPR(image)", "Recall(defect)", "FPR(defect)"]
+                tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
                 for x, tag in zip(recall_and_fpr_for_all, tags):
                     tb_writer.add_scalar(tag, x, epoch)
+                del evaluator
 
     # end epoch ----------------------------------------------------------------------------------------------------
     # end training

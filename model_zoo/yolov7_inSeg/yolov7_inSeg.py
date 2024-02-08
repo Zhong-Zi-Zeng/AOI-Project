@@ -38,8 +38,20 @@ class Yolov7inSeg(BaseInstanceModel):
         hyp_file = load_yaml(self.cfg['hyp_file'])
         hyp_file['lr0'] = self.cfg['initial_lr'] / self.cfg['warmup_epoch'] / hyp_file['warmup_bias_lr']
         hyp_file['lrf'] = self.cfg['minimum_lr'] / hyp_file['lr0']
+        hyp_file['hsv_h'] = self.cfg['hsv_h']
+        hyp_file['hsv_s'] = self.cfg['hsv_s']
+        hyp_file['hsv_v'] = self.cfg['hsv_v']
+        hyp_file['degrees'] = self.cfg['degrees']
+        hyp_file['translate'] = self.cfg['translate']
+        hyp_file['scale'] = self.cfg['scale']
+        hyp_file['shear'] = self.cfg['shear']
+        hyp_file['perspective'] = self.cfg['perspective']
+        hyp_file['flipud'] = self.cfg['flipud']
+        hyp_file['fliplr'] = self.cfg['fliplr']
+        hyp_file['mosaic'] = self.cfg['mosaic']
+        hyp_file['mixup'] = self.cfg['mixup']
+        hyp_file['copy_paste'] = self.cfg['copy_paste']
 
-        # TODO: Augmentation
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
@@ -57,6 +69,7 @@ class Yolov7inSeg(BaseInstanceModel):
                                         dnn=False,
                                         data=os.path.join(get_work_dir_path(self.cfg), 'data.yaml'),
                                         fp16=False)
+        self.model.eval()
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
         self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
 
@@ -181,14 +194,15 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
-                        '--batch', str(self.cfg['batch_size']),
+                        '--batch-size', str(self.cfg['batch_size']),
                         '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
-                        '--imgsz', str(self.cfg['imgsz'][0]),
+                        '--imgsz', str(max(self.cfg['imgsz'])),
                         '--device', self.cfg['device'],
                         '--save-period', str(self.cfg['save_period']),
+                        '--eval_period', str(self.cfg['eval_period']),
                         '--exist-ok',
                         '--cos-lr'
                         ]

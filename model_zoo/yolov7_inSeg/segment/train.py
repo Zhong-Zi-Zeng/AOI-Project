@@ -20,6 +20,9 @@ import math
 import os
 import random
 import sys
+
+sys.path.append(os.path.join(os.getcwd()))
+
 import time
 from copy import deepcopy
 from datetime import datetime
@@ -32,6 +35,8 @@ import torch.nn as nn
 import yaml
 from torch.optim import lr_scheduler
 from tqdm import tqdm
+from engine.general import load_yaml
+from tools.evaluation import Evaluator
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLOv5 root directory
@@ -78,10 +83,13 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     (w.parent if evolve else w).mkdir(parents=True, exist_ok=True)  # make dir
     last, best = w / 'last.pt', w / 'best.pt'
 
+    # Final config path
+    final_config = load_yaml(str(save_dir / 'final_config.yaml'))
+
     # tensorboard
     l = save_dir / 'log'
     (l.parent if evolve else l).mkdir(parents=True, exist_ok=True)  # make dir
-    writer = SummaryWriter(log_dir=str(l))
+    tb_writer = SummaryWriter(log_dir=str(l))
 
     # Hyperparameters
     if isinstance(hyp, str):
@@ -335,7 +343,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             scaler.scale(loss).backward()
 
             # record value on tensorboard
-            writer.add_scalar('Training loss', loss.item(), ni)
+            tb_writer.add_scalar('Training loss', loss.item(), ni)
 
             # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
             if ni - last_opt_step >= accumulate:
@@ -393,7 +401,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                                 mask_downsample_ratio=mask_ratio,
                                                 overlap=overlap)
 
-                writer.add_scalar('Validation loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
+                tb_writer.add_scalar('Validation loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
@@ -424,13 +432,23 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
 
                 # Save last, best and delete
                 torch.save(ckpt, last)
-                if best_fitness == fi:
-                    torch.save(ckpt, best)
+                # if best_fitness == fi:
+                #     torch.save(ckpt, best)
                 if opt.save_period > 0 and epoch % opt.save_period == 0:
                     torch.save(ckpt, w / f'epoch_{epoch}.pt')
                     logger.log_model(w / f'epoch_{epoch}.pt')
                 del ckpt
                 # callbacks.run('on_model_save', last, epoch, final_epoch, best_fitness, fi)
+
+            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+                with torch.no_grad():
+                    final_config.update({'weight': last})
+                    evaluator = Evaluator.build_by_config(cfg=final_config)
+                    recall_and_fpr_for_all = evaluator.eval()
+                    tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
+                    for x, tag in zip(recall_and_fpr_for_all, tags):
+                        tb_writer.add_scalar(tag, x, epoch)
+                    del evaluator
 
         # EarlyStopping
         if RANK != -1:  # if DDP training
@@ -521,6 +539,7 @@ def parse_opt(known=False):
     parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--freeze', nargs='+', type=int, default=[0], help='Freeze layers: backbone=10, first3=0 1 2')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
+    parser.add_argument('--eval_period', type=int, default=-1, help='Eval model after every "eval_period" epoch')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
 

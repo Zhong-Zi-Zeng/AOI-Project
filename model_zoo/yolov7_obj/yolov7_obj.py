@@ -28,7 +28,7 @@ class Yolov7Obj(BaseDetectModel):
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
         data_file['train'] = os.path.join(os.getcwd(), self.cfg['train_txt'])
-        data_file['val'] = os.path.join(os.getcwd(),self.cfg['val_txt'])
+        data_file['val'] = os.path.join(os.getcwd(), self.cfg['val_txt'])
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
         self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')
@@ -65,6 +65,7 @@ class Yolov7Obj(BaseDetectModel):
         # Load model
         self.device = select_device('')
         self.model = attempt_load(self.cfg['weight'], map_location=self.device)
+        self.model.eval()
         self.stride = int(self.model.stride.max())  # model stride
         self.imgsz = check_img_size(self.cfg['imgsz'][0], s=self.stride)  # check img_size
 
@@ -91,7 +92,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--name', './',
                         '--save_period', str(self.cfg['save_period']),
                         '--eval_period', str(self.cfg['eval_period']),
-                        '--img', str(self.cfg['imgsz'][0]),
+                        '--img-size', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
                         ]
                        )
