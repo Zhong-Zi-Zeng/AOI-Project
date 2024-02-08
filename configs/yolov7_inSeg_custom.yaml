@@ -33,12 +33,12 @@ copy_paste: 0.0  # segment copy-paste (probability)
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 50
+end_epoch: 900
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 8
+batch_size: 6
 save_period: 25
 eval_period: 1
 imgsz: [1024, 1024]

@@ -69,6 +69,7 @@ class Yolov7inSeg(BaseInstanceModel):
                                         dnn=False,
                                         data=os.path.join(get_work_dir_path(self.cfg), 'data.yaml'),
                                         fp16=False)
+        self.model.eval()
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
         self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
 
@@ -193,7 +194,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--data', self.cfg['data_file'],
                         '--cfg', self.cfg['cfg_file'],
                         '--hyp', self.cfg['hyp_file'],
-                        '--batch', str(self.cfg['batch_size']),
+                        '--batch-size', str(self.cfg['batch_size']),
                         '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),

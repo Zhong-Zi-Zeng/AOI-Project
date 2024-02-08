@@ -101,6 +101,12 @@ def save_yaml(path: str, data: dict):
         yaml.dump(data, file)
 
 
+def load_json(path: str):
+    with open(path, 'r') as file:
+        data = json.load(file)
+    return data
+
+
 def save_json(path: str,
               data: Union[list | dict],
               indent: Optional[int] = None):

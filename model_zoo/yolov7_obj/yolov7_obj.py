@@ -65,6 +65,7 @@ class Yolov7Obj(BaseDetectModel):
         # Load model
         self.device = select_device('')
         self.model = attempt_load(self.cfg['weight'], map_location=self.device)
+        self.model.eval()
         self.stride = int(self.model.stride.max())  # model stride
         self.imgsz = check_img_size(self.cfg['imgsz'][0], s=self.stride)  # check img_size
 

@@ -3,19 +3,23 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.getcwd()))
+
 from engine.builder import Builder
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Union
 from pycocotools.coco import COCO
 from colorama import Fore, Back, Style, init
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
-from engine.general import (get_work_dir_path, save_json)
+from torchvision.ops import nms
+from engine.general import (get_work_dir_path, save_json, load_json)
 from engine.timer import TIMER
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import argparse
+import torch
 import openpyxl
+import random
 import cv2
 
 
@@ -30,7 +34,7 @@ def get_args_parser():
                              'If given the file, this script will append new value in the given file.'
                              'Otherwise, this script will create a new Excel file depending on the task type.')
 
-    parser.add_argument('--detected_result', '-d', type=str,
+    parser.add_argument('--detected_json', '-d', type=str,
                         help='Existing detected file.'
                              'If given the file, this script will be evaluate directly.')
 
@@ -62,8 +66,7 @@ class Logger:
         self._start = False
 
     def print_message(self,
-                      value_for_all: list,
-                      value_for_each: dict):
+                      value_for_all: list):
         # 對於所有類別
         data = {title: [value]
                 for title, value in zip(self.cfg['metrics_for_all'], value_for_all)}
@@ -72,14 +75,6 @@ class Logger:
         print('For all classes:')
         print(df.to_string(index=False))
         print('\n' * 2)
-
-        # 對於每一個類別
-        data = {"Metrics": self.cfg['metrics_for_each']}
-        data.update(value_for_each)
-
-        df = pd.DataFrame(data)
-        print('For each class:')
-        print(df.to_string(index=False))
 
 
 class Writer:
@@ -177,11 +172,11 @@ class Evaluator:
     def __init__(self,
                  model: BaseInstanceModel,
                  cfg: dict,
-                 detected_result: Optional[str] = None,
+                 detected_json: Optional[str] = None,
                  excel_path: Optional[str] = None):
         self.model = model
         self.cfg = cfg
-        self.detected_result = detected_result
+        self.detected_json = detected_json
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
@@ -192,7 +187,107 @@ class Evaluator:
         model = Builder.build_model(cfg)
         return cls(model=model, cfg=cfg)
 
-    def _generate_det(self) -> list:
+    @staticmethod
+    def xywh_to_xyxy(bboxes: Union[list | np.ndarray]):
+        _bbox = np.array(bboxes, dtype=np.float32)
+
+        if _bbox.ndim == 1:
+            _bbox = _bbox[None, ...]
+
+        _bbox[:, 2] = _bbox[:, 0] + _bbox[:, 2]
+        _bbox[:, 3] = _bbox[:, 1] + _bbox[:, 3]
+
+        return _bbox
+
+    def _filter_result(self, score_threshold: float) -> List[dict]:
+        """
+            這個函數基於指定的分數閾值篩選檢測結果，對篩選後的結果執行非最大值抑制（NMS），並返回篩選和NMS處理後的檢測結果列表。
+
+        Args:
+            score_threshold (float): 用於篩選檢測結果的分數閾值。
+
+        Returns:
+            result (list[dict]): 經過篩選和非最大值抑制（NMS）處理後的檢測結果列表，包含以下信息：
+                - 'image_id'（int）：對應的圖片id。
+                - 'category_id'（int）：類別
+                - 'bbox'（list）：檢測對象的邊界框坐標，格式為 [x, y, w, h]。
+                - 'score'（float）：檢測結果的置信分數，四捨五入到小數點後5位。
+        """
+
+        detected_results = load_json(self.detected_json)
+        result = []
+
+        # 過濾低於conf_thres的bbox
+        filtered_results = [result for result in detected_results if result['score'] >= score_threshold]
+
+        # 對每一張圖片進行nms
+        for img_id in self.coco_gt.getImgIds():
+            xyxy_bbox_list, xywh_bbox_list, score_list, class_list = [], [], [], []
+
+            # 取出每一張圖片的bbox資訊
+            for rs in filtered_results:
+                if rs['image_id'] == img_id:
+                    xyxy_bbox_list.append(self.xywh_to_xyxy(rs['bbox'])[0])
+                    xywh_bbox_list.append(rs['bbox'])
+                    score_list.append(rs['score'])
+                    class_list.append(rs['category_id'])
+
+            if class_list and xywh_bbox_list and score_list:
+                # 執行nms
+                indices = nms(boxes=torch.FloatTensor(np.array(xyxy_bbox_list)),
+                              scores=torch.FloatTensor(np.array(score_list)),
+                              iou_threshold=self.cfg['nms_thres']).cpu().numpy()
+
+                class_list = np.array(class_list)[indices].tolist()
+                xywh_bbox_list = np.array(xywh_bbox_list)[indices].tolist()
+                score_list = np.array(score_list)[indices].tolist()
+
+            # 新的檢測結果
+            for cls, score, bbox in zip(class_list, score_list, xywh_bbox_list):
+                result.append({
+                    'image_id': img_id,
+                    'category_id': cls,
+                    'bbox': bbox,
+                    'score': round(score, 5),
+                })
+
+        return result
+
+    def _get_iou(self,
+                 dt_bbox: Union[list | np.ndarray],
+                 gt_bbox: Union[list | np.ndarray]):
+        """
+            計算dt_bbox與gt_bbox之間的iou
+
+            Args:
+                dt_bbox (list | np.ndarray): [D, 4], 格式為[x, y, w, h]
+                gt_bbox (list | np.ndarray): [G, 4], 格式為[x, y, w, h]
+            Returns:
+                Ious np.ndarray(float): [D, G]
+        """
+        dt_bbox = np.array(dt_bbox, dtype=np.float32)
+        gt_bbox = np.array(gt_bbox, dtype=np.float32)
+
+        # xywh -> x1y1x2y2
+        dt_bbox = self.xywh_to_xyxy(dt_bbox)
+        gt_bbox = self.xywh_to_xyxy(gt_bbox)
+
+        lt = np.maximum(dt_bbox[:, None, :2], gt_bbox[:, :2])  # [N,M,2]
+        rb = np.minimum(dt_bbox[:, None, 2:], gt_bbox[:, 2:])  # [N,M,2]
+
+        wh = np.maximum(0, rb - lt)  # [N,M,2]
+        inter = wh[:, :, 0] * wh[:, :, 1]  # [N,M]
+
+        area_1 = (dt_bbox[:, 2] - dt_bbox[:, 0]) * (dt_bbox[:, 3] - dt_bbox[:, 1])
+        area_2 = (gt_bbox[:, 2] - gt_bbox[:, 0]) * (gt_bbox[:, 3] - gt_bbox[:, 1])
+
+        union = area_1[:, None] + area_2 - inter
+
+        iou = inter / union
+
+        return iou
+
+    def _generate_det(self):
 
         img_id_list = self.coco_gt.getImgIds()
         detected_result = []
@@ -231,245 +326,15 @@ class Evaluator:
                     })
 
         # Save detected file
-        save_json(os.path.join(get_work_dir_path(self.cfg), 'detected.json'), detected_result, indent=2)
+        self.detected_json = os.path.join(get_work_dir_path(self.cfg), 'detected.json')
+        save_json(self.detected_json, detected_result, indent=2)
 
-        return detected_result
-
-    @staticmethod
-    def calculate_metrics(eval: PreviewResults,
-                          img_ids: list,
-                          cat_ids: list):
-        """
-        Args:
-            eval (PreviewResults): 以計算完畢的faster-coco-eval
-            img_ids (list):　存放dataset中所有image的id
-            cat_ids (list):　存放dataset中所有class的id
-
-        Returns:
-             sum_tp_for_image (float): 所有類別, 以圖片為單位的TP
-             sum_fp_for_image (float): 所有類別, 以圖片為單位的TP
-             each_class_tp_for_image list[float]: 各個類別, 以圖片為單位的TP
-             each_class_fp_for_image list[float]: 各個類別, 以圖片為單位的FP
-             each_class_fn_for_image list[float]: 各個類別, 以圖片為單位的FN
-             each_class_tp_for_defect list[float]: 各個類別, 以瑕疵為單位的TP
-             each_class_fp_for_defect list[float]: 各個類別, 以瑕疵為單位的FP
-             each_class_fn_for_defect list[float]: 各個類別, 以瑕疵為單位的FN
-        """
-
-        sum_tp_for_image = 0
-        sum_fp_for_image = 0
-
-        each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-        each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-        each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-
-        each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-        each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-        each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-
-        for img_id in img_ids:
-            tp, fp, fn = eval.get_tp_fp_fn(image_id=img_id)
-
-            sum_tp = np.sum(tp)
-            sum_fp = np.sum(fp)
-
-            each_class_tp_for_image += (tp > 0).astype(np.float32)
-            each_class_fp_for_image += (fp > 0).astype(np.float32)
-            each_class_fn_for_image += (fn > 0).astype(np.float32)
-
-            each_class_tp_for_defect += tp
-            each_class_fp_for_defect += fp
-            each_class_fn_for_defect += fn
-
-            sum_tp_for_image += (sum_tp > 0).astype(np.float32)
-            sum_fp_for_image += (sum_fp > 0).astype(np.float32)
-
-        return sum_tp_for_image, sum_fp_for_image, each_class_tp_for_image, each_class_fp_for_image, each_class_fn_for_image, each_class_tp_for_defect, each_class_fp_for_defect, each_class_fn_for_defect
-
-    @staticmethod
-    def calculate_metrics_percentage(denominator,
-                                     sum_tp,
-                                     sum_fp,
-                                     each_class_tp,
-                                     each_class_fp,
-                                     each_class_fn):
-        # 檢出率 (全部類別)
-        recall_all_classes = round((sum_tp / denominator) * 100, 2)
-
-        # 過殺率 (全部類別)
-        fpr_all_classes = round((sum_fp / denominator) * 100, 2)
-
-        # 檢出率 (各個類別)
-        recall_each_class = [round(v * 100, 2) for v in np.divide(each_class_tp, each_class_tp + each_class_fn,
-                                                                  out=np.zeros_like(each_class_tp),
-                                                                  where=(each_class_tp + each_class_fn) != 0)]
-
-        # 過殺率 (各個類別)
-        fpr_each_class = [round(v * 100, 2) for v in np.divide(each_class_fp, each_class_tp + each_class_fp,
-                                                               out=np.zeros_like(each_class_fp),
-                                                               where=(each_class_tp + each_class_fp) != 0)]
-
-        return recall_all_classes, fpr_all_classes, recall_each_class, fpr_each_class
-
-    def _get_recall_fpr(self,
-                        coco_de: COCO,
-                        iou_type: str,
-                        threshold_iou: float = 0.3,
-                        use_cats: bool = False) -> dict:
-        """
-            計算檢出率、過殺率
-
-            Args:
-                coco_de (COCO): 由_generate_det()函數所生成的json檔，經過loadRes()所得到的
-                iou_type (str): 指定評估的型態 ex['bbox', 'segm']
-                threshold_iou (float): IoU 閥值
-                use_cats (bool): 選擇是否要去判斷class有沒有預測正確，還是單純看bbox有沒有預測到就好，預設是只看bbox有沒有預測到就好
-
-            Returns:
-                Image 為以圖片為單位 Defect 為以瑕疵為單位
-
-                {
-                    "All": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
-                    "Each": {
-                                "Class 1": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
-                                "Class 2": [Recall(image)、FPR(image)、Recall(defect)、FPR(defect)]
-                                ...
-                            }
-                }
-        """
-        eval = PreviewResults(self.coco_gt, coco_de, iou_tresh=threshold_iou, iouType=iou_type, useCats=use_cats)
-        cat_ids = self.coco_gt.getCatIds()
-        img_ids = self.coco_gt.getImgIds()
-        ann_ids = self.coco_gt.getAnnIds()
-
-        # ==========不使用patch==========
-        if not self.cfg['use_patch']:
-            # 計算tp、fp、fn
-            sum_tp_for_image, \
-                sum_fp_for_image, \
-                each_class_tp_for_image, \
-                each_class_fp_for_image, \
-                each_class_fn_for_image, \
-                each_class_tp_for_defect, \
-                each_class_fp_for_defect, \
-                each_class_fn_for_defect = self.calculate_metrics(eval, img_ids, cat_ids)
-
-        # ==========使用patch==========
-        else:
-            # 找尋原始圖片與patch對應的id
-            mother_to_sub_images = dict()
-            for img_id in img_ids:
-                image_name = self.coco_gt.loadImgs(img_id)[0]['file_name']
-                parts = image_name.split('_')
-                mother_image_id = parts[1]
-
-                if mother_image_id in mother_to_sub_images:
-                    mother_to_sub_images[mother_image_id].append(img_id)
-                else:
-                    mother_to_sub_images[mother_image_id] = [img_id]
-
-            img_ids = mother_to_sub_images
-
-            # 計算tp、fp、fn
-            sum_tp_for_image = 0
-            sum_fp_for_image = 0
-            each_class_tp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fp_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fn_for_image = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_tp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fp_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-            each_class_fn_for_defect = np.zeros(len(cat_ids), dtype=np.float32)
-
-            for patch_ids in mother_to_sub_images.values():
-                sum_tp_for_image_, \
-                    sum_fp_for_image_, \
-                    each_class_tp_for_image_, \
-                    each_class_fp_for_image_, \
-                    each_class_fn_for_image_, \
-                    each_class_tp_for_defect_, \
-                    each_class_fp_for_defect_, \
-                    each_class_fn_for_defect_ = self.calculate_metrics(eval, patch_ids, cat_ids)
-
-                sum_tp_for_image += (sum_tp_for_image_ > 0).astype(np.float32)
-                sum_fp_for_image += (sum_fp_for_image_ > 0).astype(np.float32)
-                each_class_tp_for_image += (each_class_tp_for_image_ > 0).astype(np.float32)
-                each_class_fp_for_image += (each_class_fp_for_image_ > 0).astype(np.float32)
-                each_class_fn_for_image += (each_class_fn_for_image_ > 0).astype(np.float32)
-                each_class_tp_for_defect += each_class_tp_for_defect_
-                each_class_fp_for_defect += each_class_fp_for_defect_
-                each_class_fn_for_defect += each_class_fn_for_defect_
-
-        # 以圖片為單位的結果
-        image_recall_all_classes, \
-            image_fpr_all_classes, \
-            image_recall_each_class, \
-            image_fpr_each_class = self.calculate_metrics_percentage(len(img_ids),
-                                                                     sum_tp_for_image,
-                                                                     sum_fp_for_image,
-                                                                     each_class_tp_for_image,
-                                                                     each_class_fp_for_image,
-                                                                     each_class_fn_for_image)
-        # 以瑕疵為單位的結果
-        defect_recall_all_classes, \
-            defect_fpr_all_classes, \
-            defect_recall_each_class, \
-            defect_fpr_each_class = self.calculate_metrics_percentage(len(ann_ids),
-                                                                      np.sum(each_class_tp_for_defect),
-                                                                      np.sum(each_class_fp_for_defect),
-                                                                      each_class_tp_for_defect,
-                                                                      each_class_fp_for_defect,
-                                                                      each_class_fn_for_defect)
-        return {
-            "All": [image_recall_all_classes,
-                    image_fpr_all_classes,
-                    defect_recall_all_classes,
-                    defect_fpr_all_classes],
-            "Each": {cls_name:
-                         [image_recall_each_class[idx],
-                          image_fpr_each_class[idx],
-                          defect_recall_each_class[idx],
-                          defect_fpr_each_class[idx]]
-                     for idx, cls_name in
-                     zip(range(len(self.cfg['metrics_for_each'])), self.cfg['class_names'])}
-        }
-
-    def _instance_segmentation_eval(self, predicted_coco: COCO) -> Tuple[dict, dict]:
-        with self.logger:
-            # Evaluate
-            recall_and_fpr_ignore_cats = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
-                                                              threshold_iou=self.cfg['iou_thres'], use_cats=False)
-
-            recall_and_fpr_care_cats = self._get_recall_fpr(coco_de=predicted_coco, iou_type='bbox',
-                                                            threshold_iou=self.cfg['iou_thres'], use_cats=True)
-
-            # Print information
-            self.logger.print_message(recall_and_fpr_ignore_cats['All'], recall_and_fpr_care_cats['Each'])
-
-            # Store value
-            self.writer.write_col(self.writer.common_metrics +
-                                  recall_and_fpr_ignore_cats['All'],
-                                  sheet_name=self.cfg['sheet_names'][0])
-
-            each_value = [value for value in recall_and_fpr_care_cats['Each'].values()]
-            each_value = np.array(each_value).T
-
-            for idx, sheet_name in enumerate(self.cfg['sheet_names'][1:]):
-                self.writer.write_col(self.writer.common_metrics +
-                                      each_value[idx].tolist(),
-                                      sheet_name=sheet_name)
-
-            return recall_and_fpr_ignore_cats, recall_and_fpr_care_cats
-
-    def eval(self):
-        """
-            對給定的model輸入測試圖片，並將結果轉換成coco eval格式的json檔
-        """
+    def eval(self) -> list:
         # Generate detected json
-        if self.detected_result is None:
-            self.detected_result = self._generate_det()
+        if self.detected_json is None:
+            self._generate_det()
 
-        # When not detect anything, append null list into detected_result
-        if len(self.detected_result) == 0:
+        if len(self.detected_json) == 0:
             print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
             return [0] * 4
 
@@ -477,18 +342,69 @@ class Evaluator:
         print(Fore.BLUE + "Confidence score: {:.1}".format(self.cfg['conf_thres']) + Fore.WHITE)
         print('=' * 40)
 
-        with self.writer:
-            # Load json
-            predicted_coco = self.coco_gt.loadRes(self.detected_result)
+        with self.writer, self.logger:
+            # 瑕疵圖片編號
+            all_defect_images = self.coco_gt.getImgIds(catIds=[1])
 
-            if self.cfg['task'] == 'instance_segmentation' or \
-                    self.cfg['task'] == 'object_detection':
-                recall_and_fpr_ignore_cats, _ = self._instance_segmentation_eval(predicted_coco)
-            elif self.cfg['task'] == 'semantic_segmentation':
-                # TODO: segmentation evaluation
-                pass
+            # 瑕疵編號
+            all_defects = self.coco_gt.getAnnIds(catIds=[1])
 
-        return recall_and_fpr_ignore_cats['All']
+            # 過濾低於conf_thres的檢測框並執行nms
+            dt_result = self._filter_result(score_threshold=self.cfg["conf_thres"])
+
+            # 計算dt與gt的iou
+            coco_dt = self.coco_gt.loadRes(dt_result)
+
+            # 計算每張圖的檢出數與過殺數
+            nf_recall_img = 0
+            nf_fpr_img = 0
+            nf_recall_ann = 0
+            nf_fpr_ann = 0
+
+            for img_id in all_defect_images:
+                gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
+                dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
+
+                # 提出預測為defect且gt也為defect的部分
+                defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] == 1])
+                defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] == 1])
+
+                if len(defected_dt_bboxes) == 0:
+                    continue
+
+                # 取得dt與gt間的IoU
+                dt_gt_iou = self._get_iou(defected_dt_bboxes, defected_gt_bboxes)
+
+                # 將iou < iou_thres的部分設為0
+                dt_gt_iou[dt_gt_iou < self.cfg["iou_thres"]] = 0
+
+                # =========計算檢出數=========
+                nf_recall = np.sum(np.any(dt_gt_iou != 0, axis=1))
+                nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
+                nf_recall_ann += nf_recall
+                nf_recall_img += 1 if nf_recall > 0 else 0
+
+                # =========計算過殺數=========
+                nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
+                nf_fpr_ann += nf_fpr
+                nf_fpr_img += 1 if nf_fpr > 0 else 0
+
+            result = [
+                round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
+                round((nf_fpr_img / len(all_defect_images)) * 100, 2),  # 過殺率 (瑕疵)
+                round((nf_recall_ann / len(all_defects)) * 100, 2),  # 檢出率 (圖片)
+                round((nf_fpr_ann / len(all_defects)) * 100, 2),  # 過殺率 (瑕疵)
+            ]
+
+            # Print information
+            self.logger.print_message(result)
+
+            # Store value
+            self.writer.write_col(self.writer.common_metrics +
+                                  result,
+                                  sheet_name=self.cfg['sheet_names'][0])
+
+            return result
 
 
 if __name__ == "__main__":
@@ -506,15 +422,19 @@ if __name__ == "__main__":
     model = builder.build_model(cfg)
 
     # Use multi confidence threshold
+    detected_json = args.detected_json
     if args.multi_conf:
         confidences = np.arange(0.3, 1.0, 0.1)
     else:
         confidences = [cfg['conf_thres']]
 
-    for conf in confidences:
+    for idx, conf in enumerate(confidences):
         cfg['conf_thres'] = conf
 
         # Build evaluator
-        evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel, detected_result=args.detected_result)
-
+        evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel, detected_json=detected_json)
         evaluator.eval()
+
+        # Save detected result
+        if idx == 0:
+            detected_json = evaluator.detected_json
