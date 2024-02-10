@@ -448,6 +448,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                     tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
                     for x, tag in zip(recall_and_fpr_for_all, tags):
                         tb_writer.add_scalar(tag, x, epoch)
+                    torch.cuda.empty_cache()
                     del evaluator
 
         # EarlyStopping
