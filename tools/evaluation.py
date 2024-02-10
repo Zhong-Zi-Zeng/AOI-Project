@@ -334,10 +334,6 @@ class Evaluator:
         if self.detected_json is None:
             self._generate_det()
 
-        if len(self.detected_json) == 0:
-            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
-            return [0] * 4
-
         print('=' * 40)
         print(Fore.BLUE + "Confidence score: {:.1}".format(self.cfg['conf_thres']) + Fore.WHITE)
         print('=' * 40)
@@ -351,6 +347,9 @@ class Evaluator:
 
             # 過濾低於conf_thres的檢測框並執行nms
             dt_result = self._filter_result(score_threshold=self.cfg["conf_thres"])
+            if len(dt_result) == 0:
+                print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
+                return [0] * 4
 
             # 計算dt與gt的iou
             coco_dt = self.coco_gt.loadRes(dt_result)
