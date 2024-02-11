@@ -23,7 +23,7 @@ class Yolov7W6Obj(Yolov7Obj):
                         '--name', './',
                         '--save_period', str(self.cfg['save_period']),
                         '--eval_period', str(self.cfg['eval_period']),
-                        '--img', str(self.cfg['imgsz'][0]),
+                        '--img-size', str(self.cfg['imgsz'][0]),
                         '--exist-ok',
                         ]
                        )

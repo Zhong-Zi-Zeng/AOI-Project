@@ -14,6 +14,9 @@ number_of_class: 2
 class_names:
   - "Pass"
   - "Defect"
+class_color: # B G R
+  - [0, 255, 0]
+  - [0, 0, 255]
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -32,17 +35,17 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "C:/Users/鐘子恒/Desktop/best.pt"
 start_epoch: 0
 end_epoch: 900
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 8
+batch_size: 4
 save_period: 25
 eval_period: 25
-imgsz: [ 1024, 1024 ]
+imgsz: [ 1024, 1024 ] # [train, test] image size
 use_patch: false
 device: "0"
 
