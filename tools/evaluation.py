@@ -65,7 +65,7 @@ class Logger:
 
         self._start = False
 
-    def print_message(self,
+    def print_metrics(self,
                       value_for_all: list):
         # 對於所有類別
         data = {title: [value]
@@ -73,8 +73,7 @@ class Logger:
 
         df = pd.DataFrame(data)
         print('For all classes:')
-        print(df.to_string(index=False))
-        print('\n' * 2)
+        print(df.to_string(index=False) + "\n")
 
 
 class Writer:
@@ -377,26 +376,28 @@ class Evaluator:
                 # 將iou < iou_thres的部分設為0
                 dt_gt_iou[dt_gt_iou < self.cfg["iou_thres"]] = 0
 
-                # =========計算檢出數=========
+                # 計算檢出數
                 nf_recall = np.sum(np.any(dt_gt_iou != 0, axis=1))
                 nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
                 nf_recall_ann += nf_recall
                 nf_recall_img += 1 if nf_recall > 0 else 0
 
-                # =========計算過殺數=========
+                # 計算過殺數
                 nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
                 nf_fpr_ann += nf_fpr
                 nf_fpr_img += 1 if nf_fpr > 0 else 0
 
             result = [
-                round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
-                round((nf_fpr_img / len(all_defect_images)) * 100, 2),  # 過殺率 (瑕疵)
-                round((nf_recall_ann / len(all_defects)) * 100, 2),  # 檢出率 (圖片)
-                round((nf_fpr_ann / len(all_defects)) * 100, 2),  # 過殺率 (瑕疵)
+                str(round((nf_recall_img / len(all_defect_images)) * 100, 2)) + "%",  # 檢出率 (圖片)
+                str(round((nf_fpr_img / len(all_defect_images)) * 100, 2)) + "%",  # 過殺率 (圖片)
+                nf_recall_ann,  # 檢出數 (瑕疵)
+                nf_fpr_ann,  # 過殺數 (瑕疵)
             ]
 
             # Print information
-            self.logger.print_message(result)
+            self.logger.print_metrics(result)
+            print(f"Number of defect image: {len(all_defect_images)}")
+            print(f"Number of defect: {len(all_defects)}")
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +

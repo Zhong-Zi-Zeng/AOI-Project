@@ -35,7 +35,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "C:/Users/鐘子恒/Desktop/best.pt"
 start_epoch: 0
 end_epoch: 900
 warmup_epoch: 3

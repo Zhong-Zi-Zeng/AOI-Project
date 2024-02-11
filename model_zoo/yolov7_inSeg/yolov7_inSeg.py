@@ -91,9 +91,6 @@ class Yolov7inSeg(BaseInstanceModel):
             self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
-        max_det = kwargs.get('max_det', 1000)
-        line_thickness = kwargs.get('line_thickness', 3)
-
         with TIMER[0]:
             # ------------------------------Pre-process (Start)----------------------------
             with TIMER[1]:
@@ -126,8 +123,7 @@ class Yolov7inSeg(BaseInstanceModel):
 
             # ----------------------------NMS-process (Start)----------------------------
             with TIMER[3]:
-                pred = non_max_suppression(pred, conf_thres, nms_thres, classes=None, agnostic=False, max_det=max_det,
-                                           nm=32)
+                pred = non_max_suppression(pred, conf_thres, nms_thres, classes=None, agnostic=False, nm=32)
             # ----------------------------NMS-process (End)----------------------------
 
             # ----------------------------Post-process (Start)----------------------------
