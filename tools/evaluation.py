@@ -184,8 +184,8 @@ class Evaluator:
 
     @classmethod
     def build_by_config(cls, cfg: dict):
-        model = Builder.build_model(cfg)
-        return cls(model=model, cfg=cfg)
+        _model = Builder.build_model(cfg)
+        return cls(model=_model, cfg=cfg)
 
     @staticmethod
     def xywh_to_xyxy(bboxes: Union[list | np.ndarray]):

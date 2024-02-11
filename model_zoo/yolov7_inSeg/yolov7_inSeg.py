@@ -6,9 +6,9 @@ sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_inSeg'))
 
 from typing import Union, Any
 from model_zoo.yolov7_inSeg.models.common import DetectMultiBackend
+from models.experimental import attempt_load
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
 from utils.augmentations import letterbox
-from utils.plots import Annotator, colors
 from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
@@ -19,6 +19,7 @@ import numpy as np
 import torch
 import subprocess
 
+
 class Yolov7inSeg(BaseInstanceModel):
     def __init__(self, cfg: dict):
         super().__init__(cfg)
@@ -28,7 +29,7 @@ class Yolov7inSeg(BaseInstanceModel):
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
         data_file['train'] = os.path.join(os.getcwd(), self.cfg['train_dir'])
-        data_file['val'] = os.path.join(os.getcwd(),self.cfg['val_dir'])
+        data_file['val'] = os.path.join(os.getcwd(), self.cfg['val_dir'])
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
         self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')
@@ -63,12 +64,13 @@ class Yolov7inSeg(BaseInstanceModel):
 
     def _load_model(self):
         # Load model
-        self.device = select_device('')
+        self.device = select_device(self.cfg['device'])
         self.model = DetectMultiBackend(self.cfg['weight'],
                                         device=self.device,
                                         dnn=False,
                                         data=os.path.join(get_work_dir_path(self.cfg), 'data.yaml'),
                                         fp16=False)
+
         self.model.eval()
         stride, self.names, pt = self.model.stride, self.model.names, self.model.pt
         self.imgsz = check_img_size(self.cfg['imgsz'], s=stride)  # check image size
@@ -129,14 +131,10 @@ class Yolov7inSeg(BaseInstanceModel):
             # ----------------------------NMS-process (End)----------------------------
 
             # ----------------------------Post-process (Start)----------------------------
-            # For evaluation
             class_list = []
             score_list = []
             bbox_list = []
             rle_list = []
-
-            # Process predictions
-            annotator = Annotator(original_image, line_width=line_thickness, example=str(self.names))
 
             for i, det in enumerate(pred):  # per image
                 if len(det):
@@ -150,12 +148,6 @@ class Yolov7inSeg(BaseInstanceModel):
                     polygons = reversed(masks2segments(masks))
                     polygons = [scale_segments(im.shape[2:], x, original_image.shape).round() for x in polygons]
 
-                    # Mask plotting ----------------------------------------------------------------------------------------
-                    mcolors = [colors(int(cls), True) for cls in det[:, 5]]
-                    im_masks = plot_masks(im[i], masks, mcolors)  # image with masks shape(imh,imw,3)
-                    annotator.im = scale_masks(im.shape[2:], im_masks, original_image.shape)  # scale to original h, w
-                    # Mask plotting ----------------------------------------------------------------------------------------
-
                     # Record result
                     for j, (*xyxy, conf, cls) in enumerate(reversed(det[:, :6])):
                         if len(polygons[j]) < 2:
@@ -163,7 +155,6 @@ class Yolov7inSeg(BaseInstanceModel):
 
                         cls = int(cls.cpu())
                         conf = float(conf.cpu())
-
                         x = xyxy[0].cpu().numpy()
                         y = xyxy[1].cpu().numpy()
                         w = xyxy[2].cpu().numpy() - x
@@ -174,15 +165,17 @@ class Yolov7inSeg(BaseInstanceModel):
                         score_list.append(conf)
                         rle_list.append(polygon_to_rle(polygons[j], original_image.shape[0], original_image.shape[1]))
 
-                        # Draw bounding box
-                        annotator.box_label(xyxy, self.names[cls], color=colors(cls, True))
-
-            # results
-            result_image = annotator.result()
+                        # Draw bounding box and mask
+                        text = f'{self.class_names[int(cls)]} {conf:.2f}'
+                        self.plot_one_box_mask(image=original_image,
+                                               xywh_bbox=[x, y, w, h],
+                                               text=text,
+                                               polygon=np.array(polygons[j], dtype=np.int32),
+                                               color=self.class_color[int(cls)])
 
             # ----------------------------Post-process (End)----------------------------
 
-        return {"result_image": result_image,
+        return {"result_image": original_image,
                 "class_list": class_list,
                 "bbox_list": bbox_list,
                 "score_list": score_list,
@@ -199,7 +192,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
-                        '--imgsz', str(max(self.cfg['imgsz'])),
+                        '--imgsz', str(self.cfg['imgsz'][0]),
                         '--device', self.cfg['device'],
                         '--save-period', str(self.cfg['save_period']),
                         '--eval_period', str(self.cfg['eval_period']),

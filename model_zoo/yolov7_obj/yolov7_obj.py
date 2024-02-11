@@ -51,7 +51,6 @@ class Yolov7Obj(BaseDetectModel):
         hyp_file['mosaic'] = self.cfg['mosaic']
         hyp_file['mixup'] = self.cfg['mixup']
         hyp_file['copy_paste'] = self.cfg['copy_paste']
-
         self.cfg['hyp_file'] = os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'hyp.yaml'), hyp_file)
 
@@ -63,7 +62,7 @@ class Yolov7Obj(BaseDetectModel):
 
     def _load_model(self):
         # Load model
-        self.device = select_device('')
+        self.device = select_device(self.cfg['device'])
         self.model = attempt_load(self.cfg['weight'], map_location=self.device)
         self.model.eval()
         self.stride = int(self.model.stride.max())  # model stride
@@ -109,9 +108,6 @@ class Yolov7Obj(BaseDetectModel):
             self._check_weight_path(self.cfg['weight'])
             self._load_model()
 
-        names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
-        colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
-
         with TIMER[0]:
             # ------------------------------Pre-process (Start)----------------------------
             with TIMER[1]:
@@ -147,7 +143,6 @@ class Yolov7Obj(BaseDetectModel):
             # ----------------------------NMS-process (End)----------------------------
 
             # ----------------------------Post-process (Start)----------------------------
-            # For evaluation
             class_list = []
             score_list = []
             bbox_list = []
@@ -171,8 +166,11 @@ class Yolov7Obj(BaseDetectModel):
                         score_list.append(conf)
 
                         # Draw bounding box
-                        label = f'{names[int(cls)]} {conf:.2f}'
-                        plot_one_box(xyxy, original_image, label=label, color=colors[int(cls)], line_thickness=5)
+                        text = f'{self.class_names[int(cls)]} {conf:.2f}'
+                        self.plot_one_box_mask(image=original_image,
+                                               xywh_bbox=[x, y, w, h],
+                                               text=text,
+                                               color=self.class_color[int(cls)])
 
             return {
                 'result_image': original_image,
