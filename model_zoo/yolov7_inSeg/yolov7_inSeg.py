@@ -6,11 +6,9 @@ sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_inSeg'))
 
 from typing import Union, Any
 from model_zoo.yolov7_inSeg.models.common import DetectMultiBackend
-from models.experimental import attempt_load
 from utils.general import (check_img_size, cv2, non_max_suppression, scale_segments, scale_coords)
 from utils.augmentations import letterbox
 from utils.segment.general import process_mask, scale_masks, masks2segments
-from utils.segment.plots import plot_masks
 from utils.torch_utils import select_device
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
 from engine.timer import TIMER
