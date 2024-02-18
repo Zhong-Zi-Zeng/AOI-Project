@@ -434,13 +434,13 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                 torch.save(ckpt, last)
                 # if best_fitness == fi:
                 #     torch.save(ckpt, best)
-                if opt.save_period > 0 and epoch % opt.save_period == 0:
+                if opt.save_period > 0 and (epoch + 1) % opt.save_period == 0:
                     torch.save(ckpt, w / f'epoch_{epoch}.pt')
                     logger.log_model(w / f'epoch_{epoch}.pt')
                 del ckpt
                 # callbacks.run('on_model_save', last, epoch, final_epoch, best_fitness, fi)
 
-            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+            if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 final_config['weight'] = last
                 final_config['device'] = 'cpu'
                 evaluator = Evaluator.build_by_config(cfg=final_config)
