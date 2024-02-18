@@ -41,6 +41,23 @@ def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:
     return rle
 
 
+def rle_to_polygon(rle):
+    masked_arr = ms.decode(rle)
+    return mask_to_polygon(masked_arr)
+
+
+def xywh_to_xyxy(bboxes: Union[list | np.ndarray]):
+    _bbox = np.array(bboxes, dtype=np.float32)
+
+    if _bbox.ndim == 1:
+        _bbox = _bbox[None, ...]
+
+    _bbox[:, 2] = _bbox[:, 0] + _bbox[:, 2]
+    _bbox[:, 3] = _bbox[:, 1] + _bbox[:, 3]
+
+    return _bbox
+
+
 def load_python(path: str) -> dict:
     """讀取python檔案，並將其解析成dict"""
     data = {}

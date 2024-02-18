@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from engine.general import check_path
+from engine.general import (check_path, rle_to_polygon)
 import random
 import cv2
 
@@ -40,6 +40,7 @@ class BaseModel(ABC):
                           color: Optional[list[int]] = None,
                           xywh_bbox: Optional[list[int]] = None,
                           polygon: Optional[np.ndarray[int]] = None,
+                          rle: Optional[dict] = None,
                           text: Optional[str] = None):
         """
             繪製bbox、class name、mask到圖像中
@@ -49,6 +50,7 @@ class BaseModel(ABC):
                 color (list[int]): 一個list裡面包含3個int元素，對應RGB，範圍介於 0 ~ 255
                 xywh_bbox (list[int | float]): 包含x、y、w、h的座標
                 polygon (np.ndarray[int]): N x 2 的 x、y座標
+                rle (dict): rle編碼的polygon
                 text (str): 附加在bbox、mask左上方的文字
         """
         tl = round(0.002 * (image.shape[0] + image.shape[1]) / 2) + 1  # line/font thickness
@@ -62,6 +64,11 @@ class BaseModel(ABC):
             cv2.rectangle(image, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
 
         if polygon is not None:
+            cv2.fillPoly(image, [polygon], color=color)
+
+        if rle is not None:
+            polygon = rle_to_polygon(rle)
+            polygon = np.array(polygon, dtype=np.int32).reshape((-1, 2))
             cv2.fillPoly(image, [polygon], color=color)
 
         if text is not None:

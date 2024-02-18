@@ -11,7 +11,7 @@ from colorama import Fore, Back, Style, init
 from model_zoo import BaseInstanceModel
 from faster_coco_eval.extra import PreviewResults
 from torchvision.ops import nms
-from engine.general import (get_work_dir_path, save_json, load_json)
+from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
 from engine.timer import TIMER
 from tqdm import tqdm
 import numpy as np
@@ -186,18 +186,6 @@ class Evaluator:
         _model = Builder.build_model(cfg)
         return cls(model=_model, cfg=cfg)
 
-    @staticmethod
-    def xywh_to_xyxy(bboxes: Union[list | np.ndarray]):
-        _bbox = np.array(bboxes, dtype=np.float32)
-
-        if _bbox.ndim == 1:
-            _bbox = _bbox[None, ...]
-
-        _bbox[:, 2] = _bbox[:, 0] + _bbox[:, 2]
-        _bbox[:, 3] = _bbox[:, 1] + _bbox[:, 3]
-
-        return _bbox
-
     def _filter_result(self, score_threshold: float) -> List[dict]:
         """
             這個函數基於指定的分數閾值篩選檢測結果，對篩選後的結果執行非最大值抑制（NMS），並返回篩選和NMS處理後的檢測結果列表。
@@ -226,7 +214,7 @@ class Evaluator:
             # 取出每一張圖片的bbox資訊
             for rs in filtered_results:
                 if rs['image_id'] == img_id:
-                    xyxy_bbox_list.append(self.xywh_to_xyxy(rs['bbox'])[0])
+                    xyxy_bbox_list.append(xywh_to_xyxy(rs['bbox'])[0])
                     xywh_bbox_list.append(rs['bbox'])
                     score_list.append(rs['score'])
                     class_list.append(rs['category_id'])
@@ -268,8 +256,8 @@ class Evaluator:
         gt_bbox = np.array(gt_bbox, dtype=np.float32)
 
         # xywh -> x1y1x2y2
-        dt_bbox = self.xywh_to_xyxy(dt_bbox)
-        gt_bbox = self.xywh_to_xyxy(gt_bbox)
+        dt_bbox = xywh_to_xyxy(dt_bbox)
+        gt_bbox = xywh_to_xyxy(gt_bbox)
 
         lt = np.maximum(dt_bbox[:, None, :2], gt_bbox[:, :2])  # [N,M,2]
         rb = np.minimum(dt_bbox[:, None, 2:], gt_bbox[:, 2:])  # [N,M,2]
