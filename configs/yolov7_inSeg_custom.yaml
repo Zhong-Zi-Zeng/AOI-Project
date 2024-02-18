@@ -34,7 +34,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: /home/miislab-server/Heng/Heng_shared/AOI-Project/work_dirs/train/YOLOv7InSeg_w_aug/weights/epoch_575.pt
 start_epoch: 575
 end_epoch: 900
 warmup_epoch: 3
@@ -43,7 +43,7 @@ lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 8
 save_period: 25
-eval_period: 1
+eval_period: 25
 imgsz: [1024, 1024] # [train, test] image size
 use_patch: false
 device: "1"
