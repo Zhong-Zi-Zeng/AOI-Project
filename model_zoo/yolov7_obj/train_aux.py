@@ -469,11 +469,11 @@ def train(hyp, opt, device, tb_writer=None):
 
                 # Save last, best and delete
                 torch.save(ckpt, last)
-                if best_fitness == fi:
-                    torch.save(ckpt, best)
-                if (best_fitness == fi) and (epoch >= 200):
-                    torch.save(ckpt, wdir / 'best_{:03d}.pt'.format(epoch))
-                if opt.save_period > 0 and epoch % opt.save_period == 0:
+                # if best_fitness == fi:
+                #     torch.save(ckpt, best)
+                # if (best_fitness == fi) and (epoch >= 200):
+                #     torch.save(ckpt, wdir / 'best_{:03d}.pt'.format(epoch))
+                if opt.save_period > 0 and (epoch + 1) % opt.save_period == 0:
                     torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
                 if wandb_logger.wandb:
                     if ((epoch + 1) % opt.save_period == 0 and not final_epoch) and opt.save_period != -1:
@@ -481,7 +481,7 @@ def train(hyp, opt, device, tb_writer=None):
                             last.parent, opt, epoch, fi, best_model=best_fitness == fi)
                 del ckpt
 
-            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+            if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 final_config.update({'weight': last})
                 evaluator = Evaluator.build_by_config(cfg=final_config)
                 recall_and_fpr_for_all = evaluator.eval()

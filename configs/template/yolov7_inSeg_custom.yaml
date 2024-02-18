@@ -17,9 +17,9 @@ class_names:
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: " "
-start_epoch: 0
-end_epoch: 200
+weight: /home/miislab-server/Heng/Heng_shared/AOI-Project/work_dirs/train/YOLOv7InSeg_w_aug/weights/epoch_575.pt
+start_epoch: 575
+end_epoch: 900
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup

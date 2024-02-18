@@ -10,8 +10,8 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 
-weight_dir = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7e6e_w_aug\weights"
-config_file = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7e6e_w_aug\final_config.yaml"
+weight_dir = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7_size_1824_w_aug\weights"
+config_file = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7_size_1824_w_aug\final_config.yaml"
 
 x = list(range(0, 900, 25))
 
@@ -19,8 +19,8 @@ image_recall = []
 image_fpr = []
 defect_recall = []
 defect_fpr = []
-
 for weight in os.listdir(weight_dir):
+    print('='*40 + weight + '=' * 40)
     weight_file = os.path.join(weight_dir, weight)
 
     builder = Builder(config_path=config_file, task='eval')

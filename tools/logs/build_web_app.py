@@ -1,11 +1,14 @@
-# 將 training curve 顯示在網頁上
-from flask import Flask, render_template, url_for
+# 將 curve 顯示在網頁上
+from flask import Flask, render_template, url_for, request
+import sys
+
 app = Flask(__name__)
 
 @app.route('/')
-def training_curve():
-    image_url = url_for('static', filename='test.png')
-    return render_template('training_curve.html', image_url=image_url)
+def index():
+    # 只能先寫好
+    image_url = url_for('static', filename="YOLO_500_loss.png")
+    return render_template('curve_analysis.html', image_url=image_url)
 
 if __name__ == '__main__':
     app.run(debug=True)

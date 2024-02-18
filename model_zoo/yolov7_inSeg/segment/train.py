@@ -434,13 +434,13 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                 torch.save(ckpt, last)
                 # if best_fitness == fi:
                 #     torch.save(ckpt, best)
-                if opt.save_period > 0 and epoch % opt.save_period == 0:
+                if opt.save_period > 0 and (epoch + 1) % opt.save_period == 0:
                     torch.save(ckpt, w / f'epoch_{epoch}.pt')
                     logger.log_model(w / f'epoch_{epoch}.pt')
                 del ckpt
                 # callbacks.run('on_model_save', last, epoch, final_epoch, best_fitness, fi)
 
-            if opt.eval_period > 0 and epoch % opt.eval_period == 0:
+            if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 final_config['weight'] = last
                 final_config['device'] = 'cpu'
                 evaluator = Evaluator.build_by_config(cfg=final_config)
@@ -537,7 +537,7 @@ def parse_opt(known=False):
     parser.add_argument('--quad', action='store_true', help='quad dataloader')
     parser.add_argument('--cos-lr', action='store_true', help='cosine LR scheduler')
     parser.add_argument('--label-smoothing', type=float, default=0.0, help='Label smoothing epsilon')
-    parser.add_argument('--patience', type=int, default=100, help='EarlyStopping patience (epochs without improvement)')
+    parser.add_argument('--patience', type=int, default=0, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--freeze', nargs='+', type=int, default=[0], help='Freeze layers: backbone=10, first3=0 1 2')
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--eval_period', type=int, default=-1, help='Eval model after every "eval_period" epoch')
