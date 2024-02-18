@@ -388,8 +388,8 @@ class Evaluator:
                 nf_fpr_img += 1 if nf_fpr > 0 else 0
 
             result = [
-                str(round((nf_recall_img / len(all_defect_images)) * 100, 2)) + "%",  # 檢出率 (圖片)
-                str(round((nf_fpr_img / len(all_defect_images)) * 100, 2)) + "%",  # 過殺率 (圖片)
+                round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
+                round((nf_fpr_img / len(all_defect_images)) * 100, 2),  # 過殺率 (圖片)
                 nf_recall_ann,  # 檢出數 (瑕疵)
                 nf_fpr_ann,  # 過殺數 (瑕疵)
             ]
