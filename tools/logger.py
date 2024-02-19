@@ -18,9 +18,9 @@ import subprocess
 #     tensorboard --logdir=D:\YA_share\AOI-Project\tools\logs
 #     '''
 
-def save_to_excel(filename, data_dict, step):
+def add_scalar(filename, data_dict, step):  # 使用者只需呼叫add_scalar
     '''
-        紀錄於Excel
+        記錄於Excel
         每一列就是step,每一行就是傳入的key
 
         Args:
@@ -48,6 +48,9 @@ def save_to_excel(filename, data_dict, step):
     with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
         df.to_excel(writer, index=True)
 
+    # ========== Next step ===========
+    excel_to_json(filename)
+
 
 def excel_to_json(filename):
     """
@@ -74,6 +77,51 @@ def excel_to_json(filename):
     with open(json_file, 'w', encoding='utf-8') as file:
         json.dump(json_data, file, ensure_ascii=False, indent=4)
 
+    # ========== Next step ===========
+    plot_curve(filename)
+
+
+def plot_curve(filename):
+    '''
+        依據 JSON 文件中的所有key，自動繪製曲線
+    '''
+    json_data = load_data_from_json(filename)
+    if json_data is None:
+        return
+
+    sns.set(style="darkgrid")  # Set seaborn style
+
+    # 存所有key的資料，一種key存一張曲線圖
+    all_data = {}
+
+    for data in json_data:  # 每個key的資料數可能不同，各別存
+        step = data["step"]
+        for key, value in data.items():
+            if key == "step":
+                continue
+            if key not in all_data:
+                all_data[key] = {"steps": [], "values": []}
+            all_data[key]["steps"].append(step)
+            all_data[key]["values"].append(value)
+
+    # 繪製曲線
+    for key, data in all_data.items():
+        plt.figure(figsize=(10, 6))
+
+        # Line plot
+        plt.plot(data["steps"], data["values"], label=f'{filename} {key.capitalize()}')
+        # Mark the best epoch
+        best_epoch_index = data["values"].index(max(data["values"]))
+        best_epoch_value = max(data["values"])
+        plt.scatter(data["steps"][best_epoch_index], best_epoch_value, color='red', marker='*',
+                    label=f'Best Epoch {key.capitalize()}')
+
+        plt.xlabel('Epoch')
+        plt.ylabel(key.capitalize())
+        plt.title(f'Curve for {key.capitalize()} in {filename}')
+        plt.legend(loc='upper right')
+        plt.savefig(os.path.join("logs", "static", f"{filename}_{key}.png"))
+        plt.close()
 
 def load_data_from_json(filename):
     '''
@@ -89,57 +137,25 @@ def load_data_from_json(filename):
 
     return json_data
 
-
-def plot_curve(filename):
-    '''
-        依據 JSON 文件中的所有key，自動繪製曲線
-    '''
-    json_data = load_data_from_json(filename)
-    if json_data is None:
-        return
-
-    sns.set(style="darkgrid")  # Set seaborn style
-
-    # 一種key存一張曲線圖
-    for key in json_data[0].keys():  # 取得所有key(第一列)
-        if key == "step":
-            continue
-
-        steps = []
-        values = []
-
-        plt.figure(figsize=(10, 6))
-        plt.xlabel('Epoch')
-        plt.ylabel(key.capitalize())
-        plt.title(f'Curve for {key.capitalize()} in {filename}')
-
-        for data in json_data:
-            steps.append(data["step"])
-            values.append(data.get(key))
-
-        # Line plot
-        plt.plot(steps, values, label=f'{filename} {key.capitalize()}')
-        # Mark the best epoch
-        best_epoch_index = values.index(max(values))
-        best_epoch_value = max(values)
-        plt.scatter(steps[best_epoch_index], best_epoch_value, color='red', marker='*',
-                    label=f'Best Epoch {key.capitalize()}')
-
-        plt.legend()
-        plt.savefig(os.path.join("logs", "static", f"{filename}_{key}.png"))
-        plt.close()
-
-
 if __name__ == "__main__":
+    # 1
     for i in range(100):
-        data = {
-            'LOSS': random.random(),
-            'Accuracy': random.random()
-        }
-        save_to_excel('Test', data, step=i)
+        if i < 50:
+            data = {
+                'LOSS': random.random(),
+                'Accuracy': random.random()
+            }
+        else:
+            data = {
+                'LOSS': random.random(),
+            }
+        add_scalar('Test', data, step=i)    # 使用者只需呼叫add_scalar
 
-    excel_to_json('Test')
+    # 2
+    # excel_to_json('Test')
 
-    plot_curve('Test')
+    # 3
+    # plot_curve('Test')
 
-    subprocess.run(["python", "./logs/build_web_app.py"])     # curve架上網頁
+    # 4
+    # subprocess.run(["python", "./logs/build_web_app.py"])     # 看網頁時使用
