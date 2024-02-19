@@ -7,7 +7,7 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     # 只能先寫好
-    image_url = url_for('static', filename="YOLO_500_loss.png")
+    image_url = url_for('static', filename="Test_Loss.png")
     return render_template('curve_analysis.html', image_url=image_url)
 
 if __name__ == '__main__':

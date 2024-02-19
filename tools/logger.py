@@ -1,12 +1,11 @@
-import tensorflow as tf
-import datetime
-import random
-import json
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
+import random
+import json
 import seaborn as sns
+import matplotlib.pyplot as plt
 import subprocess
+
 
 # def log_write(tag, data_dict, step):
 #     writer = tf.summary.create_file_writer("logs")
@@ -21,28 +20,40 @@ import subprocess
 
 def save_to_excel(filename, data_dict, step):
     '''
-        紀錄於Excel:
-            每一列就是step
-            每一行就是傳入的key
+        紀錄於Excel
+        每一列就是step,每一行就是傳入的key
+
+        Args:
+            filename(str): excel檔命名，建議用model名稱
+            data_dict(dict): 此epoch要存的數據
+            step(int): 第幾個epoch
     '''
-    excel_file = filename + '.xlsx' if not filename.endswith('.xlsx') else filename
-    excel_path = os.path.join("logs", "excel", excel_file)
 
+    # 檢查路徑
+    if not os.path.exists(os.path.join("logs", "excel")):
+        os.makedirs(os.path.join("logs", "excel"))
+
+    excel_path = os.path.join("logs", "excel", filename + '.xlsx')
+
+    # 檢查 Excel 檔案是否存在
     if os.path.exists(excel_path):
-        df = pd.read_excel(excel_file, index_col=0)
-        df.loc[step] = data_dict
+        df = pd.read_excel(excel_path, index_col=0)
     else:
-        df = pd.DataFrame(data_dict, index=[step])
+        df = pd.DataFrame(columns=data_dict.keys())
 
+    # 在 DataFrame 中加入新數據
+    df.loc[step] = data_dict
+
+    # 寫入excel
     with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
         df.to_excel(writer, index=True)
+
 
 def excel_to_json(filename):
     """
     從 Excel 讀取數據後轉換為 JSON 格式並寫入文件
     """
-    excel_file = filename + '.xlsx' if not filename.endswith('.xlsx') else filename
-    excel_path = os.path.join("logs", "excel", excel_file)
+    excel_path = os.path.join("logs", "excel", filename + '.xlsx')
 
     if not os.path.exists(excel_path):
         print(f"Error: Excel file {excel_path} does not exist.")
@@ -63,60 +74,72 @@ def excel_to_json(filename):
     with open(json_file, 'w', encoding='utf-8') as file:
         json.dump(json_data, file, ensure_ascii=False, indent=4)
 
-def load_data_from_json(filename, key):
+
+def load_data_from_json(filename):
     '''
-        讀取 JSON 文件中指定的數據(key)
+        讀取 JSON 文件中的所有數據
     '''
-    json_file = filename + '.json' if not filename.endswith('.json') else filename
-    json_path = os.path.join("logs", "json", json_file)
+    json_path = os.path.join("logs", "json", filename + '.json')
     try:
         with open(json_path, 'r', encoding='utf-8') as file:
             json_data = json.load(file)
     except FileNotFoundError:
         print(f"File not found!")
+        return None
 
-    steps = []
-    key_data = []
-    for data in json_data:
-        steps.append(data.get("step"))
-        key_data.append(data.get(key))
+    return json_data
 
-    return steps, key_data
 
-def plot_curve(filename, key):
+def plot_curve(filename):
     '''
-        1.讀取 JSON 文件中指定的數據(key)
-        2.依指定的key, 繪製曲線
+        依據 JSON 文件中的所有key，自動繪製曲線
     '''
-    steps, key_data = load_data_from_json(filename, key)
+    json_data = load_data_from_json(filename)
+    if json_data is None:
+        return
 
     sns.set(style="darkgrid")  # Set seaborn style
-    plt.figure(figsize=(10, 6))
 
-    # Line plot
-    plt.plot(steps, key_data, label=key.capitalize())
-    # Mark the best epoch
-    best_epoch_index = key_data.index(max(key_data))
-    best_epoch_value = max(key_data)
-    plt.scatter(steps[best_epoch_index], best_epoch_value, color='red', marker='*', label=f'Best Epoch')
+    # 一種key存一張曲線圖
+    for key in json_data[0].keys():  # 取得所有key(第一列)
+        if key == "step":
+            continue
 
-    plt.xlabel('Epoch')
-    plt.ylabel(key.capitalize())
-    plt.title(f'{key.capitalize()} Curve')
-    plt.legend()
-    plt.savefig(os.path.join("logs", "static", f"{filename}_{key}.png"))
+        steps = []
+        values = []
+
+        plt.figure(figsize=(10, 6))
+        plt.xlabel('Epoch')
+        plt.ylabel(key.capitalize())
+        plt.title(f'Curve for {key.capitalize()} in {filename}')
+
+        for data in json_data:
+            steps.append(data["step"])
+            values.append(data.get(key))
+
+        # Line plot
+        plt.plot(steps, values, label=f'{filename} {key.capitalize()}')
+        # Mark the best epoch
+        best_epoch_index = values.index(max(values))
+        best_epoch_value = max(values)
+        plt.scatter(steps[best_epoch_index], best_epoch_value, color='red', marker='*',
+                    label=f'Best Epoch {key.capitalize()}')
+
+        plt.legend()
+        plt.savefig(os.path.join("logs", "static", f"{filename}_{key}.png"))
+        plt.close()
 
 
 if __name__ == "__main__":
-    # example
-    data_dict = {
-        'loss': 0.1,
-        'accuracy': 0.8
-    }
-    # save_to_excel('YOLO', data_dict, step=0)
-    # excel_to_json('YOLO')
-    # plot_curve('YOLO_500', 'loss')
+    for i in range(100):
+        data = {
+            'LOSS': random.random(),
+            'Accuracy': random.random()
+        }
+        save_to_excel('Test', data, step=i)
 
-    # curve架上網頁
-    # subprocess.run(["python", "./logs/build_web_app.py"])
+    excel_to_json('Test')
 
+    plot_curve('Test')
+
+    subprocess.run(["python", "./logs/build_web_app.py"])     # curve架上網頁
