@@ -109,7 +109,7 @@ def plot_curve(filename):
         plt.figure(figsize=(10, 6))
 
         # Line plot
-        plt.plot(data["steps"], data["values"], label=f'{filename} {key.capitalize()}')
+        plt.plot(data["steps"], data["values"], label=f'{key.capitalize()}')
         # Mark the best epoch
         best_epoch_index = data["values"].index(max(data["values"]))
         best_epoch_value = max(data["values"])
@@ -120,7 +120,7 @@ def plot_curve(filename):
         plt.ylabel(key.capitalize())
         plt.title(f'Curve for {key.capitalize()} in {filename}')
         plt.legend(loc='upper right')
-        plt.savefig(os.path.join("logs", "static", f"{filename}_{key}.png"))
+        plt.savefig(os.path.join("logs", "static", f"{key}.png"))    # 曲線圖名稱
         plt.close()
 
 def load_data_from_json(filename):
@@ -139,17 +139,17 @@ def load_data_from_json(filename):
 
 if __name__ == "__main__":
     # 1
-    for i in range(100):
-        if i < 50:
-            data = {
-                'LOSS': random.random(),
-                'Accuracy': random.random()
-            }
-        else:
-            data = {
-                'LOSS': random.random(),
-            }
-        add_scalar('Test', data, step=i)    # 使用者只需呼叫add_scalar
+    # for i in range(100):
+    #     if i < 50:
+    #         data = {
+    #             'LOSS': random.random(),
+    #             'Accuracy': random.random()
+    #         }
+    #     else:
+    #         data = {
+    #             'LOSS': random.random(),
+    #         }
+    #     add_scalar('Test', data, step=i)    # 使用者只需呼叫add_scalar
 
     # 2
     # excel_to_json('Test')
@@ -158,4 +158,4 @@ if __name__ == "__main__":
     # plot_curve('Test')
 
     # 4
-    # subprocess.run(["python", "./logs/build_web_app.py"])     # 看網頁時使用
+    subprocess.run(["python", "./logs/build_web_app.py"])     # 看網頁時使用
