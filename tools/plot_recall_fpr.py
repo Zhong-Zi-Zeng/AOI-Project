@@ -6,12 +6,19 @@ from engine.general import load_yaml, save_yaml
 from engine.builder import Builder
 from evaluation import Evaluator
 import seaborn as sns
-
-import matplotlib
+import re
 import matplotlib.pyplot as plt
 
-weight_dir = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7_size_1824_w_aug\weights"
-config_file = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7_size_1824_w_aug\final_config.yaml"
+def extract_number(filename):
+    match = re.search(r'\d+', filename)
+    if match:
+        return int(match.group())
+    else:
+        return None
+
+
+weight_dir = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7InSeg_w_aug\weights"
+config_file = r"D:\Heng_shared\AOI-Project\work_dirs\train\YOLOv7InSeg_w_aug\final_config.yaml"
 
 x = list(range(0, 900, 25))
 
@@ -19,7 +26,9 @@ image_recall = []
 image_fpr = []
 defect_recall = []
 defect_fpr = []
-for weight in os.listdir(weight_dir):
+weight_files = sorted(os.listdir(weight_dir), key=extract_number)
+
+for weight in weight_files:
     print('='*40 + weight + '=' * 40)
     weight_file = os.path.join(weight_dir, weight)
 

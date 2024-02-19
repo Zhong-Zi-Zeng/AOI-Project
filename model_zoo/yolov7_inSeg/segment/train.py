@@ -437,16 +437,17 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                 if opt.save_period > 0 and (epoch + 1) % opt.save_period == 0:
                     torch.save(ckpt, w / f'epoch_{epoch}.pt')
                     logger.log_model(w / f'epoch_{epoch}.pt')
-                del ckpt
+                # del ckpt
                 # callbacks.run('on_model_save', last, epoch, final_epoch, best_fitness, fi)
 
             if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 final_config['weight'] = last
-                final_config['device'] = 'cpu'
+                # del model
                 evaluator = Evaluator.build_by_config(cfg=final_config)
                 recall_and_fpr_for_all = evaluator.eval()
                 tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)",
                         "metrics/FPR(defect)"]
+
                 for x, tag in zip(recall_and_fpr_for_all, tags):
                     tb_writer.add_scalar(tag, x, epoch)
                 del evaluator
