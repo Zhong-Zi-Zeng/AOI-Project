@@ -3,20 +3,30 @@ from __future__ import annotations
 import torch
 import albumentations as A
 from torch.utils.data import Dataset
-from torchvision import transforms as T
 from pycocotools.coco import COCO
 from typing import Optional
 from torch.utils.data import DataLoader
-from transformers import SamProcessor
-from utils.augmentation import *
+from utils.augmentation import create_augmentation
 from pathlib import Path
-# from utils.general import collate_fn
 import numpy as np
 import cv2
 import yaml
+from tqdm import tqdm
 
 torch.manual_seed(10)
 np.random.seed(10)
+
+
+def to_torch(func):
+    """
+        Change all the output to the tensor type
+    """
+
+    def wrapper(*args, **kwargs):
+        return [torch.from_numpy(np.array(rs)) for rs in func(*args, **kwargs)]
+
+    return wrapper
+
 
 class CustomDataset(Dataset):
     def __init__(self,
@@ -24,23 +34,32 @@ class CustomDataset(Dataset):
                  ann_file: Optional[str | Path],
                  use_points: bool,
                  use_boxes: bool,
-                 trans: A.Compose):
+                 trans: A.Compose,
+                 trans_with_bboxes: A.Compose,
+                 trans_with_points: A.Compose,
+                 trans_with_bboxes_points: A.Compose):
         """
             Args:
                 root: coco的image資料夾路徑
                 ann_file: coco的標註文件路徑
                 use_points: 是否使用points作為prompt
                 use_boxes: 是否使用boxes作為prompt (box一張圖片只能有一個!!)
-                trans: torch中的transforms
+                trans: 只針對image和mask做aug
+                trans_with_bboxes: 針對image、mask和bboxes做aug
+                trans_with_points: 針對image、mask和points做aug
+                trans_with_bboxes_points: 針對image、mask、bboxes和points做aug
         """
         self.root = root
         self.coco = COCO(ann_file)
         self.use_points = use_points
         self.use_boxes = use_boxes
         self.trans = trans
+        self.trans_with_bboxes = trans_with_bboxes
+        self.trans_with_points = trans_with_points
+        self.trans_with_bboxes_points = trans_with_bboxes_points
 
     @staticmethod
-    def _get_points_from_mask(mask: np.ndarray) -> list:
+    def _get_center_points_from_mask(mask: np.ndarray) -> list:
         """
             從mask中生成points
             Args:
@@ -84,6 +103,69 @@ class CustomDataset(Dataset):
 
         return polygons
 
+    @staticmethod
+    def _get_bbox_from_polygons(polygons: list, category_id: list) -> list:
+        """
+            從polygon中生成bbox
+            Args:
+                polygons: [[x1, y1, x2, y2, ....], [x1, y2, x2, y2, ...], ...]
+            Return:
+                boxes = [[x1, y1, x2, y2], [x1, y1, x2, y2], ...]
+        """
+        boxes = []
+        for idx, polygon in enumerate(polygons):
+            x, y, w, h = cv2.boundingRect(np.array(polygon, dtype=np.int32).reshape((-1, 2)))
+            x1, y1, x2, y2 = x, y, x + w, y + h
+            if x2 <= x1 or y2 <= y1:
+                del category_id[idx]
+                continue
+            boxes.append([x1, y1, x2, y2])
+        return boxes
+
+    @to_torch
+    def augment_with_boxes_and_points(self, image, polygons, category_id, gt_mask):
+        boxes = self._get_bbox_from_polygons(polygons, category_id)
+        points = self._get_center_points_from_mask(gt_mask.astype(np.uint8))
+
+        transformed_result = self.trans_with_bboxes_points(image=image,
+                                                           bboxes=boxes,
+                                                           bbox_classes=category_id,
+                                                           keypoints=points,
+                                                           mask=gt_mask)
+
+        return [transformed_result['image'],
+                transformed_result['mask'],
+                transformed_result['keypoints'],
+                transformed_result['bboxes']]
+
+    @to_torch
+    def augment_with_boxes(self, image, polygons, category_id, gt_mask):
+        boxes = self._get_bbox_from_polygons(polygons, category_id)
+        transformed_result = self.trans_with_bboxes(image=image,
+                                                    bboxes=boxes,
+                                                    bbox_classes=category_id,
+                                                    mask=gt_mask)
+        return [transformed_result['image'],
+                transformed_result['mask'],
+                transformed_result['bboxes']]
+
+    @to_torch
+    def augment_with_points(self, image, gt_mask):
+        points = self._get_center_points_from_mask(gt_mask.astype(np.uint8))
+        transformed_result = self.trans_with_points(image=image,
+                                                    keypoints=points,
+                                                    mask=gt_mask)
+        return [transformed_result['image'],
+                transformed_result['mask'],
+                transformed_result['keypoints']]
+
+    @to_torch
+    def augment(self, image, gt_mask):
+        transformed_result = self.trans(image=image,
+                                        mask=gt_mask)
+        return [transformed_result['image'],
+                transformed_result['mask']]
+
     def __len__(self):
         return len(self.coco.getImgIds())
 
@@ -98,74 +180,46 @@ class CustomDataset(Dataset):
                 boxes (Tensor): [1, N, 4],
             }
         """
-
-        points = None
-        boxes = [[0, 0, 0, 0]]
-
-        # =======Input image=======
+        idx = len(self.coco.getImgIds()) - idx - 1
+        # =========================Input image=========================
         image_info = self.coco.loadImgs(ids=[idx])[0]
         image_path = Path(self.root) / image_info['file_name']
         height, width = image_info['height'], image_info['width']
         image = cv2.imread(str(image_path))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # ======= Label =======
+        # =========================Label=========================
         ann_ids = self.coco.getAnnIds(imgIds=[idx])
         ann_info = self.coco.loadAnns(ids=ann_ids)
-        has_label = len(ann_info) > 0
+
         gt_mask = np.zeros(shape=(height, width), dtype=bool)
         polygons = []
+        category_id = []
 
+        # Collate polygon、mask、category
         for ann in ann_info:
             mask = self.coco.annToMask(ann).astype(bool)
             polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
             gt_mask = np.logical_or(mask, gt_mask)
+            category_id.append(ann['category_id'])
 
-        gt_mask = gt_mask.astype(np.float32) * 255
+        gt_mask = gt_mask.astype(np.uint8) * 255
+        points = []
+        boxes = []
 
-        # If you use points be the prompt
-        if self.use_points and has_label:
-            points = self._get_points_from_mask(gt_mask.astype(np.uint8))
-
-        # If you use boxes be the prompt
-        if self.use_boxes and has_label:
-            boxes = []
-            for polygon in polygons:
-                x, y, w, h = cv2.boundingRect(np.array(polygon, dtype=np.int32).reshape((-1, 2)))
-                boxes.append([x, y, x + w, y + h])
-
-        # Augmentation
-        if self.use_boxes and self.use_points:
-            transformed_result = self.trans(image=image,
-                                            bboxes=boxes,
-                                            bbox_classes=[1] * len(boxes),
-                                            keypoints=points,
-                                            mask=gt_mask)
+        if self.use_points and self.use_boxes:
+            tr_image, tr_mask, points, boxes = self.augment_with_boxes_and_points(image, polygons, category_id, gt_mask)
         elif self.use_boxes:
-            transformed_result = self.trans(image=image,
-                                            bboxes=boxes,
-                                            bbox_classes=[1] * len(boxes),
-                                            mask=gt_mask)
+            tr_image, tr_mask, boxes = self.augment_with_boxes(image, polygons, category_id, gt_mask)
         elif self.use_points:
-            transformed_result = self.trans(image=image,
-                                            keypoints=points,
-                                            mask=gt_mask)
+            tr_image, tr_mask, points = self.augment_with_points(image, polygons, category_id, gt_mask)
         else:
-            transformed_result = self.trans(image=image,
-                                            mask=gt_mask)
-
-        tr_image = torch.from_numpy(transformed_result['image']).permute(2, 0, 1)
-        tr_mask = torch.from_numpy(transformed_result['mask'])
-
-        if self.use_points:
-            points = torch.from_numpy(np.array(transformed_result.get('keypoints')))
-        if self.use_boxes:
-            boxes = torch.from_numpy(np.array(transformed_result.get('bboxes')))
+            tr_image, tr_mask = self.augment(image, gt_mask)
 
         return {
             'tr_image': tr_image,
             'original_image': image,
-            'ground_truth_mask': tr_mask,
+            'gt_mask': tr_mask,
             'points': points,
             'boxes': boxes
         }
@@ -173,17 +227,17 @@ class CustomDataset(Dataset):
     def collate_fn(self, batch: list):
         def convert_to_array(batch):
             tr_images = torch.stack([item['tr_image'] for item in batch])
+            gt_mask = torch.stack([item['gt_mask'] for item in batch])
             original_images = [item['original_image'] for item in batch]
-            ground_truth_masks = torch.stack([item['ground_truth_mask'] for item in batch])
             points = np.stack([np.array(item['points']) for item in batch])
             boxes = np.stack([np.array(item['boxes']) for item in batch])
 
             return {
                 'tr_image': tr_images,
                 'original_image': original_images,
-                'ground_truth_mask': ground_truth_masks,
+                'gt_mask': gt_mask,
                 'points': None if all(point is None for point in points) else points,
-                'boxes': None if all(bbox is None for bbox in boxes) else boxes,
+                'boxes': boxes,
             }
 
         if not self.use_points and not self.use_boxes:
@@ -191,16 +245,16 @@ class CustomDataset(Dataset):
 
         if self.use_points:
             max_points = max(len(item['points']) for item in batch)
-
             for item in batch:
+                item['points'] = [[0, 0]] if len(item['points']) == 0 else item['points']
                 num_point_padding = max_points - len(item['points'])
                 if num_point_padding > 0:
                     item['points'] = np.vstack([item['points'], np.zeros((num_point_padding, 2))])
 
         if self.use_boxes:
             max_boxes = max(len(item['boxes']) for item in batch)
-
             for item in batch:
+                item['boxes'] = [[0, 0, 0, 0]] if len(item['boxes']) == 0 else item['boxes']
                 num_box_padding = max_boxes - len(item['boxes'])
                 if num_box_padding > 0:
                     item['boxes'] = np.vstack([item['boxes'], np.zeros((num_box_padding, 4))])
@@ -213,33 +267,8 @@ if __name__ == "__main__":
     with open('./configs/config_1.yaml', encoding='utf-8') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
-    use_points = False
+    use_points = True
     use_boxes = True
-
-    if use_boxes and use_points:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['bbox_classes']),
-            keypoint_params=A.KeypointParams(format='xy'),
-            additional_targets={'mask': 'image'})
-    elif use_boxes:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['bbox_classes']),
-            additional_targets={'mask': 'image'})
-    elif use_points:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], keypoint_params=A.KeypointParams(format='xy'),
-            additional_targets={'mask': 'image'})
-    else:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], additional_targets={'mask': 'image'})
 
     coco_root = Path(config['coco_root']) / 'train2017'
     coco_ann_file = Path(config['coco_root']) / "annotations" / "instances_train2017.json"
@@ -247,19 +276,35 @@ if __name__ == "__main__":
                                   ann_file=coco_ann_file,
                                   use_points=use_points,
                                   use_boxes=use_boxes,
-                                  trans=trans)
+                                  **create_augmentation())
 
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=4,
                                   shuffle=False,
+                                  num_workers=8,
                                   collate_fn=train_dataset.collate_fn)
-    #
-    # train_dataloader = DataLoader(train_dataset,
-    #                               batch_size=4,
-    #                               shuffle=False)
-
-    for batch in train_dataloader:
-        # print(batch['pixel_values'].shape)
-        # print(len(batch['original_image']))
-        print()
+    pbar = tqdm(train_dataloader)
+    for batch in pbar:
+        # tr_image = batch['tr_image'][0].cpu().numpy()
+        # original_image = batch['original_image'][0]
+        # mask = batch['gt_mask'][0].cpu().numpy()
+        #
+        # tr_image = cv2.resize(tr_image, (1024, 1024))
+        # original_image = cv2.resize(original_image, (1024, 1024))
+        # bboxes = batch['boxes'][0]
+        # points = batch['points'][0]
+        #
+        # for bbox in bboxes:
+        #     cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
+        #                   thickness=1, color=(0, 255, 255))
+        #
+        # for point in points:
+        #     cv2.circle(tr_image, (int(point[0]), int(point[1])), thickness=1, color=(0, 255, 255), radius=3)
+        #
+        # cv2.imshow('', tr_image)
+        # cv2.imshow('ori', original_image)
+        # cv2.imshow('mask', mask)
+        # cv2.waitKey(0)
+        pass
+        # print()
     # pass

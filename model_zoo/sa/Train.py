@@ -15,6 +15,8 @@ def train_one_epoch(model: torch.nn.Module,
     for b, batch in enumerate(train_dataloader):
         points = batch.get('points')
         boxes = batch.get('boxes')
+
+        # TODO: Permute
         tr_image = batch.get('tr_image').to(model.device)
 
         if points is not None:
@@ -30,7 +32,7 @@ def train_one_epoch(model: torch.nn.Module,
                         multimask_output=False)
 
         # compute loss
-        ground_truth_masks = batch["ground_truth_mask"].to(model.device).unsqueeze(1)  # (B, 1, H, W)
+        ground_truth_masks = batch["gt_mask"].to(model.device).unsqueeze(1)  # (B, 1, H, W)
         predicted_masks = outputs.pred_masks.squeeze(1)
         predicted_masks = nn.functional.interpolate(predicted_masks,
                                                     size=ground_truth_masks.shape[-2:],

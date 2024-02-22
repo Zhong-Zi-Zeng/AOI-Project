@@ -14,17 +14,18 @@ shuffle: True
 use_points: False
 use_boxes: False
 device: 0
+lr: 0.00001
+minimum_lr: 0.0
+warmup_epoch: 3
 
-# Optimizer
+# ===========Optimizer===========
 optimizer: "Adam" # SGD、Adam、AdamW
 weight_decay: 0.0
 start_factor: 0.2
 momentum: 0.937 # For SGD
 betas_0: 0.936 # For Adam、AdamW
 betas_1: 0.999 # For Adam、AdamW
-lr: 0.00001 # For All
-minimum_lr: 0.0 # Minimum learning rate
-warmup_epoch: 3
+
 
 
 
