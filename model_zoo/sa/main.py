@@ -1,83 +1,65 @@
-import numpy as np
-
 from Dataset import *
 from models import build_model
-from transformers import SamProcessor
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD, AdamW
-from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR
-from Train import train_one_epoch
+from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ChainedScheduler
+from train import train_one_epoch
+from test import test_one_epoch
+from utils.augmentation import create_augmentation
+from utils.logger import colorstr
+import time
 import numpy as np
-from tqdm import tqdm
-from torch import nn
-from utils.augmentation import *
-from utils.evaluate import Evaluator
 import torch
 import os
 import logging
 import yaml
 import monai
+import argparse
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("")
 
 torch.manual_seed(10)
 np.random.seed(10)
 
 
-def main(config):
-    # evaluator
-    evaluator = Evaluator(config=config)
+def get_args_parser():
+    parser = argparse.ArgumentParser('Model evaluation scripten.', add_help=False)
 
-    # augmentation
-    if config['use_boxes'] and config['use_points']:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['bbox_classes']),
-            keypoint_params=A.KeypointParams(format='xy'),
-            additional_targets={'mask': 'image'})
-    elif config['use_boxes']:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], bbox_params=A.BboxParams(format='pascal_voc', label_fields=['bbox_classes']),
-            additional_targets={'mask': 'image'})
-    elif config['use_points']:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], keypoint_params=A.KeypointParams(format='xy'),
-            additional_targets={'mask': 'image'})
-    else:
-        trans = A.Compose([
-            A.Resize(width=1024, height=1024),
-            A.ToFloat(max_value=255),
-        ], additional_targets={'mask': 'image'})
+    parser.add_argument('--cfg', type=str, required=True, help='The path of config.')
+    parser.add_argument('--work_dir', type=str, default='./train', help='save to project/name')
+
+    return parser
+
+
+def main(args, config: dict):
+    # work_dir
+    os.makedirs(os.getcwd() + args.work_dir, exist_ok=True)
 
     # dataset
     train_dataset = CustomDataset(root=Path(config['coco_root']) / "train2017",
                                   ann_file=Path(config['coco_root']) / "annotations/instances_train2017.json",
                                   use_points=config['use_points'],
                                   use_boxes=config['use_boxes'],
-                                  trans=trans)
+                                  **create_augmentation(mode='training'))
 
-    # val_dataset = CustomDataset(root=Path(config['coco_root']) / "val2017",
-    #                             ann_file=Path(config['coco_root']) / "annotations/instances_val2017.json",
-    #                             use_points=False,
-    #                             use_boxes=False,
-    #                             trans=trans)
+    test_dataset = CustomDataset(root=Path(config['coco_root']) / "val2017",
+                                 ann_file=Path(config['coco_root']) / "annotations/instances_val2017.json",
+                                 use_points=False,
+                                 use_boxes=False,
+                                 **create_augmentation(mode='testing'))
 
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=config['batch_size'],
                                   shuffle=config['shuffle'],
-                                  num_workers=0,
+                                  num_workers=config['num_workers'],
                                   collate_fn=train_dataset.collate_fn)
 
-    # val_dataloader = DataLoader(val_dataset,
-    #                             batch_size=1,
-    #                             shuffle=False,
-    #                             num_workers=0,
-    #                             collate_fn=lambda batch: collate_fn(batch, processor, False, False))
+    test_dataloader = DataLoader(test_dataset,
+                                 batch_size=1,
+                                 shuffle=False,
+                                 num_workers=config['num_workers'],
+                                 collate_fn=test_dataset.collate_fn)
 
     # model
     device = config['device']
@@ -85,11 +67,18 @@ def main(config):
     model.to(device)
 
     # load pretrained weight
+    start_epoch = 0
     if os.path.isfile(config['pretrained_weight']):
-        logging.info('Loading pretrained weight {}'.format(config['pretrained_weight']))
-        model.load_state_dict(torch.load(config['pretrained_weight']))
-    else:
-        logging.warning('Can\'t find the pretrained weight {}'.format(config['pretrained_weight']))
+        logger.info('Loading pretrained weight from {}'.format(config['pretrained_weight']))
+        ckpt = torch.load(config['pretrained_weight'])
+        start_epoch = ckpt['epoch']
+        model.load_state_dict(ckpt['model_state_dict'])
+    logger.info(colorstr('parameter: ') + ', '.join([f"{key}={value}" for key, value in config.items()]))
+
+    if start_epoch > config['end_epoch']:
+        raise ValueError(
+            f"The start epoch of the given weight file is '{start_epoch}', "
+            f"but you specify the end epoch as {config['end_epoch']}.")
 
     # optimizer
     if config['optimizer'] == 'SGD':
@@ -109,53 +98,58 @@ def main(config):
                           weight_decay=config['weight_decay'])
     else:
         raise ValueError(f"Can not find the optimizer of {config['optimizer']}")
+    logger.info(colorstr('optimizer: ') + config['optimizer'] + f" lr:{config['lr']}")
 
     # scheduler
-    linear_scheduler = LinearLR(optimizer=optimizer,
-                                start_factor=config['start_factor'],
-                                last_epoch=-1,
-                                verbose=True)
-
-    cosine_scheduler = CosineAnnealingLR(optimizer,
+    cosine_scheduler = CosineAnnealingLR(optimizer=optimizer,
                                          T_max=299,
                                          eta_min=config['minimum_lr'],
-                                         last_epoch=-1,
-                                         verbose=True)
+                                         verbose=False)
 
     # loss function
     loss_function = monai.losses.DiceCELoss(sigmoid=True,
                                             reduction='mean',
                                             squared_pred=True)
 
-    print('Start training')
-    model.train()
-    for epoch in range(config['start_epoch'], config['end_epoch']):
+    logger.info(colorstr('Start training'))
+    start_time = time.time()
+    for epoch in range(start_epoch, config['end_epoch']):
         # Training
         train_one_epoch(model=model,
                         train_dataloader=train_dataloader,
                         epoch=epoch,
+                        end_epoch=config['end_epoch'],
                         optimizer=optimizer,
                         loss_function=loss_function)
 
         # Update scheduler
-        if epoch < config['warmup_epoch']:
-            linear_scheduler.step()
-        else:
-            cosine_scheduler.step()
+        cosine_scheduler.step()
 
         # Evaluate
         if (epoch + 1) % config['eval_interval'] == 0:
-            # TODO: Evaluate
-            pass
+            logger.info("\n" + colorstr('Evaluate...'))
+            test_one_epoch(model=model,
+                           test_dataloader=test_dataloader,
+                           loss_function=loss_function)
 
         # Save
         if (epoch + 1) % config['save_interval'] == 0:
-            torch.save(model.state_dict(), config['output_path'])
+            ckpt = {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict()
+            }
+            torch.save(ckpt, os.path.join(args.work_dir, 'weight.pt'))
+
+    print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser('Model evaluation script.',
+                                     parents=[get_args_parser()])
+    args = parser.parse_args()
+
     # load config file
-    with open('./configs/config_1.yaml', encoding='utf-8') as f:
+    with open(args.cfg, encoding='utf-8') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
-    main(config)
+    main(args, config)

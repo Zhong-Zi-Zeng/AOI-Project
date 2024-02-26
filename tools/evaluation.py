@@ -9,7 +9,6 @@ from typing import Optional, Tuple, List, Union
 from pycocotools.coco import COCO
 from colorama import Fore, Back, Style, init
 from model_zoo import BaseInstanceModel
-from faster_coco_eval.extra import PreviewResults
 from torchvision.ops import nms
 from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
 from engine.timer import TIMER
@@ -19,8 +18,6 @@ import pandas as pd
 import argparse
 import torch
 import openpyxl
-import random
-import cv2
 
 
 def get_args_parser():

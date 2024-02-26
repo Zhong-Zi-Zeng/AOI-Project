@@ -1,21 +1,19 @@
 from __future__ import annotations
-
-import torch
-import albumentations as A
+from typing import Optional
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
-from typing import Optional
 from torch.utils.data import DataLoader
 from utils.augmentation import create_augmentation
 from pathlib import Path
+from tqdm import tqdm
 import numpy as np
+import torch
+import albumentations as A
 import cv2
 import yaml
-from tqdm import tqdm
 
 torch.manual_seed(10)
 np.random.seed(10)
-
 
 def to_torch(func):
     """
@@ -106,9 +104,10 @@ class CustomDataset(Dataset):
     @staticmethod
     def _get_bbox_from_polygons(polygons: list, category_id: list) -> list:
         """
-            從polygon中生成bbox
+            從polygon中生成bbox，如果有不符合的bbox則與category_id一起剔除
             Args:
                 polygons: [[x1, y1, x2, y2, ....], [x1, y2, x2, y2, ...], ...]
+                category_id: [cls1 , cls2, ....]
             Return:
                 boxes = [[x1, y1, x2, y2], [x1, y1, x2, y2], ...]
         """
@@ -116,9 +115,12 @@ class CustomDataset(Dataset):
         for idx, polygon in enumerate(polygons):
             x, y, w, h = cv2.boundingRect(np.array(polygon, dtype=np.int32).reshape((-1, 2)))
             x1, y1, x2, y2 = x, y, x + w, y + h
+
+            # check box
             if x2 <= x1 or y2 <= y1:
                 del category_id[idx]
                 continue
+
             boxes.append([x1, y1, x2, y2])
         return boxes
 
@@ -167,7 +169,8 @@ class CustomDataset(Dataset):
                 transformed_result['mask']]
 
     def __len__(self):
-        return len(self.coco.getImgIds())
+        # return len(self.coco.getImgIds())
+        return 10
 
     def __getitem__(self, idx):
         """
@@ -180,7 +183,6 @@ class CustomDataset(Dataset):
                 boxes (Tensor): [1, N, 4],
             }
         """
-        idx = len(self.coco.getImgIds()) - idx - 1
         # =========================Input image=========================
         image_info = self.coco.loadImgs(ids=[idx])[0]
         image_path = Path(self.root) / image_info['file_name']
@@ -212,7 +214,7 @@ class CustomDataset(Dataset):
         elif self.use_boxes:
             tr_image, tr_mask, boxes = self.augment_with_boxes(image, polygons, category_id, gt_mask)
         elif self.use_points:
-            tr_image, tr_mask, points = self.augment_with_points(image, polygons, category_id, gt_mask)
+            tr_image, tr_mask, points = self.augment_with_points(image, gt_mask)
         else:
             tr_image, tr_mask = self.augment(image, gt_mask)
 
@@ -236,8 +238,8 @@ class CustomDataset(Dataset):
                 'tr_image': tr_images,
                 'original_image': original_images,
                 'gt_mask': gt_mask,
-                'points': None if all(point is None for point in points) else points,
-                'boxes': boxes,
+                'points': None if all(len(point) == 0 for point in points) else points,
+                'boxes': None if all(len(box) == 0 for box in boxes) else boxes,
             }
 
         if not self.use_points and not self.use_boxes:
@@ -267,8 +269,8 @@ if __name__ == "__main__":
     with open('./configs/config_1.yaml', encoding='utf-8') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
-    use_points = True
-    use_boxes = True
+    use_points = False
+    use_boxes = False
 
     coco_root = Path(config['coco_root']) / 'train2017'
     coco_ann_file = Path(config['coco_root']) / "annotations" / "instances_train2017.json"
@@ -294,6 +296,7 @@ if __name__ == "__main__":
         # bboxes = batch['boxes'][0]
         # points = batch['points'][0]
         #
+        print(batch['points'])
         # for bbox in bboxes:
         #     cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
         #                   thickness=1, color=(0, 255, 255))
