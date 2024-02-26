@@ -8,13 +8,9 @@ _base_: [ "./base/model/Cascade-Mask RCNN/r50.yaml", # model
 # ===========Dataset===========
 number_of_class: 2
 coco_root: "./data/1000/coco/original_class_2"
-# patch_1024_class_2
-# original_class_2
 class_names:
   - "Pass"
   - "Defect"
-
-
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD

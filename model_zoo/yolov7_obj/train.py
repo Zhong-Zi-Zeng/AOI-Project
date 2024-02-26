@@ -386,7 +386,7 @@ def train(hyp, opt, device, tb_writer=None):
             scaler.scale(loss).backward()
 
             # record value on tensorboard
-            tb_writer.add_scalar('train loss', loss.item(), ni)
+            tb_writer.add_scalar('training loss', loss.item(), ni)
 
             # Optimize
             if ni % accumulate == 0:

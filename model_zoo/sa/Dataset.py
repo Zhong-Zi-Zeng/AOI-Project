@@ -15,6 +15,7 @@ import yaml
 torch.manual_seed(10)
 np.random.seed(10)
 
+
 def to_torch(func):
     """
         Change all the output to the tensor type
@@ -170,7 +171,7 @@ class CustomDataset(Dataset):
 
     def __len__(self):
         # return len(self.coco.getImgIds())
-        return 10
+        return 20
 
     def __getitem__(self, idx):
         """

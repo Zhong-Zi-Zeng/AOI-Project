@@ -5,7 +5,6 @@ import os
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'yolov7_obj'))
 from typing import Union, Any
 from models.experimental import attempt_load
-from utils.plots import plot_one_box
 from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 from model_zoo.base.BaseDetectModel import BaseDetectModel
@@ -15,7 +14,6 @@ from utils.torch_utils import select_device
 import numpy as np
 import cv2
 import torch
-import random
 import subprocess
 
 

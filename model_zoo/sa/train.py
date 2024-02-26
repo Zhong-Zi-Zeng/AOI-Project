@@ -10,7 +10,8 @@ def train_one_epoch(model: torch.nn.Module,
                     epoch: int,
                     end_epoch: int,
                     optimizer: torch.optim.Optimizer,
-                    loss_function):
+                    loss_function,
+                    tb_writer):
     model.train()
     pbar = tqdm(train_dataloader)
     for b, batch in enumerate(pbar):
@@ -52,7 +53,9 @@ def train_one_epoch(model: torch.nn.Module,
         optimizer.step()
         learning_rates = [param_group['lr'] for param_group in optimizer.param_groups][0]
 
-        # TODO: 新增tensorboard
+        step = b + len(train_dataloader) * epoch
+        tb_writer.add_scalar('training loss', loss.item(), step)
+
         pbar.set_description(
             f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item():.7f} | Learning rate:{learning_rates:.7f}")
 

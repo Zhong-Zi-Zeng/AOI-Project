@@ -2,7 +2,8 @@ from Dataset import *
 from models import build_model
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD, AdamW
-from torch.optim.lr_scheduler import LinearLR, CosineAnnealingLR, ChainedScheduler
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.utils.tensorboard import SummaryWriter
 from train import train_one_epoch
 from test import test_one_epoch
 from utils.augmentation import create_augmentation
@@ -34,7 +35,11 @@ def get_args_parser():
 
 def main(args, config: dict):
     # work_dir
-    os.makedirs(os.getcwd() + args.work_dir, exist_ok=True)
+    work_dir_path = os.getcwd() + args.work_dir
+    os.makedirs(work_dir_path, exist_ok=True)
+
+    # tensorboard
+    tb_writer = SummaryWriter(log_dir=work_dir_path + '/log')  # Tensorboard
 
     # dataset
     train_dataset = CustomDataset(root=Path(config['coco_root']) / "train2017",
@@ -120,7 +125,8 @@ def main(args, config: dict):
                         epoch=epoch,
                         end_epoch=config['end_epoch'],
                         optimizer=optimizer,
-                        loss_function=loss_function)
+                        loss_function=loss_function,
+                        tb_writer=tb_writer)
 
         # Update scheduler
         cosine_scheduler.step()
@@ -130,7 +136,9 @@ def main(args, config: dict):
             logger.info("\n" + colorstr('Evaluate...'))
             test_one_epoch(model=model,
                            test_dataloader=test_dataloader,
-                           loss_function=loss_function)
+                           epoch=epoch,
+                           loss_function=loss_function,
+                           tb_writer=tb_writer)
 
         # Save
         if (epoch + 1) % config['save_interval'] == 0:
@@ -138,7 +146,7 @@ def main(args, config: dict):
                 'epoch': epoch,
                 'model_state_dict': model.state_dict()
             }
-            torch.save(ckpt, os.path.join(args.work_dir, 'weight.pt'))
+            torch.save(ckpt, os.path.join(work_dir_path, 'weight.pt'))
 
     print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 
