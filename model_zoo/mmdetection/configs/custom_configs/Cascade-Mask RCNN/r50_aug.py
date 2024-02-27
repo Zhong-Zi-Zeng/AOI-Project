@@ -57,15 +57,8 @@ train_pipeline = [
         contrast_range=(0.5, 1.5),
         saturation_range=(0.5, 1.5),
         hue_delta=18),
-    dict(
-        type='RandomAffine',
-        max_rotate_degree=10,
-        max_translate_ratio=0.2,
-        scaling_ratio_range=0.9,
-        max_shear_degree=0,
-    ),
     dict(type='RandomFlip', prob=0.5),
-    dict(type='PackDetInputs')
+    dict(type='PackDetInputs'),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),

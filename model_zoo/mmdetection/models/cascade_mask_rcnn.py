@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
 from .BaseMMdetection import BaseMMdetection
-from engine.general import (get_work_dir_path, get_model_path, load_python, update_python_file)
+from engine.general import (get_work_dir_path, get_model_path, load_python, update_python_file, rle_to_polygon)
 from engine.timer import TIMER
 import numpy as np
 import cv2
@@ -87,7 +87,6 @@ class CascadeMaskRCNN(BaseMMdetection, BaseInstanceModel):
             rle_list = []
 
             predictions = result['predictions'][0]
-            vis = result['visualization'][0]
             classes = predictions['labels']
             scores = predictions['scores']
             rles = predictions['masks']
@@ -107,7 +106,15 @@ class CascadeMaskRCNN(BaseMMdetection, BaseInstanceModel):
                 bbox_list.append(list(map(float, [x, y, w, h])))
                 rle_list.append(rle)
 
-        return {"result_image": vis,
+                # Draw bounding box and mask
+                text = f'{self.class_names[int(cls)]} {conf:.2f}'
+                self.plot_one_box_mask(image=original_image,
+                                       xywh_bbox=[x, y, w, h],
+                                       text=text,
+                                       rle=rle,
+                                       color=self.class_color[int(cls)])
+
+        return {"result_image": original_image,
                 "class_list": class_list,
                 "bbox_list": bbox_list,
                 "score_list": score_list,
