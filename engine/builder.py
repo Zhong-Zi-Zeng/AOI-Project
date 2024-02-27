@@ -1,4 +1,5 @@
-from model_zoo import BaseInstanceModel, BaseDetectModel
+from typing import Union
+from model_zoo import BaseInstanceModel, BaseDetectModel, BaseSemanticModel
 from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml)
 import importlib
 import os
@@ -91,7 +92,7 @@ class Builder:
         return final_config
 
     @staticmethod
-    def build_model(config: dict) -> BaseInstanceModel:
+    def build_model(config: dict) -> Union[BaseInstanceModel, BaseDetectModel, BaseSemanticModel]:
         """
             從給定的config中的"name", 去model_zoo中尋找對應的model
         """

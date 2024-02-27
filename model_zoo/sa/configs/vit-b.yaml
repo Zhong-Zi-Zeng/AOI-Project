@@ -1,7 +1,5 @@
 # ===========Dataset===========
-coco_root: "D:/Heng_shared/AOI-Project/data/1500/coco/original_class_2"
-pretrained_weight: " "
-
+coco_root: " "
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -25,7 +23,8 @@ use_points: False
 use_boxes: True
 device: 0
 end_epoch: 200
-num_workers: 0
+num_workers: 4
+weight: " "
 
 # ===========Optimizer===========
 optimizer: "Adam" # SGD、Adam、AdamW

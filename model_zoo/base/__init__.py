@@ -1,2 +1,3 @@
 from .BaseInstanceModel import BaseInstanceModel
 from .BaseDetectModel import BaseDetectModel
+from .BaseSemanticModel import BaseSemanticModel

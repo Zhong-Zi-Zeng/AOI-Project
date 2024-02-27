@@ -1,4 +1,4 @@
-from Dataset import *
+from dataset import *
 from models import build_model
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD, AdamW
@@ -28,14 +28,14 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Model evaluation scripten.', add_help=False)
 
     parser.add_argument('--cfg', type=str, required=True, help='The path of config.')
-    parser.add_argument('--work_dir', type=str, default='./train', help='save to project/name')
+    parser.add_argument('--work_dir', type=str, help='save to project/name')
 
     return parser
 
 
 def main(args, config: dict):
     # work_dir
-    work_dir_path = os.getcwd() + args.work_dir
+    work_dir_path = args.work_dir
     os.makedirs(work_dir_path, exist_ok=True)
 
     # tensorboard
@@ -69,13 +69,13 @@ def main(args, config: dict):
     # model
     device = config['device']
     model = build_model(config)
-    model.to(device)
+    model.to(int(device) if device.isdigit() and device != 'cpu' else device)
 
     # load pretrained weight
     start_epoch = 0
-    if os.path.isfile(config['pretrained_weight']):
-        logger.info('Loading pretrained weight from {}'.format(config['pretrained_weight']))
-        ckpt = torch.load(config['pretrained_weight'])
+    if os.path.isfile(config['weight']):
+        logger.info('Loading pretrained weight from {}'.format(config['weight']))
+        ckpt = torch.load(config['weight'])
         start_epoch = ckpt['epoch']
         model.load_state_dict(ckpt['model_state_dict'])
     logger.info(colorstr('parameter: ') + ', '.join([f"{key}={value}" for key, value in config.items()]))
@@ -132,7 +132,7 @@ def main(args, config: dict):
         cosine_scheduler.step()
 
         # Evaluate
-        if (epoch + 1) % config['eval_interval'] == 0:
+        if (epoch + 1) % config['eval_interval'] == 0 and config['save_interval'] > 1:
             logger.info("\n" + colorstr('Evaluate...'))
             test_one_epoch(model=model,
                            test_dataloader=test_dataloader,
@@ -146,7 +146,7 @@ def main(args, config: dict):
                 'epoch': epoch,
                 'model_state_dict': model.state_dict()
             }
-            torch.save(ckpt, os.path.join(work_dir_path, 'weight.pt'))
+            torch.save(ckpt, os.path.join(work_dir_path, str(epoch) + '.pt'))
 
     print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 

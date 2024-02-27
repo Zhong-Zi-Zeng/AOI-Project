@@ -1,0 +1,44 @@
+_base_: [ "./base/model/SA/vit-b.yaml", # model
+          "./base/evaluation/semantic_segmentation.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/augmentation.yaml", # Augmentation
+          "./base/hyp.yaml" # hyperparameter
+]
+
+
+# ===========Dataset===========
+coco_root: "./data/1500/coco/original_class_2"
+number_of_class: 2
+class_names:
+  - "Pass"
+  - "Defect"
+class_color: # B G R
+  - [0, 255, 0]
+  - [0, 0, 255]
+
+# ===========Augmentation===========
+hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+degrees: 0.  # image rotation (+/- deg)
+translate: 0.2  # image translation (+/- fraction)
+scale: 0.9  # image scale (+/- gain)
+shear: 0.  # image shear (+/- deg)
+perspective: 0.  # image perspective (+/- fraction), range 0-0.001
+flipud: 0.  # image flip up-down (probability)
+fliplr: 0.5  # image flip left-right (probability)
+
+# ===========Hyperparameter===========
+optimizer: "Adam" # Adam、AdamW、SGD
+weight: " "
+end_epoch: 900
+warmup_epoch: 3
+lr: 0.01
+minimum_lr: 0.0 # Minimum learning rate
+batch_size: 2
+save_period: 25
+eval_period: 25
+use_points: False
+use_boxes: True
+device: "0"
+

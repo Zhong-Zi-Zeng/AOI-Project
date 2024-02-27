@@ -300,8 +300,8 @@ class Evaluator:
                         'score': round(score, 5),
                         'segmentation': rle
                     })
-
-            elif self.cfg['task'] == 'object_detection':
+            # Object detection or Semantic segmentation
+            else:
                 for cls, score, bbox in zip(class_list, score_list, bbox_list):
                     detected_result.append({
                         'image_id': img_id,
