@@ -13,6 +13,7 @@ from torchvision.ops import nms
 from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
 from engine.timer import TIMER
 from tqdm import tqdm
+import cv2
 import numpy as np
 import pandas as pd
 import argparse
@@ -343,6 +344,7 @@ class Evaluator:
             nf_fpr_img = 0
             nf_recall_ann = 0
             nf_fpr_ann = 0
+            fpr_image_name = []
 
             for img_id in all_defect_images:
                 gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
@@ -352,6 +354,7 @@ class Evaluator:
                 defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] == 1])
                 defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] == 1])
 
+                # 如果沒有檢測出任何defect瑕疵，則換下一張
                 if len(defected_dt_bboxes) == 0:
                     continue
 
@@ -367,10 +370,12 @@ class Evaluator:
                 nf_recall_ann += nf_recall
                 nf_recall_img += 1 if nf_recall > 0 else 0
 
-                # 計算過殺數
+                # 計算過殺數，並儲存過殺圖片的名稱
                 nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
                 nf_fpr_ann += nf_fpr
-                nf_fpr_img += 1 if nf_fpr > 0 else 0
+                if nf_fpr > 0:
+                    nf_fpr_img += 1
+                    fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
 
             result = [
                 round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
@@ -383,6 +388,7 @@ class Evaluator:
             self.logger.print_metrics(result)
             print(f"Number of defect image: {len(all_defect_images)}")
             print(f"Number of defect: {len(all_defects)}")
+            print(f"FPR images: {fpr_image_name}")
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +

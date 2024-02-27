@@ -55,29 +55,32 @@ class BaseModel(ABC):
         """
         tl = round(0.002 * (image.shape[0] + image.shape[1]) / 2) + 1  # line/font thickness
 
-        if color is None:
-            color = [random.randint(0, 255) for _ in range(3)]
+        try:
+            if color is None:
+                color = [random.randint(0, 255) for _ in range(3)]
 
-        if xywh_bbox is not None:
-            c1, c2 = (int(xywh_bbox[0]), int(xywh_bbox[1])), (
-                int(xywh_bbox[2]) + int(xywh_bbox[0]), int(xywh_bbox[3]) + int(xywh_bbox[1]))
-            cv2.rectangle(image, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
+            if xywh_bbox is not None:
+                c1, c2 = (int(xywh_bbox[0]), int(xywh_bbox[1])), (
+                    int(xywh_bbox[2]) + int(xywh_bbox[0]), int(xywh_bbox[3]) + int(xywh_bbox[1]))
+                cv2.rectangle(image, c1, c2, color, thickness=tl, lineType=cv2.LINE_AA)
 
-        if polygon is not None:
-            cv2.fillPoly(image, [polygon], color=color)
+            if polygon is not None:
+                cv2.fillPoly(image, [polygon], color=color)
 
-        if rle is not None:
-            polygon = rle_to_polygon(rle)
-            polygon = np.array(polygon, dtype=np.int32).reshape((-1, 2))
-            cv2.fillPoly(image, [polygon], color=color)
+            if rle is not None:
+                polygon = rle_to_polygon(rle)
+                polygon = np.array(polygon, dtype=np.int32).reshape((-1, 2))
+                cv2.fillPoly(image, [polygon], color=color)
 
-        if text is not None:
-            tf = max(tl - 1, 1)  # font thickness
-            t_size = cv2.getTextSize(text, 0, fontScale=tl / 3, thickness=tf)[0]
-            c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
-            cv2.rectangle(image, c1, c2, color, -1, cv2.LINE_AA)  # filled
-            cv2.putText(image, text, (c1[0], c1[1] - 2), 0, tl / 3,
-                        [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+            if text is not None:
+                tf = max(tl - 1, 1)  # font thickness
+                t_size = cv2.getTextSize(text, 0, fontScale=tl / 3, thickness=tf)[0]
+                c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
+                cv2.rectangle(image, c1, c2, color, -1, cv2.LINE_AA)  # filled
+                cv2.putText(image, text, (c1[0], c1[1] - 2), 0, tl / 3,
+                            [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+        except:
+            print("Could not plot on this image.")
 
     @abstractmethod
     def _config_transform(self):
