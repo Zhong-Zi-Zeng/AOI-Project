@@ -170,8 +170,7 @@ class CustomDataset(Dataset):
                 transformed_result['mask']]
 
     def __len__(self):
-        # return len(self.coco.getImgIds())
-        return 20
+        return len(self.coco.getImgIds())
 
     def __getitem__(self, idx):
         """
@@ -230,7 +229,7 @@ class CustomDataset(Dataset):
     def collate_fn(self, batch: list):
         def convert_to_array(batch):
             tr_images = torch.stack([item['tr_image'] for item in batch])
-            gt_mask = torch.stack([item['gt_mask'] for item in batch])
+            gt_mask = torch.stack([item['gt_mask'] > 0 for item in batch]).to(float)
             original_images = [item['original_image'] for item in batch]
             points = np.stack([np.array(item['points']) for item in batch])
             boxes = np.stack([np.array(item['boxes']) for item in batch])
@@ -267,7 +266,7 @@ class CustomDataset(Dataset):
 
 # For test
 if __name__ == "__main__":
-    with open('./configs/config_1.yaml', encoding='utf-8') as f:
+    with open('configs/config.yaml', encoding='utf-8') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     use_points = False
@@ -282,22 +281,23 @@ if __name__ == "__main__":
                                   **create_augmentation())
 
     train_dataloader = DataLoader(train_dataset,
-                                  batch_size=4,
+                                  batch_size=1,
                                   shuffle=False,
                                   num_workers=8,
                                   collate_fn=train_dataset.collate_fn)
     pbar = tqdm(train_dataloader)
     for batch in pbar:
-        # tr_image = batch['tr_image'][0].cpu().numpy()
-        # original_image = batch['original_image'][0]
-        # mask = batch['gt_mask'][0].cpu().numpy()
-        #
-        # tr_image = cv2.resize(tr_image, (1024, 1024))
-        # original_image = cv2.resize(original_image, (1024, 1024))
+        tr_image = batch['tr_image'][0].cpu().numpy()
+        original_image = batch['original_image'][0]
+        mask = batch['gt_mask'][0].cpu().numpy()
+
+        print(np.max(mask))
+
+        tr_image = cv2.resize(tr_image, (1024, 1024))
+        original_image = cv2.resize(original_image, (1024, 1024))
         # bboxes = batch['boxes'][0]
         # points = batch['points'][0]
-        #
-        print(batch['points'])
+        # print(batch['points'])
         # for bbox in bboxes:
         #     cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
         #                   thickness=1, color=(0, 255, 255))
@@ -305,10 +305,9 @@ if __name__ == "__main__":
         # for point in points:
         #     cv2.circle(tr_image, (int(point[0]), int(point[1])), thickness=1, color=(0, 255, 255), radius=3)
         #
-        # cv2.imshow('', tr_image)
-        # cv2.imshow('ori', original_image)
-        # cv2.imshow('mask', mask)
-        # cv2.waitKey(0)
-        pass
+        cv2.imshow('', tr_image)
+        cv2.imshow('ori', original_image)
+        cv2.imshow('mask', mask)
+        cv2.waitKey(0)
         # print()
     # pass

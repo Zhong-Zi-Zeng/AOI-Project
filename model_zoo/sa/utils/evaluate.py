@@ -222,7 +222,7 @@ class Evaluator(object):
 
 if __name__ == '__main__':
     # load config file
-    with open('../configs/config_1.yaml') as f:
+    with open('../configs/config.yaml') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     evaluator = Evaluator(config=config)

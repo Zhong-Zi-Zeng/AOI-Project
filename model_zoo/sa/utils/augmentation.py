@@ -24,9 +24,9 @@ def create_augmentation(hyp: Optional[dict] = None,
     if mode == 'training':
         aug = [
             A.Resize(width=1024, height=1024),
-            # A.ColorJitter(hue=hyp.get('hsv_h', 0.2),
-            #               saturation=hyp.get('hsv_s', 0.2),
-            #               brightness=hyp.get('hsv_v', 0.2)),
+            A.ColorJitter(hue=hyp.get('hsv_h', 0.2),
+                          saturation=hyp.get('hsv_s', 0.2),
+                          brightness=hyp.get('hsv_v', 0.2)),
             A.Affine(scale=hyp.get('scale', 1.0),
                      translate_px=hyp.get('translate', 0),
                      shear=hyp.get('shear', 0),
