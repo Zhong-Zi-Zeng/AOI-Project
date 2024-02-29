@@ -55,7 +55,7 @@ train_cfg = dict(
     _delete_=True,
     type='EpochBasedTrainLoop',
     max_epochs=epochs,
-    val_interval=10)
+    val_interval=check_interval)
 
 # ==========model==========
 batch_augments = [
@@ -146,12 +146,12 @@ train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
-    # dict(type='RandomCrop', crop_size=(image_size, image_size)),
     dict(type='PackDetInputs')
 ]
+
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='PackDetInputs',

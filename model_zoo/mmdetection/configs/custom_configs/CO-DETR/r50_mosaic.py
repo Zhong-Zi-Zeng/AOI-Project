@@ -327,8 +327,19 @@ model = dict(
 
 # ==========train_pipeline==========
 train_pipeline = [
-    dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True),
+    # dict(type='LoadImageFromFile', backend_args=backend_args),
+    # dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='Mosaic', img_scale=(width, height)),
+    dict(
+        type='RandomAffine',
+        scaling_ratio_range=(0.1, 2),
+        border=(-width // 2, -height // 2)
+    ),
+    dict(
+        type='MixUp',
+        img_scale=(width, height),
+        ratio_range=(0.8, 1.6),
+        pad_val=114.0),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(type='RandomFlip', prob=0.5),
     dict(type='RandomShift', prob=0.5),
@@ -349,14 +360,39 @@ test_pipeline = [
 
 # ==========dataloader==========
 
+# train_dataloader = dict(
+#     batch_size=batch_size,
+#     num_workers=2,
+#     dataset=dict(
+#         pipeline=train_pipeline,
+#         data_root=data_root,
+#         metainfo=dict(classes=classes),
+#     )
+# )
+
+train_dataset = dict(
+    # use MultiImageMixDataset wrapper to support mosaic and mixup
+    _delete_=True,
+    type='MultiImageMixDataset',
+    dataset=dict(
+        type="CocoDataset",
+        data_root=data_root,
+        ann_file='annotations/instances_train2017.json',
+        data_prefix=dict(img='train2017/'),
+        pipeline=[
+            dict(type='LoadImageFromFile', backend_args=backend_args),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=True)
+        ],
+        filter_cfg=dict(filter_empty_gt=False, min_size=32),
+        backend_args=backend_args),
+    pipeline=train_pipeline)
+
 train_dataloader = dict(
     batch_size=batch_size,
     num_workers=2,
-    dataset=dict(
-        pipeline=train_pipeline,
-        data_root=data_root,
-        metainfo=dict(classes=classes),
-    )
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    dataset=train_dataset
 )
 
 val_dataloader = dict(
