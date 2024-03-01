@@ -132,7 +132,7 @@ def main(args, config: dict):
         cosine_scheduler.step()
 
         # Evaluate
-        if (epoch + 1) % config['eval_interval'] == 0 and config['save_interval'] > 1:
+        if (epoch + 1) % config['eval_interval'] == 0 and config['eval_interval'] > 1:
             logger.info("\n" + colorstr('Evaluate...'))
             test_one_epoch(model=model,
                            test_dataloader=test_dataloader,
@@ -146,7 +146,7 @@ def main(args, config: dict):
                 'epoch': epoch,
                 'model_state_dict': model.state_dict()
             }
-            torch.save(ckpt, os.path.join(work_dir_path, str(epoch) + '.pt'))
+            torch.save(ckpt, os.path.join(work_dir_path, f"weight_{epoch}" + '.pt'))
 
     print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 

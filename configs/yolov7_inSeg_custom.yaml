@@ -43,7 +43,7 @@ lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 8
 save_period: 25
-eval_period: 25
+eval_period: 1
 imgsz: [1024, 1024] # [train, test] image size
 use_patch: false
 device: "0"

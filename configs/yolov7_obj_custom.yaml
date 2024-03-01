@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_e6e.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/augmentation.yaml", # Augmentation
@@ -21,7 +21,7 @@ class_color: # B G R
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
 hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
-hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+hsv_v: 0.8  # image HSV-Value augmentation (fraction)
 degrees: 0.  # image rotation (+/- deg)
 translate: 0.2  # image translation (+/- fraction)
 scale: 0.9  # image scale (+/- gain)
@@ -37,7 +37,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 start_epoch: 0
-end_epoch: 900
+end_epoch: 1200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
@@ -46,5 +46,4 @@ batch_size: 2
 save_period: 25
 eval_period: 25
 imgsz: [ 1600, 1600 ] # [train, test] image size
-device: "0" 
-
+device: "1" 

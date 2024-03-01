@@ -30,7 +30,7 @@ fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
-weight: " "
+weight: "D:/Heng_shared/AOI-Project/work_dirs/train/SA/0.pt"
 end_epoch: 900
 warmup_epoch: 3
 lr: 0.01
