@@ -17,16 +17,16 @@ def extract_number(filename):
         return None
 
 
-weight_dir = r"Z:\Student_Work\Heng\AOI-Result\Yolov7Obj-WC1500\YOLOv7_size_2560_w_aug\weights"
-config_file = r"Z:\Student_Work\Heng\AOI-Result\Yolov7Obj-WC1500\YOLOv7_size_2560_w_aug\final_config.yaml"
+weight_dir = r"D:\Heng_shared\AOI-Project\work_dirs\train\CascadeMaskRCNN\weights"
+config_file = r"D:\Heng_shared\AOI-Project\work_dirs\train\CascadeMaskRCNN\final_config.yaml"
 
-x = list(range(0, 900, 25))
 
 image_recall = []
 image_fpr = []
 defect_recall = []
 defect_fpr = []
 weight_files = sorted(os.listdir(weight_dir), key=extract_number)
+x = list(range(0, 900, 25))
 
 for weight in weight_files:
     print('='*40 + weight + '=' * 40)

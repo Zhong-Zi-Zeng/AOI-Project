@@ -169,7 +169,6 @@ class Yolov7Obj(BaseDetectModel):
                                                xywh_bbox=[x, y, w, h],
                                                text=text,
                                                color=self.class_color[int(cls)])
-
             return {
                 'result_image': original_image,
                 'class_list': class_list,

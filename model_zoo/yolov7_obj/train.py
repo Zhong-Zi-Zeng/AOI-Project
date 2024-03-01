@@ -481,6 +481,8 @@ def train(hyp, opt, device, tb_writer=None):
                 del ckpt
 
             if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
+                model.to('cpu')
+                torch.cuda.empty_cache()
                 final_config.update({'weight': last})
                 evaluator = Evaluator.build_by_config(cfg=final_config)
                 recall_and_fpr_for_all = evaluator.eval()
@@ -488,6 +490,7 @@ def train(hyp, opt, device, tb_writer=None):
                 for x, tag in zip(recall_and_fpr_for_all, tags):
                     tb_writer.add_scalar(tag, x, epoch)
                 del evaluator
+                model.to(device)
 
             # Log
             tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
