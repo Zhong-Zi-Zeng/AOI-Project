@@ -30,15 +30,15 @@ fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/SA/0.pt"
+weight: "D:/Heng_shared/AOI-Project/work_dirs/train/SA_2/weight_199.pt"
 end_epoch: 900
 warmup_epoch: 3
-lr: 0.01
+lr: 0.001
 minimum_lr: 0.0 # Minimum learning rate
-batch_size: 2
+batch_size: 4
 save_period: 25
 eval_period: 25
 use_points: False
-use_boxes: True
+use_boxes: False
 device: "0"
 

@@ -46,4 +46,4 @@ batch_size: 2
 save_period: 25
 eval_period: 25
 imgsz: [ 1600, 1600 ] # [train, test] image size
-device: "1" 
+device: "0" 

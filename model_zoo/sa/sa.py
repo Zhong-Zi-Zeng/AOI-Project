@@ -62,6 +62,7 @@ class SA(BaseSemanticModel):
     def _load_model(self):
         # Load model
         self.model = build_model(self.cfg)
+        self.model.eval()
         ckpt = torch.load(self.cfg['weight'])
         self.model.load_state_dict(ckpt['model_state_dict'])
 
@@ -78,6 +79,7 @@ class SA(BaseSemanticModel):
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
                  conf_thres: float = 0.25,
+                 area_thres: Union[int | float] = 100,
                  *args: Any,
                  **kwargs: Any
                  ) -> dict:
@@ -99,7 +101,7 @@ class SA(BaseSemanticModel):
 
             tr_image = torch.from_numpy(cv2.resize(original_image, (1024, 1024)))[None, :]
             tr_image = tr_image.permute(0, 3, 1, 2).to(self.model.device)
-            tr_image = tr_image.to(torch.float32)
+            tr_image = tr_image.to(torch.float32) / 255.
 
             # ----------------------------Pre-process (End)----------------------------
 
@@ -125,8 +127,8 @@ class SA(BaseSemanticModel):
                                                         align_corners=False)  # [1, 1, H, W]
             predicted_masks = torch.sigmoid(predicted_masks[0][0])  # [H, W]
             predicted_masks = predicted_masks.detach().cpu().numpy()  # [H, W]
-            predicted_masks = np.clip(predicted_masks * 255, 0, 255)  # [H, W]
-            predicted_masks = np.where(predicted_masks > 0.1, 0, 1).astype(np.uint8)  # [H, W]
+            predicted_masks = np.clip(predicted_masks, 0, 1)  # [H, W]
+            predicted_masks = np.where(predicted_masks > conf_thres, 255, 0).astype(np.uint8)  # [H, W]
             polygons = mask_to_polygon(predicted_masks)
 
             # For evaluation
@@ -137,7 +139,12 @@ class SA(BaseSemanticModel):
             for i, polygon in enumerate(polygons):  # detections per image
                 x, y, w, h = cv2.boundingRect(np.array(polygon, dtype=np.int32).reshape((-1, 2)))
 
+                # filter out too small box
+                if w * h < area_thres:
+                    continue
+
                 bbox_list.append(list(map(float, [x, y, w, h])))
+
                 # Because this is a segmentation model, so does not have score and class name
                 class_list.append(1)
                 score_list.append(1)
