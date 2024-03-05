@@ -35,7 +35,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "Z:/Student_Work/Heng/AOI-Result/Yolov7Obj-WC1500/YOLOv7_d6_size_1600/weights/epoch_824.pt"
 start_epoch: 0
 end_epoch: 1200
 warmup_epoch: 3
@@ -46,4 +46,4 @@ batch_size: 2
 save_period: 25
 eval_period: 25
 imgsz: [ 1600, 1600 ] # [train, test] image size
-device: "0" 
+device: "0"

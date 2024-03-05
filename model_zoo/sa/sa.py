@@ -79,7 +79,7 @@ class SA(BaseSemanticModel):
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
                  conf_thres: float = 0.25,
-                 area_thres: Union[int | float] = 100,
+                 area_thres: Union[int | float] = 1000,
                  *args: Any,
                  **kwargs: Any
                  ) -> dict:

@@ -17,20 +17,20 @@ class_color: # B G R
   - [0, 0, 255]
 
 # ===========Augmentation===========
-hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
-hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
-hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+hsv_h: 0.  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.  # image HSV-Value augmentation (fraction)
 degrees: 0.  # image rotation (+/- deg)
-translate: 0.2  # image translation (+/- fraction)
-scale: 0.9  # image scale (+/- gain)
+translate: 0.  # image translation (+/- fraction)
+scale: 1.0  # image scale (+/- gain)
 shear: 0.  # image shear (+/- deg)
 perspective: 0.  # image perspective (+/- fraction), range 0-0.001
 flipud: 0.  # image flip up-down (probability)
-fliplr: 0.5  # image flip left-right (probability)
+fliplr: 0.  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/SA_2/weight_199.pt"
+weight: " "
 end_epoch: 900
 warmup_epoch: 3
 lr: 0.001
