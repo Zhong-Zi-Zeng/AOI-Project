@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_e6e.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/augmentation.yaml", # Augmentation
@@ -35,7 +35,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "Z:/Student_Work/Heng/AOI-Result/Yolov7Obj-WC1500/YOLOv7_d6_size_1600/weights/epoch_824.pt"
+weight: /home/miislab-server3/Heng/Heng_shared/AOI-Project/work_dirs/train/YOLOv7_d6_size_1600_hsv/weights/epoch_099.pt
 start_epoch: 0
 end_epoch: 1200
 warmup_epoch: 3
