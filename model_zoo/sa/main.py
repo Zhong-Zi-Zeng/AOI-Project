@@ -41,6 +41,10 @@ def main(args, config: dict):
     # tensorboard
     tb_writer = SummaryWriter(log_dir=work_dir_path + '/log')  # Tensorboard
 
+    # Now not support use boxes and use points be the prompt at the same time
+    if config['use_points'] and config['use_boxes']:
+        raise ValueError("Now not support use boxes and use points be the prompt at the same time")
+
     # dataset
     train_dataset = CustomDataset(root=Path(config['coco_root']) / "train2017",
                                   ann_file=Path(config['coco_root']) / "annotations/instances_train2017.json",
