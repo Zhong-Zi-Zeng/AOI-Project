@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'sa'))
 from typing import Union, Any
 from model_zoo.base.BaseSemanticModel import BaseSemanticModel
 from engine.timer import TIMER
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path, mask_to_polygon)
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path, mask_to_polygon, get_device)
 from models import build_model
 import torch.nn as nn
 import numpy as np
@@ -63,8 +63,10 @@ class SA(BaseSemanticModel):
         # Load model
         self.model = build_model(self.cfg)
         self.model.eval()
-        ckpt = torch.load(self.cfg['weight'])
+        device = get_device(self.cfg['device'])
+        ckpt = torch.load(self.cfg['weight'], map_location=device)
         self.model.load_state_dict(ckpt['model_state_dict'])
+        self.model.to(device)
 
     def train(self):
         """

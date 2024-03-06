@@ -8,8 +8,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_txt: "./data/1500/yoloBbox/original_class_2/train_list.txt"
-val_txt: "./data/1500/yoloBbox/original_class_2/val_list.txt"
+train_txt: "./data/500/yoloBbox/original_class_2/train_list.txt"
+val_txt: "./data/500/yoloBbox/original_class_2/val_list.txt"
 number_of_class: 2
 class_names:
   - "Pass"
@@ -19,24 +19,23 @@ class_color: # B G R
   - [0, 0, 255]
 
 # ===========Augmentation===========
-hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
-hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
-hsv_v: 0.8  # image HSV-Value augmentation (fraction)
+hsv_h: 0.  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.  # image HSV-Value augmentation (fraction)
 degrees: 0.  # image rotation (+/- deg)
-translate: 0.2  # image translation (+/- fraction)
-scale: 0.9  # image scale (+/- gain)
+translate: 0.  # image translation (+/- fraction)
+scale: 1.  # image scale (+/- gain)
 shear: 0.  # image shear (+/- deg)
 perspective: 0.  # image perspective (+/- fraction), range 0-0.001
 flipud: 0.  # image flip up-down (probability)
-fliplr: 0.5  # image flip left-right (probability)
-mosaic: 1.  # image mosaic (probability)
-mixup: 0.15  # image mixup (probability)
+fliplr: 0.  # image flip left-right (probability)
+mosaic: 0.  # image mosaic (probability)
+mixup: 0.  # image mixup (probability)
 copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: /home/miislab-server3/Heng/Heng_shared/AOI-Project/work_dirs/train/YOLOv7_d6_size_1600_hsv/weights/epoch_099.pt
-start_epoch: 0
+weight: " "
 end_epoch: 1200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
@@ -44,6 +43,6 @@ lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
 batch_size: 2
 save_period: 25
-eval_period: 25
+eval_period: 1
 imgsz: [ 1600, 1600 ] # [train, test] image size
-device: "0"
+device: "1"

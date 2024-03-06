@@ -1,7 +1,6 @@
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
 weight: ""
-start_epoch: 0
 end_epoch: 300
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate

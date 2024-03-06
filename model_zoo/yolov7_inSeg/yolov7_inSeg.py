@@ -183,7 +183,7 @@ class Yolov7inSeg(BaseInstanceModel):
                         '--hyp', self.cfg['hyp_file'],
                         '--batch-size', str(self.cfg['batch_size']),
                         '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
-                        '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
+                        '--epochs', str(self.cfg['end_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
                         '--imgsz', str(self.cfg['imgsz'][0]),

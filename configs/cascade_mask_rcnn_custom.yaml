@@ -17,7 +17,7 @@ class_color: # B G R
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/CascadeMaskRCNN/epoch_425.pth"
+weight: " "
 start_epoch: 0
 end_epoch: 900
 warmup_epoch: 3

@@ -9,7 +9,7 @@ from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 from model_zoo.base.BaseDetectModel import BaseDetectModel
 from engine.timer import TIMER
-from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path)
+from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path, get_device)
 from utils.torch_utils import select_device
 import numpy as np
 import cv2
@@ -60,9 +60,10 @@ class Yolov7Obj(BaseDetectModel):
 
     def _load_model(self):
         # Load model
-        self.device = select_device(self.cfg['device'])
+        self.device = get_device(self.cfg['device'])
         self.model = attempt_load(self.cfg['weight'], map_location=self.device)
         self.model.eval()
+        self.model.to(self.device)
         self.stride = int(self.model.stride.max())  # model stride
         self.imgsz = check_img_size(self.cfg['imgsz'][0], s=self.stride)  # check img_size
 
@@ -82,7 +83,7 @@ class Yolov7Obj(BaseDetectModel):
                         '--hyp', self.cfg['hyp_file'],
                         '--batch-size', str(self.cfg['batch_size']),
                         '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
-                        '--epochs', str(self.cfg['end_epoch'] - self.cfg['start_epoch']),
+                        '--epochs', str(self.cfg['end_epoch']),
                         '--project', get_work_dir_path(self.cfg),
                         '--optimizer', self.cfg['optimizer'],
                         '--device', self.cfg['device'],

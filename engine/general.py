@@ -20,6 +20,11 @@ def check_path(path: str) -> bool:
     return os.path.exists(path)
 
 
+def get_device(device: Union[str: int]) -> torch.device:
+    device = torch.device(int(device) if device.isdigit() and device != 'cpu' else device)
+    return device
+
+
 def mask_to_polygon(mask: np.ndarray) -> list:
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
