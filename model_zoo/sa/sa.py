@@ -139,7 +139,8 @@ class SA(BaseSemanticModel):
             bbox_list = []
 
             for i, polygon in enumerate(polygons):  # detections per image
-                x, y, w, h = cv2.boundingRect(np.array(polygon, dtype=np.int32).reshape((-1, 2)))
+                polygon = np.array(polygon, dtype=np.int32).reshape((-1, 2))
+                x, y, w, h = cv2.boundingRect(polygon)
 
                 # filter out too small box
                 if w * h < area_thres:
@@ -153,9 +154,9 @@ class SA(BaseSemanticModel):
 
                 # Draw bounding box
                 text = f'{self.class_names[1]}'
-                # TODO: draw mask
                 self.plot_one_box_mask(image=original_image,
                                        xywh_bbox=[x, y, w, h],
+                                       polygon=polygon,
                                        text=text,
                                        color=self.class_color[1])
 
