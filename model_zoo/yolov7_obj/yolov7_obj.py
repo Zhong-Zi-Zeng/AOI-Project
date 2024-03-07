@@ -61,7 +61,7 @@ class Yolov7Obj(BaseDetectModel):
     def _load_model(self):
         # Load model
         self.device = get_device(self.cfg['device'])
-        self.model = attempt_load(self.cfg['weight'], map_location=self.device)
+        self.model = attempt_load(self.cfg['weight'], map_location='cpu')
         self.model.eval()
         self.model.to(self.device)
         self.stride = int(self.model.stride.max())  # model stride
