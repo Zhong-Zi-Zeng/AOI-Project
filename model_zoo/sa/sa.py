@@ -153,6 +153,7 @@ class SA(BaseSemanticModel):
 
                 # Draw bounding box
                 text = f'{self.class_names[1]}'
+                # TODO: draw mask
                 self.plot_one_box_mask(image=original_image,
                                        xywh_bbox=[x, y, w, h],
                                        text=text,

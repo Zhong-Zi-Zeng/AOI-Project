@@ -1,4 +1,4 @@
-_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_e6e.yaml", # model
+_base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/augmentation.yaml", # Augmentation
@@ -21,7 +21,7 @@ class_color: # B G R
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
 hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
-hsv_v: 0.8  # image HSV-Value augmentation (fraction)
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)
 degrees: 0.  # image rotation (+/- deg)
 translate: 0.2  # image translation (+/- fraction)
 scale: 0.9  # image scale (+/- gain)

@@ -1,4 +1,4 @@
 model_name: 'CascadeMaskRCNN'
 model_dir_name: 'mmdetection'
 
-cfg_file: "./model_zoo/mmdetection/configs/custom_configs/Cascade-Mask RCNN/r50_aug.py"
+cfg_file: "./model_zoo/mmdetection/configs/custom_configs/Cascade-Mask RCNN/r50.py"

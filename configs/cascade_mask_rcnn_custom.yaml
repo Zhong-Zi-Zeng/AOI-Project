@@ -1,4 +1,4 @@
-_base_: [ "./base/model/Cascade-Mask RCNN/r50.yaml", # model
+_base_: [ "./base/model/Cascade-Mask RCNN/x101.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -15,10 +15,21 @@ class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
 
+# ===========Augmentation===========
+hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+degrees: 10  # image rotation (+/- deg)
+translate: 0.1  # image translation (+/- fraction)
+scale: 0.9  # image scale (+/- gain)
+shear: 0.  # image shear (+/- deg)
+perspective: 0.5  # image perspective (+/- fraction), range 0-0.001
+flipud: 0.  # image flip up-down (probability)
+fliplr: 0.5  # image flip left-right (probability)
+
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
-start_epoch: 0
 end_epoch: 900
 warmup_epoch: 3
 save_period: 25
@@ -26,7 +37,7 @@ initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
 minimum_lr: 0.0001 # Minimum learning rate
 batch_size: 3
-imgsz: [2400, 1600]
+imgsz: [1024, 1024]
 use_patch: false
 device: "0"
 
