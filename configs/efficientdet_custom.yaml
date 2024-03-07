@@ -1,4 +1,4 @@
-_base_: [ "./base/model/EfficientDet/d0.yaml", # model
+_base_: [ "./base/model/EfficientDet/d3.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -14,6 +14,18 @@ class_names:
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
+
+# ===========Augmentation===========
+hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+degrees: 10  # image rotation (+/- deg)
+translate: 0.1  # image translation (+/- fraction)
+scale: 0.9  # image scale (+/- gain)
+shear: 0.  # image shear (+/- deg)
+perspective: 0.5  # image perspective (+/- fraction), range 0-0.001
+flipud: 0.  # image flip up-down (probability)
+fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD

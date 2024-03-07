@@ -141,22 +141,53 @@ model = dict(
         max_per_img=100))
 
 # ==========train_pipeline==========
+albu_train_transforms = [
+    dict(
+        type='ColorJitter',
+        hue=0.2,
+        saturation=0.2,
+        brightness=0.2),
+    dict(
+        type='Affine',
+        scale=1.0,
+        translate_px=0,
+        shear=0,
+        rotate=20
+    ),
+    dict(type='Perspective', scale=0.2),
+    dict(type='HorizontalFlip', p=0.5),
+    dict(type='VerticalFlip', p=0.5),
+]
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
+    dict(
+        type='Albu',
+        transforms=albu_train_transforms,
+        bbox_params=dict(
+            type='BboxParams',
+            format='pascal_voc',
+            label_fields=['gt_bboxes_labels', 'gt_ignore_flags'],
+            min_visibility=0.0,
+            filter_lost_elements=True),
+        keymap={
+            'img': 'image',
+            'gt_masks': 'masks',
+            'gt_bboxes': 'bboxes'
+        },
+        skip_img_without_anno=True),
     dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='PackDetInputs',
         meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
                    'scale_factor'))
 ]
-
 
 # ==========dataloader==========
 train_dataloader = dict(
