@@ -44,17 +44,22 @@ class BaseMMdetection:
         update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
 
-    def _build_optimizer(self, **kwargs) -> dict:
+    def _build_optimizer(self,
+                         weight_decay: float = 0.0005,
+                         **kwargs) -> dict:
 
         optimizer = dict(_delete_=True, type='OptimWrapper')
         optimizer.update(kwargs)
 
         if self.cfg['optimizer'] == 'SGD':
-            optimizer['optimizer'] = dict(type='SGD', lr=self.cfg['lr'], momentum=0.937, weight_decay=0.0005)
+            optimizer['optimizer'] = dict(type='SGD', lr=self.cfg['lr'], momentum=0.937,
+                                          weight_decay=weight_decay)
         elif self.cfg['optimizer'] == 'Adam':
-            optimizer['optimizer'] = dict(type='Adam', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0005)
+            optimizer['optimizer'] = dict(type='Adam', lr=self.cfg['lr'], betas=(0.937, 0.999),
+                                          weight_decay=weight_decay)
         elif self.cfg['optimizer'] == 'AdamW':
-            optimizer['optimizer'] = dict(type='AdamW', lr=self.cfg['lr'], betas=(0.937, 0.999), weight_decay=0.0005)
+            optimizer['optimizer'] = dict(type='AdamW', lr=self.cfg['lr'], betas=(0.937, 0.999),
+                                          weight_decay=weight_decay)
 
         return optimizer
 
