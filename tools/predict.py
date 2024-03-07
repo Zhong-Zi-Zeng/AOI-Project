@@ -55,7 +55,7 @@ def run():
             result_image_cp = cv2.resize(result_image_cp, None, fx=0.3, fy=0.3)
             cv2.imshow(f"{image_file}", result_image_cp)
             cv2.waitKey(0)
-
+        print(os.path.join(get_work_dir_path(cfg), Path(image_file).name))
         cv2.imwrite(os.path.join(get_work_dir_path(cfg), Path(image_file).name), result_image)
 
 

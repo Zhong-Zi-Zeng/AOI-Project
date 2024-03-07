@@ -7,7 +7,7 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     # 只能先寫好
-    loss_image_url = url_for('static', filename="Loss.png")
+    loss_image_url = url_for('static', filename="Test_acc.png")
     accuracy_image_url = url_for('static', filename="Accuracy.png")
     return render_template('curve_analysis.html', loss_image_url=loss_image_url, accuracy_image_url=accuracy_image_url)
 
