@@ -7,6 +7,7 @@ import multiprocessing
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import subprocess
 
 
 # def log_write(tag, data_dict, step):
@@ -28,7 +29,7 @@ class Logger:
         1. 資料存入 Excel --> add_scalar()
         2. Excel 轉 Json --> _excel_to_json()
         3. 讀取 Json，畫曲線圖 --> _plot_curve()
-        4. 看網頁時使用 --> subprocess.run(["python", "./logs/build_web_app.py"])
+        4. 看網頁時使用 --> subprocess.run(["python", "./tools/logs/build_web_app.py"])
     '''
 
     def __init__(self):
@@ -144,7 +145,7 @@ class Logger:
 
 # example
 # logger = Logger()
-#
+
 # for i in range(10):
 #     if i < 5:
 #         for tag in ['loss', 'acc', 'map', 'ap']:
@@ -161,3 +162,4 @@ class Logger:
 #
 # logger._excel_to_json('Test')
 # logger._plot_curve('Test')
+# subprocess.run(["python", "./tools/logs/build_web_app.py"])
