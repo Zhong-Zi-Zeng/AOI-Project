@@ -8,8 +8,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_e6.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_txt: "./data/1500/yoloBbox/patch_1024_class_2/train_list.txt"
-val_txt: "./data/1500/yoloBbox/patch_1024_class_2/val_list.txt"
+train_txt: "./data/1500/yoloBbox/original_class_2/train_list.txt"
+val_txt: "./data/1500/yoloBbox/original_class_2/val_list.txt"
 number_of_class: 2
 class_names:
   - "Pass"
@@ -45,7 +45,4 @@ batch_size: 6
 save_period: 25
 eval_period: 25
 imgsz: [ 1024, 1024 ] # [train, test] image size
-use_patch: True
-patch_size: 1024
-step: 512
-device: "1"
+device: "0"
