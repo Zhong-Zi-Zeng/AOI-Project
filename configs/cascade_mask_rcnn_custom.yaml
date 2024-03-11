@@ -28,7 +28,7 @@ flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
-optimizer: "SGD" # Adam、AdamW、SGD
+optimizer: "Adam" # Adam、AdamW、SGD
 weight: " "
 end_epoch: 900
 warmup_epoch: 3

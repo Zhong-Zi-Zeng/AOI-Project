@@ -60,6 +60,8 @@ class BaseMMdetection:
         elif self.cfg['optimizer'] == 'AdamW':
             optimizer['optimizer'] = dict(type='AdamW', lr=self.cfg['lr'], betas=(0.937, 0.999),
                                           weight_decay=weight_decay)
+        else:
+            raise ValueError("Please use 'SGD'、'Adam'、'AdamW' be the optimizer.")
 
         return optimizer
 
@@ -99,7 +101,14 @@ class BaseMMdetection:
             command = f'{dist_train_sh} {self.cfg["cfg_file"]} 1 --work-dir {get_work_dir_path(self.cfg)}'
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
                                     stderr=subprocess.PIPE, executable='/bin/bash')
-            proc.communicate()
+            output, error = proc.communicate()
+            if proc.returncode != 0:
+                print("Error occurred while executing the command.")
+                if error:
+                    print("Error message:", error.decode())
+            else:
+                print("Command executed successfully.")
+
         else:
             command = [
                 'python',
