@@ -1,4 +1,4 @@
-_base_: [ "./base/model/Cascade-Mask RCNN/x101.yaml", # model
+_base_: [ "./base/model/Cascade-Mask RCNN/r50.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -28,7 +28,7 @@ flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
-optimizer: "Adam" # Adam、AdamW、SGD
+optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 end_epoch: 900
 warmup_epoch: 3

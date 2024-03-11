@@ -97,8 +97,10 @@ class BaseMMdetection:
             with open(dist_train_sh, 'wb') as file:
                 file.write(script_content)
 
-            # TODO: resume from pretrained weight
             command = f'{dist_train_sh} {self.cfg["cfg_file"]} 1 --work-dir {get_work_dir_path(self.cfg)}'
+            if os.path.exists(self.cfg['weight']):
+                command += f' --resume {self.cfg["weight"]}'
+
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
                                     stderr=subprocess.PIPE, executable='/bin/bash')
             output, error = proc.communicate()
