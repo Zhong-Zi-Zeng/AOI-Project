@@ -1,10 +1,16 @@
+import os
+import sys
+
+sys.path.append(os.path.join(os.getcwd()))
+
 from typing import Optional
 from mmengine.hooks import Hook
 from mmdet.registry import HOOKS
-from mmengine.runner.runner import Runner
-from mmengine.config import Config, ConfigDict
 from torch.utils.tensorboard import SummaryWriter
+from tools.evaluation import Evaluator
 from tqdm import tqdm
+from engine.general import load_yaml
+import torch
 
 
 @HOOKS.register_module()
@@ -14,16 +20,31 @@ class ValidationHook(Hook):
 
     def after_train_epoch(self, runner) -> None:
         if not hasattr(self, "tb_writer"):
-            self.tb_writer = SummaryWriter(log_dir=runner.work_dir + './log')
+            setattr(self, "tb_writer", SummaryWriter(log_dir=os.path.join(runner.work_dir, 'log')))
+
+        if not hasattr(self, "final_config"):
+            setattr(self, "final_config", load_yaml(os.path.join(runner.work_dir.replace(" ", ""), 'final_config.yaml')))
 
         model = runner.model
         model.eval()
-
         print("Evaluate:")
+
+        # Validation loss
         bar = tqdm(runner.val_dataloader)
         for data in bar:
             outputs = runner.model.train_step(data, runner.optim_wrapper)
             for key, value in outputs.items():
                 self.tb_writer.add_scalar('Val/' + key, value.item(), self.step)
             self.step += 1
-        model.train()
+
+        # Save last epoch
+        last_weight_path = os.path.join(runner.work_dir, "last.pt")
+        torch.save(runner.model.state_dict(), last_weight_path)
+
+        # Evaluate recall and FPR
+        self.final_config.update({'weight': last_weight_path})
+        evaluator = Evaluator.build_by_config(cfg=self.final_config)
+        recall_and_fpr_for_all = evaluator.eval()
+        tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
+        for x, tag in zip(recall_and_fpr_for_all, tags):
+            self.tb_writer.add_scalar(tag, x, runner.epoch)
