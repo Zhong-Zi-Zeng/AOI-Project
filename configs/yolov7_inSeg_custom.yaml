@@ -7,8 +7,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_dir: "./data/1500/yoloSeg/original_class_2/train"
-val_dir: "./data/1500/yoloSeg/original_class_2/test"
+train_dir: "./data/500/yoloSeg/original_class_2/train"
+val_dir: "./data/500/yoloSeg/original_class_2/test"
 number_of_class: 2
 class_names:
   - "Pass"
@@ -41,10 +41,9 @@ warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 8
+batch_size: 4
 save_period: 25
 eval_period: 1
-imgsz: [1024, 1024] # [train, test] image size
-use_patch: false
-device: "0"
+imgsz: [1600, 1600] # [train, test] image size
+device: "1"
 

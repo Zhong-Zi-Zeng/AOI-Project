@@ -1,4 +1,4 @@
-_base_: [ "./base/model/CO-DETR/swin-T.yaml", # model
+_base_: [ "./base/model/CO-DETR/r101.yaml", # model
           "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
