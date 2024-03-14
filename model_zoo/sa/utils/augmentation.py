@@ -30,8 +30,10 @@ def create_augmentation(hyp: Optional[dict] = None,
             A.Affine(scale=hyp.get('scale', 1.0),
                      translate_percent=hyp.get('translate', 0),
                      shear=hyp.get('shear', 0),
-                     rotate=hyp.get('degrees', 20)),
-            A.Perspective(scale=hyp.get('perspective', 0.2)),
+                     rotate=hyp.get('degrees', 20),
+                     fit_output=True),
+            A.Perspective(scale=hyp.get('perspective', 0.2), fit_output=True),
+            A.Resize(width=1024, height=1024),
             A.HorizontalFlip(p=hyp.get('fliplr', 0.5)),
             A.VerticalFlip(p=hyp.get('flipud', 0.5)),
             A.ToFloat(max_value=255),
@@ -42,7 +44,7 @@ def create_augmentation(hyp: Optional[dict] = None,
             A.ToFloat(max_value=255)
         ]
     else:
-        raise ValueError("The argument 'mode' must in {'train', 'test'}")
+        raise ValueError("The argument 'mode' must in {'training', 'testing'}")
 
     trans = A.Compose(aug, additional_targets={'mask': 'image'})
     trans_with_bboxes = A.Compose(aug,
