@@ -42,7 +42,7 @@ def test_one_epoch(model: torch.nn.Module,
             predicted_masks = torch.sigmoid(predicted_masks.reshape((-1,))).cpu().numpy()
             predicted_masks = np.where(predicted_masks > 0.1, 0, 1).astype(int)
             precision, recall, f1_score, _ = precision_recall_fscore_support(ground_truth_masks, predicted_masks,
-                                                                             zero_division=0, average='weighted')
+                                                                             zero_division=0, average='macro')
             sum_of_precision += precision
             sum_of_recall += recall
             sum_of_f1_score += f1_score
