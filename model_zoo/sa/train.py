@@ -59,10 +59,10 @@ def train_one_epoch(model: torch.nn.Module,
         pbar.set_description(
             f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item():.7f} | Learning rate:{learning_rates:.7f}")
 
-        tr_image = tr_image.permute(0, 2, 3, 1).cpu().numpy()
-        ground_truth_masks = ground_truth_masks.cpu().numpy()
-        predicted_masks = predicted_masks.detach().cpu().numpy()
-        cv2.imshow('gt', ground_truth_masks[0][0])
-        cv2.imshow('predicted_masks', predicted_masks[0][0])
-        cv2.imshow('input', tr_image[0])
-        cv2.waitKey(0)
+        # tr_image = tr_image.permute(0, 2, 3, 1).cpu().numpy()
+        # ground_truth_masks = ground_truth_masks.cpu().numpy()
+        # predicted_masks = predicted_masks.detach().cpu().numpy()
+        # cv2.imshow('gt', ground_truth_masks[0][0])
+        # cv2.imshow('predicted_masks', predicted_masks[0][0])
+        # cv2.imshow('input', tr_image[0])
+        # cv2.waitKey(0)

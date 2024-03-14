@@ -121,7 +121,6 @@ def main(args, config: dict):
                                             squared_pred=True)
 
     logger.info(colorstr('Start training'))
-    start_time = time.time()
     for epoch in range(start_epoch, config['end_epoch']):
         # Training
         train_one_epoch(model=model,
@@ -151,8 +150,6 @@ def main(args, config: dict):
                 'model_state_dict': model.state_dict()
             }
             torch.save(ckpt, os.path.join(work_dir_path, f"weight_{epoch}" + '.pt'))
-
-    print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 
 
 if __name__ == "__main__":

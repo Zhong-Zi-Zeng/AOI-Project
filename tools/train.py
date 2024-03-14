@@ -7,6 +7,7 @@ from engine.builder import Builder
 from engine.general import get_work_dir_path
 from threading import Thread
 import numpy as np
+import time
 import argparse
 import torch
 import subprocess
@@ -54,4 +55,7 @@ if __name__ == "__main__":
     Thread(target=open_tensorboard).start()
 
     # Training
+    start_time = time.time()
     model.train()
+    print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
+
