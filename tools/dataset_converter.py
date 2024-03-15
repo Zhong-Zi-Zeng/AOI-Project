@@ -1,10 +1,11 @@
 # 只需輸入 coco dataset路徑
 # 轉換成 yoloBbox 或 yoloSeg
 import os
-import sys
 import shutil
 import json
-import itertools
+from tqdm import tqdm
+import time
+
 
 class coco2yoloBbox():
     def __init__(self, coco_path):
@@ -12,9 +13,6 @@ class coco2yoloBbox():
         self.yoloBbox_save_path = coco_path.replace('coco', 'yoloBbox')
         if not os.path.exists(self.yoloBbox_save_path):
             os.makedirs(self.yoloBbox_save_path)
-        else:   # Check
-            print("yolobbox dataset already exists.")
-            sys.exit()
         # The path to the json file in the coco dataset
         self.coco_train = coco_path + '/annotations/instances_train2017.json'
         self.coco_val = coco_path + '/annotations/instances_val2017.json'
@@ -48,8 +46,15 @@ class coco2yoloBbox():
         return (x, y, w, h)
 
     def convert(self):
-        tasks = ['train', 'val']
+        self.yoloBbox_save_path = coco_path.replace('coco', 'yoloBbox')
+        if os.path.exists(self.yoloBbox_save_path):  # Check
+            print("yolobbox dataset already exists.")
+            return
+
+        tasks = tqdm(['train', 'val'])
         for task in tasks:
+            time.sleep(1)
+            tasks.set_description("Processing %s" % task)  # 進度條
 
             data = json.load(open(getattr(self, f'coco_{task}'), 'r'))
 
@@ -79,7 +84,6 @@ class coco2yoloBbox():
                 # 寫入image的相對路徑
                 list_file.write(f'./images/{task}/%s.jpg\n' % (head))
             list_file.close()
-        print('finish!')
 
 
 class coco2yoloSeg():
@@ -88,9 +92,6 @@ class coco2yoloSeg():
         self.yoloSeg_save_path = coco_path.replace('coco', 'yoloSeg')
         if not os.path.exists(self.yoloSeg_save_path):
             os.makedirs(self.yoloSeg_save_path)
-        else:   # Check
-            print("yoloSeg dataset already exists.")
-            sys.exit()
         # The path to the json file in the coco dataset
         self.coco_train = coco_path + '/annotations/instances_train2017.json'
         self.coco_test = coco_path + '/annotations/instances_val2017.json'
@@ -124,8 +125,16 @@ class coco2yoloSeg():
         return polygons
 
     def convert(self):
-        tasks = ['train', 'test']
+        # The storage path of the yoloSeg dataset
+        self.yoloSeg_save_path = coco_path.replace('coco', 'yoloSeg')
+        if os.path.exists(self.yoloSeg_save_path):  # Check
+            print("yoloSeg dataset already exists.")
+            return
+
+        tasks = tqdm(['train', 'test'])
         for task in tasks:
+            time.sleep(1)
+            tasks.set_description("Processing %s" % task)  # 進度條
 
             data = json.load(open(getattr(self, f'coco_{task}'), 'r'))
 
@@ -149,12 +158,12 @@ class coco2yoloSeg():
                         flattened_polygons = ' '.join(str(coord) for coord in polygons)
                         f_txt.write("%s %s\n" % (id_map[ann["category_id"]], flattened_polygons))
                 f_txt.close()
-        print('finish!')
+
 
 
 if __name__ == '__main__':
     coco_path = './data/test/coco/original_class_2'  # input
-    task = 'yolov7_inSeg'
+    task = 'yolov7_obj'
 
     if task == 'yolov7_obj':
         conv = coco2yoloBbox(coco_path)
