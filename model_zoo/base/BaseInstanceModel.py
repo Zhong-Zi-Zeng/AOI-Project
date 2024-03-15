@@ -93,6 +93,7 @@ class BaseInstanceModel(BaseModel):
                         bbox[1] += y_offset
 
                         polygon = rle_to_polygon(rle)
+                        polygon = np.hstack(polygon)
                         polygon = np.array(polygon, dtype=np.float32).reshape((-1, 2))
                         polygon[:, 0] += x_offset
                         polygon[:, 1] += y_offset

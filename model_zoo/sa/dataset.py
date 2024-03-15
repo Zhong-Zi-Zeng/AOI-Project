@@ -59,7 +59,7 @@ class CustomDataset(Dataset):
 
     def _filter_image(self) -> list[int]:
         """Filter out images that didn't has label"""
-        all_img_ids = self.coco.getImgIds()
+        all_img_ids = self.coco.getImgIds(catIds=[1])
         result = []
         for img_id in all_img_ids:
             ann_ids = self.coco.getAnnIds(imgIds=[img_id])
@@ -67,6 +67,28 @@ class CustomDataset(Dataset):
             if len(ann_info):
                 result.append(img_id)
         return result
+
+    def _process_annotation(self,
+                            ann: dict,
+                            polygons: list,
+                            gt_mask: np.ndarray,
+                            category_id: list):
+        """
+           將label轉換為多邊形，並更新gt_mask和類別ID列表。
+
+           Args:
+               ann (dict): COCO數據集中的注釋字典。
+               polygons (list): 存儲多邊形的列表。
+               gt_mask (numpy.ndarray): 存儲合併後的mask的布爾數組。
+               category_id (list): 存儲類別ID的列表。
+
+           Returns:
+               None
+           """
+        mask = self.coco.annToMask(ann).astype(bool)
+        polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
+        np.logical_or(mask, gt_mask, out=gt_mask)
+        category_id.append(ann['category_id'])
 
     @staticmethod
     def _get_center_points_from_mask(mask: np.ndarray) -> list:
@@ -210,17 +232,16 @@ class CustomDataset(Dataset):
 
         # Collate polygon、mask、category
         if self.use_boxes or self.use_points:
-            ann = random.choice(ann_info)
-            mask = self.coco.annToMask(ann).astype(bool)
-            polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
-            gt_mask = np.logical_or(mask, gt_mask)
-            category_id.append(ann['category_id'])
+            while True:
+                ann = random.choice(ann_info)
+                if ann['category_id'] == 1:
+                    break
+            self._process_annotation(ann, polygons, gt_mask, category_id)
         else:
             for ann in ann_info:
-                mask = self.coco.annToMask(ann).astype(bool)
-                polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
-                gt_mask = np.logical_or(mask, gt_mask)
-                category_id.append(ann['category_id'])
+                if ann['category_id'] != 1:
+                    continue
+                self._process_annotation(ann, polygons, gt_mask, category_id)
 
         gt_mask = gt_mask.astype(np.uint8) * 255
         points = []
@@ -236,8 +257,9 @@ class CustomDataset(Dataset):
             tr_image, tr_mask = self.augment(image, gt_mask)
 
         # avoid error
-        if self.use_boxes and len(boxes) == 0:
-            print(f"Could not find label in {image_path}.")
+        if (self.use_boxes and len(boxes) == 0) or \
+            (self.use_points and len(points) == 0):
+            print(f"Could not find label in {image_path} after augmentation.")
             return self.__getitem__(idx + 1)
 
         return {
@@ -275,7 +297,7 @@ if __name__ == "__main__":
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     use_points = False
-    use_boxes = True
+    use_boxes = False
 
     coco_root = Path(config['coco_root']) / 'train2017'
     coco_ann_file = Path(config['coco_root']) / "annotations" / "instances_train2017.json"
@@ -295,17 +317,17 @@ if __name__ == "__main__":
         tr_image = batch['tr_image'][0].cpu().numpy()
         original_image = batch['original_image'][0]
         mask = batch['gt_mask'][0].cpu().numpy()
-        #
+
         tr_image = cv2.resize(tr_image, (1024, 1024))
         original_image = cv2.resize(original_image, (1024, 1024))
         # print(batch['boxes'])
-        bboxes = batch['boxes'][0]
+        # bboxes = batch['boxes'][0]
         # print(bboxes)
         # points = batch['points'][0]
         # print(batch['points'])
-        for bbox in bboxes:
-            cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
-                          thickness=1, color=(0, 255, 255))
+        # for bbox in bboxes:
+        #     cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
+        #                   thickness=1, color=(0, 255, 255))
 
         # for point in points:
         #     cv2.circle(tr_image, (int(point[0]), int(point[1])), thickness=1, color=(0, 255, 255), radius=3)

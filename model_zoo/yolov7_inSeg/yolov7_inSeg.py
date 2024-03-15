@@ -11,6 +11,7 @@ from utils.augmentations import letterbox
 from utils.segment.general import process_mask, scale_masks, masks2segments
 from utils.torch_utils import select_device
 from model_zoo.base.BaseInstanceModel import BaseInstanceModel
+from tools.dataset_converter import coco2yoloSeg
 from engine.timer import TIMER
 from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, polygon_to_rle, check_path)
 import numpy as np
@@ -24,10 +25,16 @@ class Yolov7inSeg(BaseInstanceModel):
         self.cfg = cfg
 
     def _config_transform(self):
+        # # Convert coco format to yolo instance segmentation format
+        # converter = coco2yoloSeg(coco_path=self.cfg["coco_root"])
+        # converter.convert()
+
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
         data_file['train'] = os.path.join(os.getcwd(), self.cfg['train_dir'])
         data_file['val'] = os.path.join(os.getcwd(), self.cfg['val_dir'])
+        # data_file['train'] = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'train')
+        # data_file['val'] = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'test')
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
         self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')

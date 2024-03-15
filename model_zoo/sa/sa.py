@@ -127,9 +127,9 @@ class SA(BaseSemanticModel):
                                                         size=original_image.shape[:2],
                                                         mode='bilinear',
                                                         align_corners=False)  # [1, 1, H, W]
+
             predicted_masks = torch.sigmoid(predicted_masks[0][0])  # [H, W]
             predicted_masks = predicted_masks.detach().cpu().numpy()  # [H, W]
-            predicted_masks = np.clip(predicted_masks, 0, 1)  # [H, W]
             predicted_masks = np.where(predicted_masks > conf_thres, 255, 0).astype(np.uint8)  # [H, W]
             polygons = mask_to_polygon(predicted_masks)
 
