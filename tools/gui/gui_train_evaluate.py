@@ -175,22 +175,6 @@ class MyWidget(QtWidgets.QWidget):
         # coco_root
         self.input_box1('coco_root', 140, 'Path to coco dataset:', default=False)
 
-        # training dataset：folder -> yolov7-inSeg
-        self.input_box1('train_dataset_folder', 180, 'Path to training folder:', default=True)
-            # default：yolov7-obj
-
-        # test dataset：folder -> yolov7-inSeg
-        self.input_box1('test_dataset_folder', 220, 'Path to test folder:', default=True)
-            # default：yolov7-obj
-
-        # training dataset：txt -> yolov7-obj
-        self.input_box1('train_dataset_txt', 260, 'Path to train txt file:', default=False, File=True)
-            # default：yolov7-obj
-
-        # test dataset：txt -> yolov7-obj
-        self.input_box1('test_dataset_txt', 300, 'Path to test txt file:', default=False, File=True)
-            # default：yolov7-obj
-
         # =========================================
         # Augmentation
         self.label_hyp = QtWidgets.QLabel(self)  # Label
@@ -201,58 +185,58 @@ class MyWidget(QtWidgets.QWidget):
                                         font-weight:bold;
                                         font-family:monospace;
                                         ''')
-        self.label_hyp.move(5, 380)
+        self.label_hyp.move(5, 200)
 
         # HSV-Hue
-        self.input_box2('hsv_h', 50, 200, 420, 'hsv_h:', '0.15')
+        self.input_box2('hsv_h', 50, 200, 240, 'hsv_h:', '0.15')
             # default, hsv_h=0.15
 
         # HSV-Saturation
-        self.input_box2('hsv_s', 50, 200, 460, 'hsv_s:', '0.7')
+        self.input_box2('hsv_s', 50, 200, 280, 'hsv_s:', '0.7')
             # default, hsv_s=0.7
 
         # HSV-Value
-        self.input_box2('hsv_v', 50, 200, 500, 'hsv_v:', '0.8')
+        self.input_box2('hsv_v', 50, 200, 320, 'hsv_v:', '0.8')
             # default, hsv_v=0.8
 
         # rotation
-        self.input_box2('degrees', 50, 200, 540, 'degrees:', '0.')
+        self.input_box2('degrees', 50, 200, 360, 'degrees:', '0.')
             # default, degrees=0.
 
         # translation
-        self.input_box2('translate', 50, 200, 580, 'translate:', '0.2')
+        self.input_box2('translate', 50, 200, 400, 'translate:', '0.2')
             # default, translate=0.2
 
         # scale
-        self.input_box2('scale', 50, 200, 620, 'scale:', '0.9')
+        self.input_box2('scale', 50, 200, 440, 'scale:', '0.9')
             # default, scale=0.9
 
         # shear
-        self.input_box2('shear', 50, 200, 660, 'shear:', '0.')
+        self.input_box2('shear', 50, 200, 480, 'shear:', '0.')
             # default, shear=0.
 
         # perspective
-        self.input_box2('perspective', 50, 200, 700, 'perspective:', '0.')
+        self.input_box2('perspective', 50, 200, 520, 'perspective:', '0.')
             # default, perspective=0.
 
         # flip up-down
-        self.input_box2('flipud', 50, 200, 740, 'flipud:', '0.')
+        self.input_box2('flipud', 50, 200, 560, 'flipud:', '0.')
             # default, flipud=0.
 
         # flip left-right
-        self.input_box2('fliplr', 50, 200, 780, 'fliplr:', '0.5')
+        self.input_box2('fliplr', 50, 200, 600, 'fliplr:', '0.5')
             # default, fliplr=0.5
 
         # mosaic
-        self.input_box2('mosaic', 50, 200, 820, 'mosaic:', '1.')
+        self.input_box2('mosaic', 50, 200, 640, 'mosaic:', '1.')
             # default, mosaic=1.
 
         # mixup
-        self.input_box2('mixup', 50, 200, 860, 'mixup:', '0.15')
+        self.input_box2('mixup', 50, 200, 680, 'mixup:', '0.15')
             # default, mixup=0.15
 
         # copy-paste
-        self.input_box2('copy_paste', 50, 200, 900, 'copy_paste:', '0.0')
+        self.input_box2('copy_paste', 50, 200, 720, 'copy_paste:', '0.0')
             # default, copy_paste=0.0
 
         # =========================================
@@ -265,51 +249,51 @@ class MyWidget(QtWidgets.QWidget):
                                 font-weight:bold;
                                 font-family:monospace;
                                 ''')
-        self.label_hyp.move(400, 380)
+        self.label_hyp.move(400, 200)
 
         # optimizer
         addItems = ['Adam', 'AdamW', 'SGD']
-        self.drop_down_list2('optimizer', 420, 'optimizer:', addItems, x1=450, x2=620, default=2)  # 下拉選單
+        self.drop_down_list2('optimizer', 240, 'optimizer:', addItems, x1=450, x2=620, default=2)  # 下拉選單
             # default, optimizer=SGD
 
         # weight
-        self.input_box1('weight', 460, 'weight file path:', label_position=450, x1=620, x2=750, default=False, font_size=18, input_size=100, File=True)
+        self.input_box1('weight', 280, 'weight file path:', label_position=450, x1=620, x2=750, default=False, font_size=18, input_size=100, File=True)
 
         # start_epoch
-        self.input_box2('start_epoch', 450, 620, 500, 'start epoch:', '0')
+        self.input_box2('start_epoch', 450, 620, 320, 'start epoch:', '0')
             # default, start_epoch=0
 
         # end_epoch
-        self.input_box2('end_epoch', 450, 620, 540, 'end epoch:', '50')
+        self.input_box2('end_epoch', 450, 620, 360, 'end epoch:', '50')
             # default, end_epoch=50
 
         # warmup_epoch
-        self.input_box2('warmup_epoch', 450, 620, 580, 'warmup epoch:', '3')
+        self.input_box2('warmup_epoch', 450, 620, 400, 'warmup epoch:', '3')
             # default, warmup_epoch=3
 
         # initial_lr
-        self.input_box2('initial_lr', 450, 620, 620, 'initial lr:', '0.003')
+        self.input_box2('initial_lr', 450, 620, 440, 'initial lr:', '0.003')
             # default, initial_lr=0.003
 
         # lr (Learning rate at the end of warm-up)
-        self.input_box2('lr', 450, 620, 660, 'lr:', '0.01')
+        self.input_box2('lr', 450, 620, 480, 'lr:', '0.01')
             # default, lr=0.01
 
         # minimum_lr (Learning rate from the 50th epoch)
-        self.input_box2('minimum_lr', 450, 620, 700, 'minimum lr:', '0.01')
+        self.input_box2('minimum_lr', 450, 620, 520, 'minimum lr:', '0.01')
             # default, minimum_lr=0.001
 
         # batch_size
-        self.input_box2('batch_size', 450, 620, 740, 'batch size:', '8')
+        self.input_box2('batch_size', 450, 620, 560, 'batch size:', '8')
             # default, batch_size=8
 
         # imgsz
-        self.input_box2('imgsz', 450, 620, 780, 'resize:', '1024')
+        self.input_box2('imgsz', 450, 620, 600, 'resize:', '1024')
             # default, imgsz=1024
 
         # device
         addItems = ['GPU 0', 'GPU 1', 'GPU 2', 'GPU 3', 'CPU']
-        self.drop_down_list2('device', 820, 'device:', addItems, x1=450, x2=620, default=0)  # 下拉選單
+        self.drop_down_list2('device', 640, 'device:', addItems, x1=450, x2=620, default=0)  # 下拉選單
             # default, device=0
 
         # Start -> run
@@ -321,9 +305,9 @@ class MyWidget(QtWidgets.QWidget):
                                         font-weight:bold;
                                         font-family:monospace;
                                         ''')
-        self.run_label.move(5, 940)
+        self.run_label.move(5, 780)
         self.run_btn1 = QtWidgets.QPushButton(self)  # Button
-        self.run_btn1.setGeometry(150, 960, 150, 30)
+        self.run_btn1.setGeometry(150, 820, 150, 30)
         self.run_btn1.setText('Training')
         self.run_btn1.setStyleSheet('''
                                 QPushButton {
@@ -340,7 +324,7 @@ class MyWidget(QtWidgets.QWidget):
                                 ''')
         self.run_btn1.clicked.connect(lambda: self.run_program('train'))
         self.run_btn2 = QtWidgets.QPushButton(self)  # Button
-        self.run_btn2.setGeometry(450, 960, 150, 30)
+        self.run_btn2.setGeometry(450, 820, 150, 30)
         self.run_btn2.setText('Evaluation')
         self.run_btn2.setStyleSheet('''
                                         QPushButton {
@@ -380,106 +364,32 @@ class MyWidget(QtWidgets.QWidget):
             self.box_model.clear()
             self.box_model.addItems(Obj_list)
 
-    def control_model(self):  # model -> backbone, training dataset, test dataset
+    def control_model(self):  # model -> backbone
         model_no_backbone = ['YOLOv7', 'YOLOv7-X', 'YOLOv7-W6', 'YOLOv7-E6', 'YOLOv7-D6', 'YOLOv7-E6E', 'YOLOv7 Instance Segmentation']
-        dataset_txt = ['YOLOv7', 'YOLOv7-X', 'YOLOv7-W6', 'YOLOv7-E6', 'YOLOv7-D6', 'YOLOv7-E6E']
 
         selected_model = self.box_model.currentText()
         if selected_model in model_no_backbone:
             self.box_backbone.setDisabled(True)
-
-            if selected_model in dataset_txt: # txt
-                self.input_train_dataset_folder.setDisabled(True)
-                self.btn_train_dataset_folder.setDisabled(True)
-                self.input_test_dataset_folder.setDisabled(True)
-                self.btn_test_dataset_folder.setDisabled(True)
-                self.input_train_dataset_txt.setDisabled(False)
-                self.btn_train_dataset_txt.setDisabled(False)
-                self.input_test_dataset_txt.setDisabled(False)
-                self.btn_test_dataset_txt.setDisabled(False)
-            elif selected_model == 'YOLOv7 Instance Segmentation':  # folder
-                self.input_train_dataset_folder.setDisabled(False)
-                self.btn_train_dataset_folder.setDisabled(False)
-                self.input_test_dataset_folder.setDisabled(False)
-                self.btn_test_dataset_folder.setDisabled(False)
-                self.input_train_dataset_txt.setDisabled(True)
-                self.btn_train_dataset_txt.setDisabled(True)
-                self.input_test_dataset_txt.setDisabled(True)
-                self.btn_test_dataset_txt.setDisabled(True)
-            else:
-                self.input_train_dataset_folder.setDisabled(True)
-                self.btn_train_dataset_folder.setDisabled(True)
-                self.input_test_dataset_folder.setDisabled(True)
-                self.btn_test_dataset_folder.setDisabled(True)
-                self.input_train_dataset_txt.setDisabled(True)
-                self.btn_train_dataset_txt.setDisabled(True)
-                self.input_test_dataset_txt.setDisabled(True)
-                self.btn_test_dataset_txt.setDisabled(True)
         elif selected_model == 'CO-DETR':
             self.box_backbone.setDisabled(False)
             self.box_backbone.clear()
             self.box_backbone.addItems(['ResNet-50'])
-
-            self.input_train_dataset_folder.setDisabled(True)
-            self.btn_train_dataset_folder.setDisabled(True)
-            self.input_test_dataset_folder.setDisabled(True)
-            self.btn_test_dataset_folder.setDisabled(True)
-            self.input_train_dataset_txt.setDisabled(True)
-            self.btn_train_dataset_txt.setDisabled(True)
-            self.input_test_dataset_txt.setDisabled(True)
-            self.btn_test_dataset_txt.setDisabled(True)
         elif selected_model == 'EfficientDet':
             self.box_backbone.setDisabled(False)
             self.box_backbone.clear()
             self.box_backbone.addItems(['EfficientNet-d0', 'EfficientNet-d3'])
-
-            self.input_train_dataset_folder.setDisabled(True)
-            self.btn_train_dataset_folder.setDisabled(True)
-            self.input_test_dataset_folder.setDisabled(True)
-            self.btn_test_dataset_folder.setDisabled(True)
-            self.input_train_dataset_txt.setDisabled(True)
-            self.btn_train_dataset_txt.setDisabled(True)
-            self.input_test_dataset_txt.setDisabled(True)
-            self.btn_test_dataset_txt.setDisabled(True)
         elif selected_model == 'Segment Anything':
             self.box_backbone.setDisabled(False)
             self.box_backbone.clear()
             self.box_backbone.addItems(['vit-b', 'vit-l', 'vit-h'])
-
-            self.input_train_dataset_folder.setDisabled(True)
-            self.btn_train_dataset_folder.setDisabled(True)
-            self.input_test_dataset_folder.setDisabled(True)
-            self.btn_test_dataset_folder.setDisabled(True)
-            self.input_train_dataset_txt.setDisabled(True)
-            self.btn_train_dataset_txt.setDisabled(True)
-            self.input_test_dataset_txt.setDisabled(True)
-            self.btn_test_dataset_txt.setDisabled(True)
         elif selected_model == 'Cascade Mask RCNN':
             self.box_backbone.setDisabled(False)
             self.box_backbone.clear()
             self.box_backbone.addItems(['ResNet-50', 'ResNet-101', 'ResNeXt-101'])
-
-            self.input_train_dataset_folder.setDisabled(True)
-            self.btn_train_dataset_folder.setDisabled(True)
-            self.input_test_dataset_folder.setDisabled(True)
-            self.btn_test_dataset_folder.setDisabled(True)
-            self.input_train_dataset_txt.setDisabled(True)
-            self.btn_train_dataset_txt.setDisabled(True)
-            self.input_test_dataset_txt.setDisabled(True)
-            self.btn_test_dataset_txt.setDisabled(True)
         elif selected_model == 'Mask2Former':
             self.box_backbone.setDisabled(False)
             self.box_backbone.clear()
             self.box_backbone.addItems(['ResNet-50', 'ResNet-101', 'Swin-T'])
-
-            self.input_train_dataset_folder.setDisabled(True)
-            self.btn_train_dataset_folder.setDisabled(True)
-            self.input_test_dataset_folder.setDisabled(True)
-            self.btn_test_dataset_folder.setDisabled(True)
-            self.input_train_dataset_txt.setDisabled(True)
-            self.btn_train_dataset_txt.setDisabled(True)
-            self.input_test_dataset_txt.setDisabled(True)
-            self.btn_test_dataset_txt.setDisabled(True)
 
     # def modify_cfg(self, train_or_evaluate):
     #     # Mapping
@@ -507,8 +417,6 @@ class MyWidget(QtWidgets.QWidget):
     #         cfg = yaml.safe_load(cfg_file)
     #         # path
     #     cfg['coco_root'] = self.input_coco_root.text()
-    #     cfg['train_txt'] = self.input_train_dataset_txt.text()
-    #     cfg['val_txt'] = self.input_test_dataset_txt.text()
     #         # aug
     #     cfg['hsv_h'] = float(self.input_hsv_h.text())
     #     cfg['hsv_s'] = float(self.input_hsv_s.text())

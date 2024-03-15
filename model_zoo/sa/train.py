@@ -17,10 +17,10 @@ def train_one_epoch(model: torch.nn.Module,
     for b, batch in enumerate(pbar):
         points = batch.get('points')
         boxes = batch.get('boxes')
-        tr_image = batch.get('tr_image').permute(0, 3, 1, 2).to(model.device)
+        tr_image = batch.get('tr_image').permute(0, 3, 1, 2).to(model.device)  # [B, H, W, C] to [B, C, H, W]
+
         if points is not None:
             points = torch.from_numpy(np.array(points)).to(model.device)  # [B, number of point, 2]
-            # output a mask
             points = points[:, None, ...]  # [B, 1, number of point, 2]
 
         if boxes is not None:

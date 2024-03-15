@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import random
 from typing import Optional
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
@@ -11,9 +13,6 @@ import torch
 import albumentations as A
 import cv2
 import yaml
-
-torch.manual_seed(10)
-np.random.seed(10)
 
 
 def to_torch(func):
@@ -56,6 +55,40 @@ class CustomDataset(Dataset):
         self.trans_with_bboxes = trans_with_bboxes
         self.trans_with_points = trans_with_points
         self.trans_with_bboxes_points = trans_with_bboxes_points
+        self.img_ids = self._filter_image()
+
+    def _filter_image(self) -> list[int]:
+        """Filter out images that didn't has label"""
+        all_img_ids = self.coco.getImgIds(catIds=[1])
+        result = []
+        for img_id in all_img_ids:
+            ann_ids = self.coco.getAnnIds(imgIds=[img_id])
+            ann_info = self.coco.loadAnns(ids=ann_ids)
+            if len(ann_info):
+                result.append(img_id)
+        return result
+
+    def _process_annotation(self,
+                            ann: dict,
+                            polygons: list,
+                            gt_mask: np.ndarray,
+                            category_id: list):
+        """
+           將label轉換為多邊形，並更新gt_mask和類別ID列表。
+
+           Args:
+               ann (dict): COCO數據集中的注釋字典。
+               polygons (list): 存儲多邊形的列表。
+               gt_mask (numpy.ndarray): 存儲合併後的mask的布爾數組。
+               category_id (list): 存儲類別ID的列表。
+
+           Returns:
+               None
+           """
+        mask = self.coco.annToMask(ann).astype(bool)
+        polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
+        np.logical_or(mask, gt_mask, out=gt_mask)
+        category_id.append(ann['category_id'])
 
     @staticmethod
     def _get_center_points_from_mask(mask: np.ndarray) -> list:
@@ -170,7 +203,7 @@ class CustomDataset(Dataset):
                 transformed_result['mask']]
 
     def __len__(self):
-        return len(self.coco.getImgIds())
+        return len(self.img_ids)
 
     def __getitem__(self, idx):
         """
@@ -184,26 +217,31 @@ class CustomDataset(Dataset):
             }
         """
         # =========================Input image=========================
-        image_info = self.coco.loadImgs(ids=[idx])[0]
+        image_info = self.coco.loadImgs(ids=[self.img_ids[idx]])[0]
         image_path = Path(self.root) / image_info['file_name']
         height, width = image_info['height'], image_info['width']
         image = cv2.imread(str(image_path))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # =========================Label=========================
-        ann_ids = self.coco.getAnnIds(imgIds=[idx])
+        ann_ids = self.coco.getAnnIds(imgIds=[self.img_ids[idx]])
         ann_info = self.coco.loadAnns(ids=ann_ids)
-
         gt_mask = np.zeros(shape=(height, width), dtype=bool)
         polygons = []
         category_id = []
 
         # Collate polygon、mask、category
-        for ann in ann_info:
-            mask = self.coco.annToMask(ann).astype(bool)
-            polygons.append(self._get_polygon_from_mask(mask.astype(np.uint8)))
-            gt_mask = np.logical_or(mask, gt_mask)
-            category_id.append(ann['category_id'])
+        if self.use_boxes or self.use_points:
+            while True:
+                ann = random.choice(ann_info)
+                if ann['category_id'] == 1:
+                    break
+            self._process_annotation(ann, polygons, gt_mask, category_id)
+        else:
+            for ann in ann_info:
+                if ann['category_id'] != 1:
+                    continue
+                self._process_annotation(ann, polygons, gt_mask, category_id)
 
         gt_mask = gt_mask.astype(np.uint8) * 255
         points = []
@@ -218,6 +256,12 @@ class CustomDataset(Dataset):
         else:
             tr_image, tr_mask = self.augment(image, gt_mask)
 
+        # avoid error
+        if (self.use_boxes and len(boxes) == 0) or \
+            (self.use_points and len(points) == 0):
+            print(f"Could not find label in {image_path} after augmentation.")
+            return self.__getitem__(idx + 1)
+
         return {
             'tr_image': tr_image,
             'original_image': image,
@@ -226,47 +270,30 @@ class CustomDataset(Dataset):
             'boxes': boxes
         }
 
-    def collate_fn(self, batch: list):
-        def convert_to_array(batch):
+    @staticmethod
+    def collate_fn(batch: list):
+        try:
             tr_images = torch.stack([item['tr_image'] for item in batch])
             gt_mask = torch.stack([item['gt_mask'] > 0 for item in batch]).to(float)
             original_images = [item['original_image'] for item in batch]
             points = np.stack([np.array(item['points']) for item in batch])
             boxes = np.stack([np.array(item['boxes']) for item in batch])
+        except:
+            raise ValueError("After augmentation causes bbox or point disappear,"
+                             " please adjust 'translate', 'scale', 'shear' and 'perspective' to more small value.")
 
-            return {
-                'tr_image': tr_images,
-                'original_image': original_images,
-                'gt_mask': gt_mask,
-                'points': None if all(len(point) == 0 for point in points) else points,
-                'boxes': None if all(len(box) == 0 for box in boxes) else boxes,
-            }
-
-        if not self.use_points and not self.use_boxes:
-            return convert_to_array(batch)
-
-        if self.use_points:
-            max_points = max(len(item['points']) for item in batch)
-            for item in batch:
-                item['points'] = [[0, 0]] if len(item['points']) == 0 else item['points']
-                num_point_padding = max_points - len(item['points'])
-                if num_point_padding > 0:
-                    item['points'] = np.vstack([item['points'], np.zeros((num_point_padding, 2))])
-
-        if self.use_boxes:
-            max_boxes = max(len(item['boxes']) for item in batch)
-            for item in batch:
-                item['boxes'] = [[0, 0, 0, 0]] if len(item['boxes']) == 0 else item['boxes']
-                num_box_padding = max_boxes - len(item['boxes'])
-                if num_box_padding > 0:
-                    item['boxes'] = np.vstack([item['boxes'], np.zeros((num_box_padding, 4))])
-
-        return convert_to_array(batch)
+        return {
+            'tr_image': tr_images,
+            'original_image': original_images,
+            'gt_mask': gt_mask,
+            'points': None if all(len(point) == 0 for point in points) else points,
+            'boxes': None if all(len(box) == 0 for box in boxes) else boxes,
+        }
 
 
 # For test
 if __name__ == "__main__":
-    with open('configs/config.yaml', encoding='utf-8') as f:
+    with open('configs/vit-b.yaml', encoding='utf-8') as f:
         config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     use_points = False
@@ -278,36 +305,34 @@ if __name__ == "__main__":
                                   ann_file=coco_ann_file,
                                   use_points=use_points,
                                   use_boxes=use_boxes,
-                                  **create_augmentation())
+                                  **create_augmentation(hyp=config))
 
     train_dataloader = DataLoader(train_dataset,
-                                  batch_size=1,
+                                  batch_size=4,
                                   shuffle=False,
-                                  num_workers=8,
+                                  num_workers=4,
                                   collate_fn=train_dataset.collate_fn)
     pbar = tqdm(train_dataloader)
-    for batch in pbar:
+    for idx, batch in enumerate(pbar):
         tr_image = batch['tr_image'][0].cpu().numpy()
         original_image = batch['original_image'][0]
         mask = batch['gt_mask'][0].cpu().numpy()
 
-        print(np.max(mask))
-
         tr_image = cv2.resize(tr_image, (1024, 1024))
         original_image = cv2.resize(original_image, (1024, 1024))
+        # print(batch['boxes'])
         # bboxes = batch['boxes'][0]
+        # print(bboxes)
         # points = batch['points'][0]
         # print(batch['points'])
         # for bbox in bboxes:
         #     cv2.rectangle(tr_image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])),
         #                   thickness=1, color=(0, 255, 255))
-        #
+
         # for point in points:
         #     cv2.circle(tr_image, (int(point[0]), int(point[1])), thickness=1, color=(0, 255, 255), radius=3)
-        #
+
         cv2.imshow('', tr_image)
         cv2.imshow('ori', original_image)
         cv2.imshow('mask', mask)
         cv2.waitKey(0)
-        # print()
-    # pass

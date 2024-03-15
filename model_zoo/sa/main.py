@@ -42,21 +42,21 @@ def main(args, config: dict):
     tb_writer = SummaryWriter(log_dir=work_dir_path + '/log')  # Tensorboard
 
     # Now not support use boxes and use points be the prompt at the same time
-    if config['use_points'] and config['use_boxes']:
-        raise ValueError("Now not support use boxes and use points be the prompt at the same time")
+    # if config['use_points'] and config['use_boxes']:
+    #     raise ValueError("Now not support use boxes and use points be the prompt at the same time")
 
     # dataset
     train_dataset = CustomDataset(root=Path(config['coco_root']) / "train2017",
                                   ann_file=Path(config['coco_root']) / "annotations/instances_train2017.json",
                                   use_points=config['use_points'],
                                   use_boxes=config['use_boxes'],
-                                  **create_augmentation(mode='training'))
+                                  **create_augmentation(hyp=config, mode='training'))
 
     test_dataset = CustomDataset(root=Path(config['coco_root']) / "val2017",
                                  ann_file=Path(config['coco_root']) / "annotations/instances_val2017.json",
                                  use_points=False,
                                  use_boxes=False,
-                                 **create_augmentation(mode='testing'))
+                                 **create_augmentation(hyp=config, mode='testing'))
 
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=config['batch_size'],
@@ -68,7 +68,7 @@ def main(args, config: dict):
                                  batch_size=1,
                                  shuffle=False,
                                  num_workers=config['num_workers'],
-                                 collate_fn=test_dataset.collate_fn)
+                                 collate_fn=train_dataset.collate_fn)
 
     # model
     device = config['device']
@@ -121,7 +121,6 @@ def main(args, config: dict):
                                             squared_pred=True)
 
     logger.info(colorstr('Start training'))
-    start_time = time.time()
     for epoch in range(start_epoch, config['end_epoch']):
         # Training
         train_one_epoch(model=model,
@@ -151,8 +150,6 @@ def main(args, config: dict):
                 'model_state_dict': model.state_dict()
             }
             torch.save(ckpt, os.path.join(work_dir_path, f"weight_{epoch}" + '.pt'))
-
-    print(f'\nAll training processes took {(time.time() - start_time) / 3600:.2f} hours.')
 
 
 if __name__ == "__main__":
