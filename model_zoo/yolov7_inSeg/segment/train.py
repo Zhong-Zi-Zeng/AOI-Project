@@ -342,7 +342,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             scaler.scale(loss).backward()
 
             # record value on tensorboard
-            tb_writer.add_scalar('Training loss', loss.item(), ni)
+            # tb_writer.add_scalar('Training loss', loss.item(), ni)
 
             # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
             if ni - last_opt_step >= accumulate:
@@ -399,8 +399,6 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                                 compute_loss=compute_loss,
                                                 mask_downsample_ratio=mask_ratio,
                                                 overlap=overlap)
-
-                tb_writer.add_scalar('Validation loss', np.sum(np.array(results).reshape(1, -1)[-4:]), epoch)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]

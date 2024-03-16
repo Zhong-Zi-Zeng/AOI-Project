@@ -23,7 +23,8 @@ class ValidationHook(Hook):
             setattr(self, "tb_writer", SummaryWriter(log_dir=os.path.join(runner.work_dir, 'log')))
 
         if not hasattr(self, "final_config"):
-            setattr(self, "final_config", load_yaml(os.path.join(runner.work_dir.replace(" ", ""), 'final_config.yaml')))
+            setattr(self, "final_config",
+                    load_yaml(os.path.join(runner.work_dir.replace(" ", ""), 'final_config.yaml')))
 
         model = runner.model
         model.eval()
@@ -37,14 +38,16 @@ class ValidationHook(Hook):
                 self.tb_writer.add_scalar('Val/' + key, value.item(), self.step)
             self.step += 1
 
-        # Save last epoch
-        last_weight_path = os.path.join(runner.work_dir, "last.pt")
-        torch.save(runner.model.state_dict(), last_weight_path)
-
         # Evaluate recall and FPR
-        self.final_config.update({'weight': last_weight_path})
-        evaluator = Evaluator.build_by_config(cfg=self.final_config)
-        recall_and_fpr_for_all = evaluator.eval()
-        tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
-        for x, tag in zip(recall_and_fpr_for_all, tags):
-            self.tb_writer.add_scalar(tag, x, runner.epoch)
+        if (runner.epoch + 1) % self.final_config == 0:
+            # Save last epoch
+            last_weight_path = os.path.join(runner.work_dir, "last.pt")
+            torch.save(runner.model.state_dict(), last_weight_path)
+
+            # Evaluate
+            self.final_config.update({'weight': last_weight_path})
+            evaluator = Evaluator.build_by_config(cfg=self.final_config)
+            recall_and_fpr_for_all = evaluator.eval()
+            tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
+            for x, tag in zip(recall_and_fpr_for_all, tags):
+                self.tb_writer.add_scalar(tag, x, runner.epoch)
