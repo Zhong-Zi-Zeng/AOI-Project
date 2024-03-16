@@ -28,7 +28,6 @@ class ValidationHook(Hook):
 
         model = runner.model
         model.eval()
-        print("Evaluate:")
 
         # Validation loss
         bar = tqdm(runner.val_dataloader)
@@ -39,7 +38,9 @@ class ValidationHook(Hook):
             self.step += 1
 
         # Evaluate recall and FPR
-        if (runner.epoch + 1) % self.final_config == 0:
+        if (runner.epoch + 1) % self.final_config['eval_period'] == 0:
+            print("Evaluate:")
+
             # Save last epoch
             last_weight_path = os.path.join(runner.work_dir, "last.pt")
             torch.save(runner.model.state_dict(), last_weight_path)

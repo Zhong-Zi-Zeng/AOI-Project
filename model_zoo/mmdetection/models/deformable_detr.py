@@ -11,13 +11,18 @@ import numpy as np
 import cv2
 
 
-class CODETR(BaseMMdetection, BaseDetectModel):
+class DeformableDETR(BaseMMdetection, BaseDetectModel):
     def __init__(self, cfg: dict):
         self.cfg = cfg
         optimizer = self._build_optimizer(
             weight_decay=0.0001,
             clip_grad=dict(max_norm=0.1, norm_type=2),
-            paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)})
+            paramwise_cfg=dict(
+                custom_keys={
+                    'backbone': dict(lr_mult=0.1),
+                    'sampling_offsets': dict(lr_mult=0.1),
+                    'reference_points': dict(lr_mult=0.1)
+                })
         )
         transforms = self._build_augmentation()
         BaseMMdetection.__init__(self, cfg, optimizer, transforms)
