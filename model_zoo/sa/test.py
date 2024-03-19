@@ -1,10 +1,15 @@
+import os
+import sys
+
+sys.path.append(os.path.join(os.getcwd()))
+
 import numpy as np
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch import nn
 from sklearn.metrics import precision_recall_fscore_support
-import time
-import cv2
+from engine.general import load_yaml
+from tools.evaluation import Evaluator
 import torch
 
 
@@ -12,7 +17,8 @@ def test_one_epoch(model: torch.nn.Module,
                    test_dataloader: DataLoader,
                    epoch,
                    loss_function,
-                   tb_writer):
+                   tb_writer,
+                   work_dir_path):
     model.eval()
     pbar = tqdm(test_dataloader)
     sum_of_loss = 0
@@ -56,3 +62,15 @@ def test_one_epoch(model: torch.nn.Module,
 
     print(
         f"Precision:{sum_of_precision:.5f} | Recall:{sum_of_recall:.5f} | F1 score:{f1_score:.5f} | Loss:{sum_of_loss:.5f}")
+
+    final_config = load_yaml(os.path.join(work_dir_path, 'final_config.yaml'))
+    ori_device = model.device
+    model.to('cpu')
+    final_config.update({'weight': os.path.join(work_dir_path, 'last.pt')})
+    evaluator = Evaluator.build_by_config(cfg=final_config)
+    recall_and_fpr_for_all = evaluator.eval()
+    tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
+    for x, tag in zip(recall_and_fpr_for_all, tags):
+        tb_writer.add_scalar(tag, x, epoch)
+    del evaluator
+    model.to(ori_device)
