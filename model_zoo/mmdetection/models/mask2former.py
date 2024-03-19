@@ -93,20 +93,14 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                 rle_list = np.array(rle_list)[indices].tolist()
                 polygon_list = np.array(polygon_list)[indices]
 
-                for cls, bbox, poly in zip(class_list, bbox_xywh_list, polygon_list):
-                    x, y, w, h = list(map(int, bbox))
-
-                    color = list(np.random.uniform(0, 255, size=(3,)))
-
-                    # For mask
-                    cv2.fillPoly(original_image, [poly], color=color)
-
-                    # For text
-                    cv2.putText(original_image, self.cfg['class_names'][cls], (x, y - 10), cv2.FONT_HERSHEY_PLAIN,
-                                1.5, color, 1, cv2.LINE_AA)
-
-                    # For bbox
-                    cv2.rectangle(original_image, (x, y), (x + w, y + h), color=color, thickness=2)
+                for conf, cls, bbox, poly in zip(score_list, class_list, bbox_xywh_list, polygon_list):
+                    # Draw bounding box and mask
+                    text = f'{self.class_names[int(cls)]} {conf:.2f}'
+                    self.plot_one_box_mask(image=original_image,
+                                           xywh_bbox=bbox,
+                                           text=text,
+                                           polygon=poly,
+                                           color=self.class_color[int(cls)])
 
         return {"result_image": original_image,
                 "class_list": class_list,

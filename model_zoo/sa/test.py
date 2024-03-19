@@ -18,7 +18,6 @@ def test_one_epoch(model: torch.nn.Module,
     sum_of_loss = 0
     sum_of_precision = 0
     sum_of_recall = 0
-    sum_of_f1_score = 0
 
     for b, batch in enumerate(pbar):
         tr_image = batch.get('tr_image').permute(0, 3, 1, 2).to(model.device)
@@ -45,17 +44,15 @@ def test_one_epoch(model: torch.nn.Module,
                                                                              zero_division=0, average='macro')
             sum_of_precision += precision
             sum_of_recall += recall
-            sum_of_f1_score += f1_score
 
     sum_of_precision /= len(test_dataloader)
     sum_of_recall /= len(test_dataloader)
-    sum_of_f1_score /= len(test_dataloader)
     sum_of_loss /= len(test_dataloader)
-
+    f1_score = (2 * sum_of_recall * sum_of_precision) / (sum_of_recall + sum_of_precision + 1e-5)
     tb_writer.add_scalar('metrics/precision', sum_of_precision, epoch)
     tb_writer.add_scalar('metrics/recall', sum_of_recall, epoch)
-    tb_writer.add_scalar('metrics/f1_score', sum_of_f1_score, epoch)
+    tb_writer.add_scalar('metrics/f1_score', f1_score, epoch)
     tb_writer.add_scalar('metrics/loss', sum_of_loss, epoch)
 
     print(
-        f"Precision:{sum_of_precision:.5f} | Recall:{sum_of_recall:.5f} | F1 score:{sum_of_f1_score:.5f} | Loss:{sum_of_loss:.5f}")
+        f"Precision:{sum_of_precision:.5f} | Recall:{sum_of_recall:.5f} | F1 score:{f1_score:.5f} | Loss:{sum_of_loss:.5f}")

@@ -29,7 +29,7 @@ flipud: 0.5  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
-optimizer: "AdamW" # Adam、AdamW、SGD
+optimizer: "Adam" # Adam、AdamW、SGD
 weight: " "
 end_epoch: 200
 lr: 0.001
@@ -37,7 +37,7 @@ minimum_lr: 0.0 # Minimum learning rate
 batch_size: 8
 save_period: 25
 eval_period: 25
-use_points: True
+use_points: False
 use_boxes: False
 device: "0"
 
