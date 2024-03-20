@@ -3,7 +3,6 @@ from typing import Union, Any, Dict, Optional
 from abc import ABC, abstractmethod
 
 import numpy as np
-
 from engine.general import (check_path, rle_to_polygon)
 import random
 import cv2
@@ -13,16 +12,9 @@ class BaseModel(ABC):
     def __init__(self, cfg: dict):
         self.cfg = cfg
 
-        # class names
+        # class names and color
         self.class_names = self.cfg['class_names']
-
-        # class color
-        class_color_cfg = cfg.get('class_color')
-
-        if class_color_cfg is None:
-            self.class_color = [[random.randint(0, 255) for _ in range(3)] for _ in self.class_names]
-        else:
-            self.class_color = class_color_cfg
+        self.class_color = self.cfg['class_color']
 
         # Update config
         self._config_transform()

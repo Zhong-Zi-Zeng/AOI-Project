@@ -8,6 +8,7 @@ from models.experimental import attempt_load
 from utils.datasets import letterbox
 from utils.general import check_img_size, non_max_suppression, scale_coords
 from model_zoo.base.BaseDetectModel import BaseDetectModel
+from tools.dataset_converter import coco2yoloBbox
 from engine.timer import TIMER
 from engine.general import (get_work_dir_path, load_yaml, save_yaml, get_model_path, check_path, get_device)
 from utils.torch_utils import select_device
@@ -23,6 +24,10 @@ class Yolov7Obj(BaseDetectModel):
         self.cfg = cfg
 
     def _config_transform(self):
+        # Convert coco format to yolo object detection format
+        converter = coco2yoloBbox(coco_path=self.cfg["coco_root"])
+        converter.convert()
+
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
         data_file['train'] = os.path.join(os.getcwd(), self.cfg['train_txt'])
