@@ -15,16 +15,22 @@ class coco2yoloBbox():
 
         # The storage path of the yoloBbox dataset
         self.yoloBbox_save_path = coco_path.replace('coco', 'yoloBbox')
+        yoloBbox_train_images = os.path.join(self.yoloBbox_save_path, 'images', 'train')
+        yoloBbox_val_images = os.path.join(self.yoloBbox_save_path, 'images', 'val')
+
         # Check
-        source_images_dir = os.path.join(self.yoloBbox_save_path, 'images', 'train')
-        if os.path.exists(source_images_dir) and os.listdir(source_images_dir):
-            print('Image already exists.')
-            return
-        if not os.path.exists(source_images_dir):
+        if not os.path.exists(self.yoloBbox_save_path):
             self._generate_dir()
-        # Copy coco images to yoloBbox
-        self._copy_images(os.path.join(self.coco_path, 'train2017'), os.path.join(self.yoloBbox_save_path, 'images', 'train'))
-        self._copy_images(os.path.join(self.coco_path, 'val2017'), os.path.join(self.yoloBbox_save_path, 'images', 'val'))
+
+        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloBbox_train_images)):
+            self._copy_images(os.path.join(self.coco_path, 'train2017'), yoloBbox_train_images, 'training images')
+        else:
+            print('Training images already exist.')
+
+        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloBbox_val_images)):
+            self._copy_images(os.path.join(self.coco_path, 'val2017'), yoloBbox_val_images, 'validation images')
+        else:
+            print('Validation images already exist.')
 
     def _generate_dir(self):
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'images'), exist_ok=True)
@@ -34,8 +40,8 @@ class coco2yoloBbox():
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'train'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'val'), exist_ok=True)
 
-    def _copy_images(self, source_dir, dest_dir):
-        for filename in os.listdir(source_dir):
+    def _copy_images(self, source_dir, dest_dir, task):
+        for filename in tqdm(os.listdir(source_dir), desc='Processing %s' % task):
             shutil.copy(os.path.join(source_dir, filename), dest_dir)
 
     def _conv_box(self, size, box):
@@ -53,19 +59,24 @@ class coco2yoloBbox():
         return (x, y, w, h)
 
     def convert(self):
+        tasks = []
+        yoloBbox_train_labels = os.path.join(self.yoloBbox_save_path, 'labels', 'train')
+        yoloBbox_val_labels = os.path.join(self.yoloBbox_save_path, 'labels', 'val')
+
         # Check
-        source_images_dir = os.path.join(self.yoloBbox_save_path, 'labels', 'train')
-        if os.path.exists(source_images_dir) and os.listdir(source_images_dir):
-            print('Label already exists.')
-            return
+        if os.path.exists(yoloBbox_train_labels) and os.listdir(yoloBbox_train_labels):
+            print('Training labels already exists.')
+        else:
+            tasks.append('train')
 
-        tasks = tqdm(['train', 'val'])
+        if os.path.exists(yoloBbox_val_labels) and os.listdir(yoloBbox_val_labels):
+            print('Validation labels already exists.')
+        else:
+            tasks.append('val')
+
+        # Converter
         for task in tasks:
-            time.sleep(1)
-            tasks.set_description("Processing %s" % task)  # 進度條
-
             data = json.load(open(getattr(self, f'coco_{task}'), 'r'))
-
             id_map = {}
             for i, category in enumerate(data['categories']):
                 id_map[category['id']] = i
@@ -73,7 +84,7 @@ class coco2yoloBbox():
             # 寫入image的相對路徑
             list_file = open(os.path.join(self.yoloBbox_save_path, f'{task}_list.txt'), 'w')
 
-            for img in data['images']:
+            for img in tqdm(data['images'], desc='Processing %s labels' % task):
                 filename = img["file_name"]
                 img_width = img["width"]
                 img_height = img["height"]
@@ -102,16 +113,22 @@ class coco2yoloSeg():
 
         # The storage path of the yoloSeg dataset
         self.yoloSeg_save_path = coco_path.replace('coco', 'yoloSeg')
+        yoloSeg_train_images = os.path.join(self.yoloSeg_save_path, 'train', 'images')
+        yoloSeg_test_images = os.path.join(self.yoloSeg_save_path, 'test', 'images')
+
         # Check
-        source_images_dir = os.path.join(self.yoloSeg_save_path, 'train', 'images')
-        if os.path.exists(source_images_dir) and os.listdir(source_images_dir):
-            print('Image already exists.')
-            return
-        if not os.path.exists(source_images_dir):
+        if not os.path.exists(self.yoloSeg_save_path):
             self._generate_dir()
-        # Copy coco images to yolobbox
-        self._copy_images(os.path.join(self.coco_path, 'train2017'), os.path.join(self.yoloSeg_save_path, 'train', 'images'))
-        self._copy_images(os.path.join(self.coco_path, 'val2017'), os.path.join(self.yoloSeg_save_path, 'test', 'images'))
+
+        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloSeg_train_images)):
+            self._copy_images(os.path.join(self.coco_path, 'train2017'), yoloSeg_train_images, 'training images')
+        else:
+            print('Training images already exist.')
+
+        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloSeg_test_images)):
+            self._copy_images(os.path.join(self.coco_path, 'val2017'), yoloSeg_test_images, 'testing images')
+        else:
+            print('Validation images already exist.')
 
     def _generate_dir(self):
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'train'), exist_ok=True)
@@ -121,8 +138,8 @@ class coco2yoloSeg():
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'images'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'labels'), exist_ok=True)
 
-    def _copy_images(self, source_dir, dest_dir):
-        for filename in os.listdir(source_dir):
+    def _copy_images(self, source_dir, dest_dir, task):
+        for filename in tqdm(os.listdir(source_dir), desc='Processing %s' % task):
             shutil.copy(os.path.join(source_dir, filename), dest_dir)
 
     def _conv_polygon(self, size, seg):  # normalize
@@ -140,24 +157,30 @@ class coco2yoloSeg():
         return polygons
 
     def convert(self):
+        tasks = []
+        yoloSeg_train_labels = os.path.join(self.yoloSeg_save_path, 'train', 'labels')
+        yoloSeg_test_labels = os.path.join(self.yoloSeg_save_path, 'test', 'labels')
+
         # Check
-        source_images_dir = os.path.join(self.yoloSeg_save_path, 'train', 'labels')
-        if os.path.exists(source_images_dir) and os.listdir(source_images_dir):
-            print('Label already exists.')
-            return
+        if os.path.exists(yoloSeg_train_labels) and os.listdir(yoloSeg_train_labels):
+            print('Training labels already exists.')
+        else:
+            tasks.append('train')
 
-        tasks = tqdm(['train', 'test'])
+        if os.path.exists(yoloSeg_test_labels) and os.listdir(yoloSeg_test_labels):
+            print('Testing labels already exists.')
+        else:
+            tasks.append('test')
+
+        # Converter
         for task in tasks:
-            time.sleep(1)
-            tasks.set_description("Processing %s" % task)  # 進度條
-
             data = json.load(open(getattr(self, f'coco_{task}'), 'r'))
 
             id_map = {}
             for i, category in enumerate(data['categories']):
                 id_map[category['id']] = i
 
-            for img in data['images']:
+            for img in tqdm(data['images'], desc='Processing %sing labels' % task):
                 filename = img["file_name"]
                 img_width = img["width"]
                 img_height = img["height"]
