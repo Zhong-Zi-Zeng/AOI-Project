@@ -1,10 +1,11 @@
 # 只需輸入 coco dataset路徑
 # 轉換成 yoloBbox 或 yoloSeg
+import json
 import os
 import shutil
-import json
+
+import numpy as np
 from tqdm import tqdm
-import time
 
 
 class coco2yoloBbox():
@@ -150,11 +151,16 @@ class coco2yoloSeg():
         dw = 1. / (size[0])
         dh = 1. / (size[1])
 
-        polygons = []
-        for i, point in enumerate(seg[0]):
-            polygons.append(point * dw if i % 2 == 0 else point * dh)
+        seg = np.array(seg, dtype=np.float64).reshape((-1, 2))
+        seg[:, 0] *= dw
+        seg[:, 1] *= dh
 
-        return polygons
+        # polygons = []
+        # for i, point in enumerate(seg[0]):
+        #     polygons.append(point * dw if i % 2 == 0 else point * dh)
+        # return polygons
+        return seg.reshape((-1,)).astype(np.int32).tolist()
+
 
     def convert(self):
         tasks = []
@@ -198,7 +204,6 @@ class coco2yoloSeg():
                 f_txt.close()
 
 
-
 if __name__ == '__main__':
     coco_path = './data/test/coco/original_class_2'  # input
     task = 'yolov7_inSeg'
@@ -209,9 +214,5 @@ if __name__ == '__main__':
     elif task == 'yolov7_inSeg':
         conv = coco2yoloSeg(coco_path)
         conv.convert()
-    else:   # 不轉換
+    else:  # 不轉換
         pass
-
-
-
-
