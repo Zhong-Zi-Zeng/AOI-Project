@@ -159,7 +159,7 @@ class coco2yoloSeg():
         # for i, point in enumerate(seg[0]):
         #     polygons.append(point * dw if i % 2 == 0 else point * dh)
         # return polygons
-        return seg.reshape((-1,)).astype(np.int32).tolist()
+        return seg.reshape((-1,)).tolist()
 
 
     def convert(self):
