@@ -28,7 +28,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/YOLOv7_InSeg_size_1600_3/weights/epoch_624.pt"
+weight: " "
 end_epoch: 900
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate

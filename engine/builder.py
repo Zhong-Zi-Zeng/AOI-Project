@@ -87,6 +87,7 @@ class Builder:
         class_names, class_color = get_class_names_and_colors(final_config)
         final_config['class_names'] = class_names
         final_config['class_color'] = class_color
+        final_config['number_of_class'] = len(class_names)
 
         # Create work dir
         self._create_work_dir(final_config)

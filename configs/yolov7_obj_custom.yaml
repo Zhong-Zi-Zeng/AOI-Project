@@ -8,12 +8,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_txt: /home/miislab-server2/MiiSLab_NAS/Student_Work/Heng/AOI-New-Dataset/1500/yoloBbox/patch_1024_class_2/train_list.txt
-val_txt: /home/miislab-server2/MiiSLab_NAS/Student_Work/Heng/AOI-New-Dataset/1500/yoloBbox/patch_1024_class_2/val_list.txt
-number_of_class: 2
-class_names:
-  - "Pass"
-  - "Defect"
+train_txt: ./data/1500/yoloBbox/original_class_2/train_list.txt
+val_txt: ./data/1500/yoloBbox/original_class_2/val_list.txt
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -35,17 +31,14 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: /home/miislab-server/MiiSLab_NAS/Student_Work/Heng/AOI-Result/Yolov7Obj-WC1500/YOLOv7_d6_size_1600/weights/epoch_824.pt
 end_epoch: 1200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 6
+batch_size: 2
 save_period: 25
 eval_period: 25
-imgsz: [ 1024, 1024 ] # [train, test] image size
-use_patch: True
-patch_size: 1024
-step: 512
+imgsz: [ 1600, 1600 ] # [train, test] image size
 device: "0"
