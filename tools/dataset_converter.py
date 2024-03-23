@@ -15,7 +15,9 @@ class coco2yoloBbox():
         self.coco_val = self.coco_path + '/annotations/instances_val2017.json'
 
         # The storage path of the yoloBbox dataset
-        self.yoloBbox_save_path = coco_path.replace('coco', 'yoloBbox')
+        folder_name = os.path.basename(self.coco_path)
+        self.yoloBbox_save_path = os.path.join(os.getcwd(), 'data', folder_name)
+        print(self.yoloBbox_save_path)
         yoloBbox_train_images = os.path.join(self.yoloBbox_save_path, 'images', 'train')
         yoloBbox_val_images = os.path.join(self.yoloBbox_save_path, 'images', 'val')
 
@@ -113,7 +115,8 @@ class coco2yoloSeg():
         self.coco_test = self.coco_path + '/annotations/instances_val2017.json'
 
         # The storage path of the yoloSeg dataset
-        self.yoloSeg_save_path = coco_path.replace('coco', 'yoloSeg')
+        folder_name = os.path.basename(self.coco_path)
+        self.yoloSeg_save_path = os.path.join(os.getcwd(), 'data', folder_name)
         yoloSeg_train_images = os.path.join(self.yoloSeg_save_path, 'train', 'images')
         yoloSeg_test_images = os.path.join(self.yoloSeg_save_path, 'test', 'images')
 
@@ -159,7 +162,7 @@ class coco2yoloSeg():
         # for i, point in enumerate(seg[0]):
         #     polygons.append(point * dw if i % 2 == 0 else point * dh)
         # return polygons
-        return seg.reshape((-1,)).astype(np.int32).tolist()
+        return seg.reshape((-1,)).tolist()
 
 
     def convert(self):
@@ -197,7 +200,7 @@ class coco2yoloSeg():
                 # 寫入每個image的txt (label)
                 f_txt = open(os.path.join(self.yoloSeg_save_path, f'{task}', 'labels', ana_txt_name), 'w')
                 for ann in data['annotations']:
-                    if ann['image_id'] == img_id:
+                    if ann['image_id'] == img_id and ann["segmentation"]:   # normal data直接跳過
                         polygons = self._conv_polygon((img_width, img_height), ann["segmentation"])  # list
                         flattened_polygons = ' '.join(str(coord) for coord in polygons)
                         f_txt.write("%s %s\n" % (id_map[ann["category_id"]], flattened_polygons))
