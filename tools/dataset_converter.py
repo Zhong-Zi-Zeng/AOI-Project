@@ -16,7 +16,7 @@ class coco2yoloBbox():
 
         # The storage path of the yoloBbox dataset
         folder_name = os.path.basename(self.coco_path)
-        self.yoloBbox_save_path = os.path.join(os.getcwd(), 'data', folder_name)
+        self.yoloBbox_save_path = os.path.join(os.getcwd(), 'data', 'yoloBbox', folder_name)
         print(self.yoloBbox_save_path)
         yoloBbox_train_images = os.path.join(self.yoloBbox_save_path, 'images', 'train')
         yoloBbox_val_images = os.path.join(self.yoloBbox_save_path, 'images', 'val')
@@ -116,7 +116,7 @@ class coco2yoloSeg():
 
         # The storage path of the yoloSeg dataset
         folder_name = os.path.basename(self.coco_path)
-        self.yoloSeg_save_path = os.path.join(os.getcwd(), 'data', folder_name)
+        self.yoloSeg_save_path = os.path.join(os.getcwd(), 'data', 'yoloSeg', folder_name)
         yoloSeg_train_images = os.path.join(self.yoloSeg_save_path, 'train', 'images')
         yoloSeg_test_images = os.path.join(self.yoloSeg_save_path, 'test', 'images')
 
