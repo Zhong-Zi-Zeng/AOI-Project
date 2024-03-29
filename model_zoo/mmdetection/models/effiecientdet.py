@@ -51,7 +51,6 @@ class EfficientDet(BaseMMdetection, BaseDetectModel):
             bbox_list = []
 
             predictions = result['predictions'][0]
-            vis = result['visualization'][0]
             classes = predictions['labels']
             scores = predictions['scores']
             bboxes = predictions['bboxes']
@@ -69,8 +68,15 @@ class EfficientDet(BaseMMdetection, BaseDetectModel):
                 score_list.append(conf)
                 bbox_list.append(list(map(float, [x, y, w, h])))
 
+                # Draw bounding box and mask
+                text = f'{self.class_names[int(cls)]} {conf:.2f}'
+                self.plot_one_box_mask(image=original_image,
+                                       xywh_bbox=[x, y, w, h],
+                                       text=text,
+                                       color=self.class_color[int(cls)])
+
         return {
-            'result_image': vis,
+            'result_image': original_image,
             'class_list': class_list,
             'score_list': score_list,
             'bbox_list': bbox_list
