@@ -25,16 +25,20 @@ class Yolov7inSeg(BaseInstanceModel):
         self.cfg = cfg
 
     def _config_transform(self):
-        # # Convert coco format to yolo instance segmentation format
-        # converter = coco2yoloSeg(coco_path=self.cfg["coco_root"])
-        # converter.convert()
+        # Convert coco format to yolo instance segmentation format
+        train_dir = self.cfg.get('train_dir')
+        val_dir = self.cfg.get('val_dir')
+
+        if not os.path.exists(train_dir) and not os.path.exists(val_dir):
+            converter = coco2yoloSeg(coco_path=self.cfg["coco_root"])
+            converter.convert()
+            train_dir = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'train')
+            val_dir = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'test')
 
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
-        data_file['train'] = os.path.join(os.getcwd(), self.cfg['train_dir'])
-        data_file['val'] = os.path.join(os.getcwd(), self.cfg['val_dir'])
-        # data_file['train'] = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'train')
-        # data_file['val'] = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'test')
+        data_file['train'] = train_dir
+        data_file['val'] = val_dir
         data_file['nc'] = self.cfg['number_of_class']
         data_file['names'] = self.cfg['class_names']
         self.cfg['data_file'] = os.path.join(get_work_dir_path(self.cfg), 'data.yaml')

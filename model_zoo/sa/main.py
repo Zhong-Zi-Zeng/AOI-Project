@@ -134,22 +134,25 @@ def main(args, config: dict):
         # Update scheduler
         cosine_scheduler.step()
 
+        # Save
+        ckpt = {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict()
+        }
+        torch.save(ckpt, os.path.join(work_dir_path, "last.pt"))
+        if (epoch + 1) % config['save_interval'] == 0:
+            torch.save(ckpt, os.path.join(work_dir_path, f"weight_{epoch}" + '.pt'))
+
         # Evaluate
-        if (epoch + 1) % config['eval_interval'] == 0 and config['eval_interval'] > 1:
+        if (epoch + 1) % config['eval_interval'] == 0 and config['eval_interval'] > 0:
             logger.info("\n" + colorstr('Evaluate...'))
             test_one_epoch(model=model,
                            test_dataloader=test_dataloader,
                            epoch=epoch,
                            loss_function=loss_function,
-                           tb_writer=tb_writer)
+                           tb_writer=tb_writer,
+                           work_dir_path=work_dir_path)
 
-        # Save
-        if (epoch + 1) % config['save_interval'] == 0:
-            ckpt = {
-                'epoch': epoch,
-                'model_state_dict': model.state_dict()
-            }
-            torch.save(ckpt, os.path.join(work_dir_path, f"weight_{epoch}" + '.pt'))
 
 
 if __name__ == "__main__":

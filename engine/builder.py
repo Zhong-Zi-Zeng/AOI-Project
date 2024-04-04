@@ -1,6 +1,6 @@
 from typing import Union
 from model_zoo import BaseInstanceModel, BaseDetectModel, BaseSemanticModel
-from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml)
+from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml, get_class_names_and_colors)
 import importlib
 import os
 import copy
@@ -82,6 +82,12 @@ class Builder:
 
         # Load config
         final_config = self._process_base_key(config_dir, self.custom_config)
+
+        # Append class name and color
+        class_names, class_color = get_class_names_and_colors(final_config)
+        final_config['class_names'] = class_names
+        final_config['class_color'] = class_color
+        final_config['number_of_class'] = len(class_names)
 
         # Create work dir
         self._create_work_dir(final_config)

@@ -1,10 +1,12 @@
 from __future__ import annotations
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 from pathlib import Path
 from PIL import Image, ImageDraw
+from pycocotools.coco import COCO
 import pycocotools.mask as ms
 import numpy as np
 import os
+import random
 import yaml
 import json
 import re
@@ -25,15 +27,30 @@ def get_device(device: Union[str: int]) -> torch.device:
     return device
 
 
+def get_class_names_and_colors(cfg: dict) -> Tuple[list[str], list[list]]:
+    # Class name
+    coco = COCO(os.path.join(cfg['coco_root'], 'annotations', 'instances_train2017.json'))
+    class_names = [info['name'] for info in coco.loadCats(coco.getCatIds())]
+
+    # Class color
+    class_color_cfg = cfg.get('class_color')
+    if class_color_cfg is None:
+        class_color = [[random.randint(0, 255) for _ in range(3)] for _ in class_names]
+    else:
+        class_color = class_color_cfg
+
+    return class_names, class_color
+
+
 def mask_to_polygon(mask: np.ndarray) -> list:
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     polygons = []
     for contour in contours:
         if contour.size >= 6:
-            polygons.append(contour.flatten().tolist())
+            polygons.extend(contour.flatten().tolist())
 
-    return polygons
+    return [polygons]
 
 
 def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:

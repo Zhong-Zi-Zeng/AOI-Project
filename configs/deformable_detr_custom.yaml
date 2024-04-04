@@ -1,4 +1,4 @@
-_base_: [ "./base/model/Mask2Former/r50.yaml", # model
+_base_: [ "./base/model/Deformable-DETR/x101.yaml", # model
           "./base/evaluation/instance_segmentation.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
@@ -23,21 +23,21 @@ degrees: 10  # image rotation (+/- deg)
 translate: 0.1  # image translation (+/- fraction)
 scale: 0.9  # image scale (+/- gain)
 shear: 0.  # image shear (+/- deg)
-perspective: 0.  # image perspective (+/- fraction), range 0-0.001
+perspective: 0.5  # image perspective (+/- fraction), range 0-0.001
 flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
-optimizer: "AdamW" # Adam、AdamW、SGD
+optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
-end_epoch: 100
+end_epoch: 900
 warmup_epoch: 3
 save_period: 25
-eval_period: 25
-initial_lr: 0.000005 # Initial learning rate
-lr: 0.0002 # The learning rate after warmup
-minimum_lr: 0.0 # Minimum learning rate
+initial_lr: 0.0003 # Initial learning rate
+lr: 0.001 # The learning rate after warmup
+minimum_lr: 0.0001 # Minimum learning rate
 batch_size: 2
-imgsz: [1600, 1600]
+imgsz: [1024, 1024]
+use_patch: false
 device: "0"
 

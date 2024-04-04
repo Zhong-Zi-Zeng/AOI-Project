@@ -7,12 +7,6 @@ _base_: [ "./base/model/YOLO-v7/yolov7_inSeg_base.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_dir: "./data/1500/yoloSeg/original_class_2/train"
-val_dir: "./data/1500/yoloSeg/original_class_2/test"
-number_of_class: 2
-class_names:
-  - "Pass"
-  - "Defect"
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -34,7 +28,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: /home/miislab-server2/Heng/Heng_shared/AOI-Project/work_dirs/train/YOLOv7_InSeg_size_1600_2/weights/last.pt
+weight: " "
 end_epoch: 900
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
@@ -47,5 +41,5 @@ eval_period: 25
 # patch_size: 1024
 # step: 512
 imgsz: [1600, 1600] # [train, test] image size
-device: "0"
+device: "1"
 

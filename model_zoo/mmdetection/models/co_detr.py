@@ -6,7 +6,6 @@ import os
 sys.path.append(os.path.join(os.getcwd(), 'model_zoo', 'mmdetection'))
 from model_zoo.base.BaseDetectModel import BaseDetectModel
 from .BaseMMdetection import BaseMMdetection
-from engine.general import (get_work_dir_path, get_model_path, load_python, update_python_file)
 from engine.timer import TIMER
 import numpy as np
 import cv2
