@@ -322,15 +322,15 @@ class Evaluator:
         print(Fore.BLUE + "Confidence score: {:.1}".format(self.cfg['conf_thres']) + Fore.WHITE)
         print('=' * 40)
 
-        # 取出只有瑕疵的圖片 (pass為第9個類別)
+        # 取出只有瑕疵的圖片 (pass為第0個類別)
         all_images_id = self.coco_gt.getImgIds()
         pass_images_id = []
-        for img_id in self.coco_gt.getImgIds(catIds=[9]):
+        for img_id in self.coco_gt.getImgIds(catIds=[0]):
             annIds = self.coco_gt.getAnnIds(imgIds=[img_id])
             anns = self.coco_gt.loadAnns(annIds)
             has_other_category = False
             for ann in anns:
-                if ann['category_id'] != 9:
+                if ann['category_id'] != 0:
                     has_other_category = True
                     break
             if not has_other_category:
@@ -346,14 +346,14 @@ class Evaluator:
 
         # 計算dt與gt的iou
         coco_dt = self.coco_gt.loadRes(dt_result)
-        result = {cls_id: [] for cls_id in range(9)}
+        result = {cls_id: [] for cls_id in range(1, 16)}
 
         for img_id in all_defect_images:
             gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
             dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
 
             # 提出預測為defect且gt也為defect的部分
-            defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] != 9])
+            defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] != 0])
             defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] == 1])
 
             # 如果沒有檢測出任何defect瑕疵，則換下一張
@@ -361,7 +361,7 @@ class Evaluator:
                 continue
 
             # 取出gt box每一個對應的class編號
-            gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != 9])
+            gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != 0])
 
             # 取出dt box的score
             defected_dt_score = np.array([dt['score'] for dt in dt_ann if dt['category_id'] == 1])
@@ -396,7 +396,8 @@ class Evaluator:
 
         print("\n=======Recall rate=======")
         for cls_id, scores in result.items():
-            print(f'{category_name[cls_id]}  {len(scores) / len(self.coco_gt.getAnnIds(catIds=[cls_id])):.3f}')
+            # print(f'{category_name[cls_id]}  {len(scores) / len(self.coco_gt.getAnnIds(catIds=[cls_id])):.3f}')
+            print(f'{category_name[cls_id]}  {np.divide(len(scores), len(self.coco_gt.getAnnIds(catIds=[cls_id]))):.3f}')
 
 
 if __name__ == "__main__":

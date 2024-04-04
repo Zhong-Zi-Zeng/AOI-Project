@@ -1,3 +1,4 @@
+albumentations==1.4.2
 addict==2.4.0
 astor==0.8.1
 boto3==1.34.5
