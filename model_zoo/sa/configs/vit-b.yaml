@@ -24,7 +24,7 @@ use_points: False
 use_boxes: True
 device: 0
 end_epoch: 200
-num_workers: 2
+num_workers: 0
 weight: " "
 
 # ===========Optimizer===========

@@ -7,7 +7,7 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/1500/coco/original_class_2"
+coco_root: "./data/NEW-1500-16-Class"
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -35,8 +35,8 @@ warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 6
+batch_size: 2
 save_period: 25
 eval_period: 25
-imgsz: [ 1024, 1024 ] # [train, test] image size
+imgsz: [ 1600, 1600 ] # [train, test] image size
 device: "0"
