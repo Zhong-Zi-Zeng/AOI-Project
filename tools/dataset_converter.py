@@ -6,6 +6,7 @@ import shutil
 
 import numpy as np
 from tqdm import tqdm
+import cv2
 
 
 class coco2yoloBbox():
@@ -25,13 +26,13 @@ class coco2yoloBbox():
         if not os.path.exists(self.yoloBbox_save_path):
             self._generate_dir()
 
-        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloBbox_train_images)):
-            self._copy_images(os.path.join(self.coco_path, 'train2017'), yoloBbox_train_images, 'training images')
+        if not any(file.endswith('.png') for file in os.listdir(yoloBbox_train_images)):
+            self._copy_images_png(os.path.join(self.coco_path, 'train2017'), yoloBbox_train_images, 'training images')
         else:
             print('Training images already exist.')
 
         if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloBbox_val_images)):
-            self._copy_images(os.path.join(self.coco_path, 'val2017'), yoloBbox_val_images, 'validation images')
+            self._copy_images_png(os.path.join(self.coco_path, 'val2017'), yoloBbox_val_images, 'validation images')
         else:
             print('Validation images already exist.')
 
@@ -43,9 +44,16 @@ class coco2yoloBbox():
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'train'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'val'), exist_ok=True)
 
-    def _copy_images(self, source_dir, dest_dir, task):
-        for filename in tqdm(os.listdir(source_dir), desc='Processing %s' % task):
-            shutil.copy(os.path.join(source_dir, filename), dest_dir)
+    def _copy_images_png(self, source_dir, dest_dir, task):
+        # 轉成 png
+        for file in tqdm(os.listdir(source_dir), desc=f'Converting {task} images to png...'):
+            if file.endswith('.jpg'):
+                img = cv2.imread(os.path.join(source_dir, file))
+                new_file_name = file.replace('.jpg', '.png')
+                cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
+            else:
+                shutil.copy(os.path.join(source_dir, file), dest_dir)
+
 
     def _conv_box(self, size, box):
         dw = 1. / (size[0])
@@ -104,7 +112,7 @@ class coco2yoloBbox():
                 f_txt.close()
 
                 # 寫入image的相對路徑
-                list_file.write(f'./images/{task}/%s.jg\n' % (head))
+                list_file.write(f'./images/{task}/%s.png\n' % (head))
             list_file.close()
 
 
@@ -125,13 +133,13 @@ class coco2yoloSeg():
         if not os.path.exists(self.yoloSeg_save_path):
             self._generate_dir()
 
-        if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloSeg_train_images)):
-            self._copy_images(os.path.join(self.coco_path, 'train2017'), yoloSeg_train_images, 'training images')
+        if not any(file.endswith('.png') for file in os.listdir(yoloSeg_train_images)):
+            self._copy_images_png(os.path.join(self.coco_path, 'train2017'), yoloSeg_train_images, 'training images')
         else:
             print('Training images already exist.')
 
         if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloSeg_test_images)):
-            self._copy_images(os.path.join(self.coco_path, 'val2017'), yoloSeg_test_images, 'testing images')
+            self._copy_images_png(os.path.join(self.coco_path, 'val2017'), yoloSeg_test_images, 'testing images')
         else:
             print('Validation images already exist.')
 
@@ -143,9 +151,15 @@ class coco2yoloSeg():
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'images'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'labels'), exist_ok=True)
 
-    def _copy_images(self, source_dir, dest_dir, task):
-        for filename in tqdm(os.listdir(source_dir), desc='Processing %s' % task):
-            shutil.copy(os.path.join(source_dir, filename), dest_dir)
+    def _copy_images_png(self, source_dir, dest_dir, task):
+        # 轉成 png
+        for file in tqdm(os.listdir(source_dir), desc=f'Converting {task} images to png...'):
+            if file.endswith('.jpg'):
+                img = cv2.imread(os.path.join(source_dir, file))
+                new_file_name = file.replace('.jpg', '.png')
+                cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
+            else:
+                shutil.copy(os.path.join(source_dir, file), dest_dir)
 
     def _conv_polygon(self, size, seg):  # normalize
         '''
