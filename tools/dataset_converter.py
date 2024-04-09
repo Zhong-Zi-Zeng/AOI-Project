@@ -104,12 +104,13 @@ class coco2yoloBbox():
                 f_txt.close()
 
                 # 寫入image的相對路徑
-                list_file.write(f'./images/{task}/%s.jpg\n' % (head))
+                list_file.write(f'./images/{task}/%s.jg\n' % (head))
             list_file.close()
 
 
 class coco2yoloSeg():
     def __init__(self, coco_path):
+
         self.coco_path = coco_path
         self.coco_train = self.coco_path + '/annotations/instances_train2017.json'
         self.coco_test = self.coco_path + '/annotations/instances_val2017.json'

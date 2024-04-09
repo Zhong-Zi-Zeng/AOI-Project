@@ -41,5 +41,5 @@ eval_period: 25
 # patch_size: 1024
 # step: 512
 imgsz: [1600, 1600] # [train, test] image size
-device: "0"
+device: "1"
 

@@ -8,8 +8,8 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/1500/coco/original_class_2"
-train_txt: ./data/1500/yoloBbox/original_class_2/train_list.txt
-val_txt: ./data/1500/yoloBbox/original_class_2/val_list.txt
+train_txt: ./data/500/yoloBbox/original_class_2/train_list.txt
+val_txt: ./data/500/yoloBbox/original_class_2/val_list.txt
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -31,14 +31,14 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: /home/miislab-server/MiiSLab_NAS/Student_Work/Heng/AOI-Result/Yolov7Obj-WC1500/YOLOv7_d6_size_1600/weights/epoch_824.pt
+weight: " "
 end_epoch: 1200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 2
+batch_size: 1
 save_period: 25
 eval_period: 25
 imgsz: [ 1600, 1600 ] # [train, test] image size
-device: "0"
+device: "1"
