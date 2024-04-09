@@ -60,7 +60,7 @@ train_cfg = dict(
 
 # ==========model==========
 batch_augments = [
-    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=True)
+    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=False)
 ]
 
 model = dict(
@@ -77,7 +77,7 @@ model = dict(
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         bgr_to_rgb=True,
-        pad_mask=True,
+        pad_mask=False,
         batch_augments=batch_augments),
     backbone=dict(
         type='ResNet',
@@ -99,7 +99,7 @@ model = dict(
         num_outs=5),
     query_head=dict(
         type='CoDINOHead',
-        num_query=900,
+        num_query=100,
         num_classes=num_classes,
         in_channels=2048,
         as_two_stage=True,
@@ -114,7 +114,7 @@ model = dict(
             num_feature_levels=5,
             encoder=dict(
                 type='DetrTransformerEncoder',
-                num_layers=6,
+                num_layers=4,
                 # number of layers that use checkpoint.
                 # The maximum value for the setting is num_layers.
                 # FairScale must be installed for it to work.
@@ -131,7 +131,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
             decoder=dict(
                 type='DinoTransformerDecoder',
-                num_layers=6,
+                num_layers=4,
                 return_intermediate=True,
                 transformerlayers=dict(
                     type='DetrTransformerDecoderLayer',
@@ -345,7 +345,7 @@ albu_train_transforms = [
 ]
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='Albu',
@@ -358,7 +358,6 @@ train_pipeline = [
             filter_lost_elements=True),
         keymap={
             'img': 'image',
-            'gt_masks': 'masks',
             'gt_bboxes': 'bboxes'
         },
         skip_img_without_anno=True),
