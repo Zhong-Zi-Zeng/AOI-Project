@@ -6,14 +6,7 @@ _base_: [ "./base/model/Deformable-DETR/x101.yaml", # model
 
 
 # ===========Dataset===========
-number_of_class: 2
 coco_root: "./data/1500/coco/original_class_2"
-class_names:
-  - "Pass"
-  - "Defect"
-class_color: # B G R
-  - [0, 255, 0]
-  - [0, 0, 255]
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -32,12 +25,12 @@ optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
 end_epoch: 900
 warmup_epoch: 3
-save_period: 25
 initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
 minimum_lr: 0.0001 # Minimum learning rate
 batch_size: 1
 imgsz: [1024, 1024]
-use_patch: false
-device: "1"
+save_period: 25
+eval_period: 25
+device: "0"
 
