@@ -60,7 +60,7 @@ train_cfg = dict(
 
 # ==========model==========
 batch_augments = [
-    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=True)
+    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=False)
 ]
 
 model = dict(
@@ -77,7 +77,7 @@ model = dict(
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         bgr_to_rgb=True,
-        pad_mask=True,
+        pad_mask=False,
         batch_augments=batch_augments),
     backbone=dict(
         type='SwinTransformer',
@@ -355,7 +355,7 @@ albu_train_transforms = [
 ]
 train_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='Albu',
@@ -368,7 +368,6 @@ train_pipeline = [
             filter_lost_elements=True),
         keymap={
             'img': 'image',
-            'gt_masks': 'masks',
             'gt_bboxes': 'bboxes'
         },
         skip_img_without_anno=True),

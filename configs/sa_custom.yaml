@@ -34,10 +34,10 @@ weight: " "
 end_epoch: 200
 lr: 0.001
 minimum_lr: 0.0 # Minimum learning rate
-batch_size: 8
+batch_size: 1
 save_period: 25
 eval_period: 25
 use_points: False
 use_boxes: False
-device: "0"
+device: "1"
 

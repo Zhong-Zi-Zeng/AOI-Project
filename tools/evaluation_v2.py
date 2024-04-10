@@ -66,32 +66,6 @@ class Logger:
 
         self._start = False
 
-    def print_metrics_for_all(self,
-                              value_for_all: List[int]):
-        console = Console()
-        table = Table(title="Metrics for all classes", title_justify="left")
-
-        for title, value in zip(self.cfg['metrics_for_all'], value_for_all):
-            table.add_column(title, justify="right", style="cyan", no_wrap=True)
-
-        table.add_row(*[str(value) for value in value_for_all])
-        console.print(table)
-
-    @staticmethod
-    def print_dataset_info(all_defect_images: List[int],
-                           all_defects: int,
-                           fpr_image_name: List[str]) -> None:
-        console = Console()
-        table = Table(title="Result Analysis", show_lines=True, title_justify="left")
-        table.add_column("Information")
-        table.add_column("Value")
-
-        table.add_row("Number of defect image", str(len(all_defect_images)))
-        table.add_row("Number of defect", str(all_defects))
-        table.add_row("FPR images", ", ".join(fpr_image_name))
-
-        console.print(table)
-
 
 class Writer:
     def __init__(self, cfg: dict, excel_path: Optional[str] = None):
