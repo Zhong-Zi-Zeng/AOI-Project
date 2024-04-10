@@ -86,7 +86,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile', backend_args=backend_args),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
     dict(type='Resize', scale=(width, height), keep_ratio=True),
     dict(
         type='PackDetInputs',
@@ -145,7 +145,7 @@ test_dataloader = val_dataloader
 val_evaluator = dict(
     type='CocoMetric',
     ann_file=data_root + '/annotations/instances_val2017.json',
-    metric=['bbox', 'segm']
+    metric='bbox'
 )
 test_evaluator = val_evaluator
 

@@ -132,7 +132,7 @@ test_dataloader = val_dataloader
 val_evaluator = dict(
     type='CocoMetric',
     ann_file=data_root + '/annotations/instances_val2017.json',
-    metric=['bbox', 'segm']
+    metric='bbox'
 )
 test_evaluator = val_evaluator
 

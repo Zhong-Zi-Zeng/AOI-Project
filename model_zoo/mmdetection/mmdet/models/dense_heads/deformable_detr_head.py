@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import copy
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import torch
 import torch.nn as nn
@@ -142,8 +142,10 @@ class DeformableDETRHead(DETRHead):
         return all_layers_outputs_classes, all_layers_outputs_coords
 
     def loss(self, hidden_states: Tensor, references: List[Tensor],
-             enc_outputs_class: Tensor, enc_outputs_coord: Tensor,
-             batch_data_samples: SampleList) -> dict:
+             batch_data_samples: SampleList,
+             enc_outputs_class: Optional[Tensor] = None,
+             enc_outputs_coord: Optional[Tensor] = None,
+             ) -> dict:
         """Perform forward propagation and loss calculation of the detection
         head on the queries of the upstream network.
 
@@ -188,14 +190,14 @@ class DeformableDETRHead(DETRHead):
         return losses
 
     def loss_by_feat(
-        self,
-        all_layers_cls_scores: Tensor,
-        all_layers_bbox_preds: Tensor,
-        enc_cls_scores: Tensor,
-        enc_bbox_preds: Tensor,
-        batch_gt_instances: InstanceList,
-        batch_img_metas: List[dict],
-        batch_gt_instances_ignore: OptInstanceList = None
+            self,
+            all_layers_cls_scores: Tensor,
+            all_layers_bbox_preds: Tensor,
+            enc_cls_scores: Tensor,
+            enc_bbox_preds: Tensor,
+            batch_gt_instances: InstanceList,
+            batch_img_metas: List[dict],
+            batch_gt_instances_ignore: OptInstanceList = None
     ) -> Dict[str, Tensor]:
         """Loss function.
 
