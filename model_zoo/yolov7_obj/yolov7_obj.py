@@ -27,7 +27,8 @@ class Yolov7Obj(BaseDetectModel):
         # Convert coco format to yolo object detection format
         train_txt = self.cfg.get('train_txt')
         val_txt = self.cfg.get('val_txt')
-        if not os.path.exists(train_txt) and not os.path.exists(val_txt):
+
+        if not check_path(train_txt) or not check_path(val_txt):
             converter = coco2yoloBbox(coco_path=self.cfg["coco_root"])
             converter.convert()
             train_txt = os.path.join(os.getcwd(), converter.yoloBbox_save_path, 'train_list.txt')
