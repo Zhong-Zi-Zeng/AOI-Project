@@ -257,9 +257,7 @@ class CoDINOHead(DINOHead):
         img_shape = img_meta['img_shape']
         # exclude background
         if self.loss_cls.use_sigmoid:
-            # cls_score = cls_score.sigmoid()
-            # num_elements_cls = cls_score.view(-1).size(0)
-            # max_per_img_cls = min(max_per_img, num_elements_cls)
+            cls_score = cls_score.sigmoid()
             scores, indexes = cls_score.view(-1).topk(max_per_img)
             det_labels = indexes % self.num_classes
             bbox_index = indexes // self.num_classes

@@ -6,7 +6,7 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/Synth-Per-Class/Synth-scratches"
+coco_root: ./data/Exp-6/Fine-Tune-Dataset
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -23,15 +23,15 @@ fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: " "
-end_epoch: 10
+weight: ./work_dirs/train/CO-DETR_exp_6_stage_1/epoch_5.pth
+end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.00005 # Initial learning rate
 lr: 0.0002 # The learning rate after warmup
 minimum_lr: 0.0 # Minimum learning rate
 batch_size: 1
 imgsz: [ 1600, 1600 ]
-save_period: 5
+save_period: 1
 eval_period: 5
 device: "0"
 

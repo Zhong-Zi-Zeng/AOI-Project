@@ -7,7 +7,7 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/NEW-1500-2-Class"
+coco_root:  ./data/WC-1500-Per-Class/WC-1500-scratches
 #train_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/1500/yoloBbox/original_class_2  + friction(400)/train_list.txt
 #val_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/1500/yoloBbox/original_class_2  + friction(400)/val_list.txt
 class_color: # B G R
@@ -31,8 +31,8 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "C:/Users/鐘子恒/Desktop/epoch_1099.pt"
-end_epoch: 1200
+weight: " "
+end_epoch: 200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
