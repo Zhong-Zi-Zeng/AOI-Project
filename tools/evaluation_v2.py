@@ -393,7 +393,7 @@ class Evaluator:
                 defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
 
                 # Check if there is any prediction
-                if len(defected_dt_bboxes) == 0:
+                if len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
                     continue
 
                 # Calculate iou
