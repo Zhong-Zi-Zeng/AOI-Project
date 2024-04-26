@@ -24,8 +24,11 @@ class Yolov7inSeg(BaseInstanceModel):
         super().__init__(cfg)
         self.cfg = cfg
 
-    def _config_transform(self):
-        # Convert coco format to yolo instance segmentation format
+    def _convert_dataset(self) -> tuple[str, str]:
+        # If task is predict or val didn't convert
+        if self.cfg['action'] in ['predict', 'eval']:
+            return "", ""
+
         train_dir = self.cfg.get('train_dir')
         val_dir = self.cfg.get('val_dir')
 
@@ -34,6 +37,12 @@ class Yolov7inSeg(BaseInstanceModel):
             converter.convert()
             train_dir = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'train')
             val_dir = os.path.join(os.getcwd(), converter.yoloSeg_save_path, 'test')
+
+        return train_dir, val_dir
+
+    def _config_transform(self):
+        # Convert coco format to yolo instance segmentation format
+        train_dir, val_dir = self._convert_dataset()
 
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])

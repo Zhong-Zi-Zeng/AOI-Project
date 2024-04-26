@@ -7,9 +7,7 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 
 # ===========Dataset===========
-coco_root:  ./data/WC-1500-Per-Class/WC-1500-scratches
-#train_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/1500/yoloBbox/original_class_2  + friction(400)/train_list.txt
-#val_txt: /home/miislab-server2/Heng/Heng_shared/AOI-Project/data/1500/yoloBbox/original_class_2  + friction(400)/val_list.txt
+coco_root:  "D:/Heng_shared/AOI-Project/data/NEW-1500-2-Class"
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -31,7 +29,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: " "
+weight: "Z:/Student_Work/Heng/AOI-Result/Yolov7ObjectDetection/YOLOv7_d6_size_1600/weights/epoch_824.pt"
 end_epoch: 200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate

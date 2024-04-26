@@ -89,6 +89,9 @@ class Builder:
         final_config['class_color'] = class_color
         final_config['number_of_class'] = len(class_names)
 
+        # Append action
+        final_config['action'] = self.task
+
         # Create work dir
         self._create_work_dir(final_config)
 
