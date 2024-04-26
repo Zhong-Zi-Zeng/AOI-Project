@@ -38,7 +38,7 @@ class Builder:
         if self.work_dir_name is not None:
             cfg['work_dir_name'] = os.path.join(self.task, self.work_dir_name)
             work_dir_path = get_work_dir_path(cfg)
-            os.makedirs(work_dir_path)
+            os.makedirs(work_dir_path, exist_ok=True)
         else:
             cfg['work_dir_name'] = os.path.join(self.task, cfg['model_name'])
             work_dir_path = get_work_dir_path(cfg)
@@ -88,6 +88,9 @@ class Builder:
         final_config['class_names'] = class_names
         final_config['class_color'] = class_color
         final_config['number_of_class'] = len(class_names)
+
+        # Append action
+        final_config['action'] = self.task
 
         # Create work dir
         self._create_work_dir(final_config)

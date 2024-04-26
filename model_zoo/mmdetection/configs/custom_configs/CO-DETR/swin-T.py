@@ -311,7 +311,7 @@ model = dict(
     ],
     test_cfg=[
         dict(
-            max_per_img=300,
+            max_per_img=100,
             # NMS can improve the mAP by 0.2.
             nms=dict(type='soft_nms', iou_threshold=0.8)),
         dict(

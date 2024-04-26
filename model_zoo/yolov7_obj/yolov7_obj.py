@@ -23,15 +23,25 @@ class Yolov7Obj(BaseDetectModel):
         super().__init__(cfg)
         self.cfg = cfg
 
-    def _config_transform(self):
-        # Convert coco format to yolo object detection format
+    def _convert_dataset(self) -> tuple[str, str]:
+        # If task is predict or val didn't convert
+        if self.cfg['action'] in ['predict', 'eval']:
+            return "", ""
+
         train_txt = self.cfg.get('train_txt')
         val_txt = self.cfg.get('val_txt')
-        if not os.path.exists(train_txt) and not os.path.exists(val_txt):
+
+        if not check_path(train_txt) or not check_path(val_txt):
             converter = coco2yoloBbox(coco_path=self.cfg["coco_root"])
             converter.convert()
             train_txt = os.path.join(os.getcwd(), converter.yoloBbox_save_path, 'train_list.txt')
             val_txt = os.path.join(os.getcwd(), converter.yoloBbox_save_path, 'val_list.txt')
+
+        return train_txt, val_txt
+
+    def _config_transform(self):
+        # Convert coco format to yolo object detection format
+        train_txt, val_txt = self._convert_dataset()
 
         # Update data file
         data_file = load_yaml(self.cfg['data_file'])
