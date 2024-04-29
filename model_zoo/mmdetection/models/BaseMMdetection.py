@@ -23,7 +23,7 @@ class BaseMMdetection:
         # Update config file
         variables = {
             '_base_': new_base,
-            'data_root': self.cfg['coco_root'],
+            'data_root': self.cfg['coco_root'] if self.cfg['action'] == 'train' else '',
             'classes': self.cfg['class_names'],
             'batch_size': self.cfg['batch_size'],
             'epochs': self.cfg['end_epoch'],
