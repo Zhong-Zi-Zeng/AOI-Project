@@ -28,6 +28,8 @@ def get_device(device: Union[str: int]) -> torch.device:
 
 
 def get_class_names_and_colors(cfg: dict) -> Tuple[list[str], list[list]]:
+    assert cfg.get('coco_root') is not None, "Please set the 'coco_root' in the config file."
+
     # Class name
     coco = COCO(os.path.join(cfg['coco_root'], 'annotations', 'instances_train2017.json'))
     class_names = [info['name'] for info in coco.loadCats(coco.getCatIds())]
