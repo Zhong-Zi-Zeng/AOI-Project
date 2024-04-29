@@ -6,7 +6,7 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: ./data/Synth-1200
+coco_root: "D:/Heng_shared/AOI-Project/data/NEW-1500-2-Class"
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -23,7 +23,7 @@ fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: " "
+weight: "D:/Heng_shared/AOI-Project/work_dirs/train/CO-DETR_wc_1500_with_symth_2400/epoch_50.pth"
 end_epoch: 25
 warmup_epoch: 3
 initial_lr: 0.00005 # Initial learning rate
