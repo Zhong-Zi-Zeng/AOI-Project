@@ -62,7 +62,7 @@ class Yolov7inSeg(BaseInstanceModel):
         hyp_file['hsv_v'] = self.cfg['hsv_v']
         hyp_file['degrees'] = self.cfg['degrees']
         hyp_file['translate'] = self.cfg['translate']
-        hyp_file['scale'] = self.cfg['scale']
+        hyp_file['scale'] = 1 - self.cfg['scale']
         hyp_file['shear'] = self.cfg['shear']
         hyp_file['perspective'] = self.cfg['perspective']
         hyp_file['flipud'] = self.cfg['flipud']

@@ -7,7 +7,7 @@ _base_: [ "./base/model/YOLO-v7/yolov7_obj_base_d6.yaml", # model
 
 
 # ===========Dataset===========
-coco_root:  "D:/Heng_shared/AOI-Project/data/NEW-1500-2-Class"
+coco_root:  "D:/Heng_shared/AOI-Project/data/500/coco/original_class_2"
 class_color: # B G R
   - [0, 255, 0]
   - [0, 0, 255]
@@ -16,11 +16,11 @@ class_color: # B G R
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
 hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
 hsv_v: 0.4  # image HSV-Value augmentation (fraction)
-degrees: 0.  # image rotation (+/- deg)
+degrees: 0  # image rotation (+/- deg)
 translate: 0.2  # image translation (+/- fraction)
 scale: 0.9  # image scale (+/- gain)
 shear: 0.  # image shear (+/- deg)
-perspective: 0.  # image perspective (+/- fraction), range 0-0.001
+perspective: 0. # image perspective (+/- fraction), range 0-0.001
 flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 mosaic: 1.  # image mosaic (probability)
@@ -29,7 +29,7 @@ copy_paste: 0.0  # segment copy-paste (probability)
 
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
-weight: "Z:/Student_Work/Heng/AOI-Result/Yolov7ObjectDetection/YOLOv7_d6_size_1600/weights/epoch_824.pt"
+weight: " "
 end_epoch: 200
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate

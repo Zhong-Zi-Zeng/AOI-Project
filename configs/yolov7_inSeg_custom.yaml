@@ -37,9 +37,6 @@ minimum_lr: 0.001 # Minimum learning rate
 batch_size: 2
 save_period: 25
 eval_period: 25
-# use_patch: True
-# patch_size: 1024
-# step: 512
 imgsz: [1600, 1600] # [train, test] image size
 device: "1"
 

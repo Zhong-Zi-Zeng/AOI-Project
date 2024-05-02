@@ -4,9 +4,8 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
           "./base/hyp.yaml" # hyperparameter
 ]
 
-
 # ===========Dataset===========
-coco_root: "D:/Heng_shared/AOI-Project/data/NEW-1500-2-Class"
+coco_root: ./data/500/coco/original_class_2
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -20,17 +19,16 @@ perspective: 0.5  # image perspective (+/- fraction), range 0-0.001
 flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 
-
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: "D:/Heng_shared/AOI-Project/work_dirs/train/CO-DETR_wc_1500_with_symth_2400/epoch_50.pth"
-end_epoch: 25
+weight: ./work_dirs/train/CO-DETR_pretrain_on_synth_1200/epoch_25.pth
+end_epoch: 75
 warmup_epoch: 3
 initial_lr: 0.00005 # Initial learning rate
 lr: 0.0002 # The learning rate after warmup
 minimum_lr: 0.0 # Minimum learning rate
 batch_size: 1
-imgsz: [ 1600, 1600 ]
+imgsz: [ 1024, 1024 ]
 save_period: 5
 eval_period: 5
 device: "0"

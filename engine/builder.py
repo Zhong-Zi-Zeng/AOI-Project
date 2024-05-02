@@ -84,9 +84,8 @@ class Builder:
         final_config = self._process_base_key(config_dir, self.custom_config)
 
         # Append class name and color if cfg doesn't have
-        if 'class_names' not in final_config or \
-                'class_color' not in final_config or \
-                'number_of_class' not in final_config:
+        if len(final_config['class_names']) == 0 or \
+                len(final_config['class_color']) == 0:
             class_names, class_color = get_class_names_and_colors(final_config)
             final_config['class_names'] = class_names
             final_config['class_color'] = class_color
