@@ -4,21 +4,24 @@ import os
 
 sys.path.append(os.path.join(os.getcwd()))
 
-from engine.builder import Builder
-from typing import Optional, Tuple, List, Union
-from pycocotools.coco import COCO
-from colorama import Fore, Back, Style, init
-from model_zoo import BaseInstanceModel
-from torchvision.ops import nms
-from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
-from engine.timer import TIMER
-from tqdm import tqdm
-import cv2
+import openpyxl
 import numpy as np
 import pandas as pd
 import argparse
+from typing import Optional, Tuple, List, Union, Dict
+from tqdm import tqdm
+
 import torch
-import openpyxl
+from pycocotools.coco import COCO
+from torchvision.ops import nms
+from colorama import Fore, Back, Style, init
+from rich.console import Console
+from rich.table import Table
+
+from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
+from engine.timer import TIMER
+from engine.builder import Builder
+from model_zoo import BaseInstanceModel
 
 
 def get_args_parser():
@@ -43,35 +46,6 @@ def get_args_parser():
                         help='Using multi confidence threshold lie in range 0.3 to 0.9.')
 
     return parser
-
-
-class Logger:
-    def __init__(self,
-                 cfg: dict):
-        self.cfg = cfg
-        self._start = False
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # Print process time
-        print('\n\n')
-        for timer in TIMER:
-            print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
-        print('\n\n')
-
-        self._start = False
-
-    def print_metrics(self,
-                      value_for_all: list):
-        # 對於所有類別
-        data = {title: [value]
-                for title, value in zip(self.cfg['metrics_for_all'], value_for_all)}
-
-        df = pd.DataFrame(data)
-        print('For all classes:')
-        print(df.to_string(index=False) + "\n")
 
 
 class Writer:
@@ -121,7 +95,6 @@ class Writer:
     def _save_to_json(self):
         """將excel檔轉換成json後儲存"""
 
-        # TODO: 目前json只有存全部類別的指標，沒有各別的
         path = os.path.join(get_work_dir_path(self.cfg), 'result.json')
         excel = pd.read_excel(self.excel_path)
         data_dict = excel.to_dict()
@@ -177,12 +150,52 @@ class Evaluator:
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
-        self.logger = Logger(cfg)
 
     @classmethod
     def build_by_config(cls, cfg: dict):
         _model = Builder.build_model(cfg)
         return cls(model=_model, cfg=cfg)
+
+    @staticmethod
+    def remove_pass_images(coco: COCO):
+        """
+            Removes image IDs that only contain the 'Pass' class from the COCO dataset.
+            Args:
+                coco (COCO): COCO dataset object
+            Returns:
+                all_defect_image_ids (list): List of image IDs that only contain the defect class
+                pass_category_id (int): The 'Pass' category ID
+                defect_category_ids (list): List of defect category IDs
+        """
+        # Get all image IDs and category IDs
+        all_image_ids = coco.getImgIds()
+        all_category_ids = coco.getCatIds()
+
+        # Get all category names
+        category_names = [coco.loadCats(cat_id)[0]['name'] for cat_id in all_category_ids]
+
+        # Check if 'Pass' class is present
+        assert 'Pass' in category_names, "Pass class not found in COCO dataset"
+
+        # Get the category ID for the 'Pass' class
+        pass_category_id = coco.getCatIds(catNms=['Pass'])[0]
+
+        # Get non-pass category IDs
+        defect_category_ids = [cat_id for cat_id in all_category_ids if cat_id != pass_category_id]
+
+        # Get image IDs that only contain the 'Pass' class
+        pass_images_id = []
+        for img_id in coco.getImgIds(catIds=[pass_category_id]):
+            annIds = coco.getAnnIds(imgIds=[img_id])
+            anns = coco.loadAnns(annIds)
+            if all(ann['category_id'] == pass_category_id for ann in anns):
+                pass_images_id.append(img_id)
+
+        # Remove image IDs that only contain the 'Pass' class
+        all_defect_image_ids = list(set(all_image_ids) - set(pass_images_id))
+        all_defect_image_ids.sort()
+
+        return all_defect_image_ids, pass_category_id, defect_category_ids
 
     def _filter_result(self, score_threshold: float) -> List[dict]:
         """
@@ -323,59 +336,72 @@ class Evaluator:
         print(Fore.BLUE + "Confidence score: {:.1}".format(self.cfg['conf_thres']) + Fore.WHITE)
         print('=' * 40)
 
-        with self.writer, self.logger:
-            # 瑕疵圖片編號
-            all_defect_images = self.coco_gt.getImgIds(catIds=[1])
+        with self.writer:
+            # Get all defect image ids
+            all_defect_images, pass_category_id, defect_category_ids = self.remove_pass_images(self.coco_gt)
 
-            # 瑕疵編號
-            all_defects = self.coco_gt.getAnnIds(catIds=[1])
+            # Number of defects
+            all_category_ids = self.coco_gt.getCatIds()
+            all_category_names = [cat['name'] for cat in self.coco_gt.loadCats(all_category_ids)]
+            all_defects = sum([len(self.coco_gt.getAnnIds(catIds=[cat_id]))
+                               for cat_id in all_category_ids if cat_id != pass_category_id])
 
-            # 過濾低於conf_thres的檢測框並執行nms
+            # Filter detection result
             dt_result = self._filter_result(score_threshold=self.cfg["conf_thres"])
             if len(dt_result) == 0:
                 print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
                 return [0] * 4
 
-            # 計算dt與gt的iou
+            # Load detection result
             coco_dt = self.coco_gt.loadRes(dt_result)
 
-            # 計算每張圖的檢出數與過殺數
+            # Calculate the number of detections and false positives for each image
             nf_recall_img = 0
             nf_fpr_img = 0
             nf_recall_ann = 0
             nf_fpr_ann = 0
             fpr_image_name = []
+            each_detect_score = {defect_category_id: [] for defect_category_id in defect_category_ids}
 
             for img_id in all_defect_images:
                 gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
                 dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
 
-                # 提出預測為defect且gt也為defect的部分
-                defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] == 1])
-                defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] == 1])
+                # Extract predictions that are classified as defect and ground truth is also defect
+                defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] != pass_category_id])
+                defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
 
-                # 如果沒有檢測出任何defect瑕疵，則換下一張
-                if len(defected_dt_bboxes) == 0:
+                # Check if there is any prediction
+                if len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
                     continue
 
-                # 取得dt與gt間的IoU
+                # Calculate iou
                 dt_gt_iou = self._get_iou(defected_dt_bboxes, defected_gt_bboxes)
 
-                # 將iou < iou_thres的部分設為0
+                # Filter iou
                 dt_gt_iou[dt_gt_iou < self.cfg["iou_thres"]] = 0
 
-                # 計算檢出數
+                # ==========To detected all classes recall and fpr==========
+                # Calculate the recall
                 nf_recall = np.sum(np.any(dt_gt_iou != 0, axis=1))
                 nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
                 nf_recall_ann += nf_recall
                 nf_recall_img += 1 if nf_recall > 0 else 0
 
-                # 計算過殺數，並儲存過殺圖片的名稱
+                # Calculate the fpr
                 nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
                 nf_fpr_ann += nf_fpr
                 if nf_fpr > 0:
                     nf_fpr_img += 1
                     fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+
+                # ==========To detected each class recall and average confidence==========
+                gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != pass_category_id])
+                defected_dt_score = np.array([dt['score'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+                class_id = gt_class_id[np.sum(dt_gt_iou, axis=0) != 0]
+                dt_score = defected_dt_score[np.any(dt_gt_iou > 0, axis=1)]
+                for cls_id, score in zip(class_id, dt_score):
+                    each_detect_score[cls_id].append(score)
 
             result = [
                 round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
@@ -384,11 +410,56 @@ class Evaluator:
                 nf_fpr_ann,  # 過殺數 (瑕疵)
             ]
 
+            # ==========Print information==========
+            console = Console()
+
+            # Print result recall and fpr
+            table = Table(title="Metrics for all classes", title_justify="left")
+
+            for title, value in zip(self.cfg['metrics_for_all'], result):
+                table.add_column(title, justify="center", style="cyan", no_wrap=True)
+
+            table.add_row(*[str(value) for value in result])
+            console.print(table)
+
+            # Print each class recall and average confidence
+            table = Table(title="Metrics for each class", title_justify="left", show_header=True,
+                          header_style="bold magenta")
+            table.add_column("Category")
+            table.add_column("Total", justify='center', style="cyan", no_wrap=True)
+            table.add_column("Recall", justify='center', style="cyan", no_wrap=True)
+            table.add_column("Avg confidence", justify='center', style="cyan", no_wrap=True)
+            table.add_column("Recall rate", justify='center', style="cyan", no_wrap=True)
+
+            for cls_id, scores in each_detect_score.items():
+                cat_name = all_category_names[cls_id]
+                total = len(self.coco_gt.getAnnIds(catIds=[cls_id]))
+                avg_confidence = f"{np.mean(scores):.3f}" if scores else "-"
+                recall = len(scores)
+                recall_rate = f"{recall / total:.3f}" if total > 0 else "-"
+
+                table.add_row(
+                    cat_name, str(total), str(recall), avg_confidence, recall_rate
+                )
+
+            console.print(table)
+
             # Print information
-            self.logger.print_metrics(result)
-            print(f"Number of defect image: {len(all_defect_images)}")
-            print(f"Number of defect: {len(all_defects)}")
-            print(f"FPR images: {fpr_image_name}")
+            table = Table(title="Result Analysis", show_lines=True, title_justify="left")
+            table.add_column("Information")
+            table.add_column("Value")
+
+            table.add_row("Number of defect image", str(len(all_defect_images)))
+            table.add_row("Number of defect", str(all_defects))
+            table.add_row("FPR images", ", ".join(fpr_image_name))
+
+            console.print(table)
+
+            # Print timer
+            print('\n\n')
+            for timer in TIMER:
+                print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+            print('\n\n')
 
             # Store value
             self.writer.write_col(self.writer.common_metrics +
