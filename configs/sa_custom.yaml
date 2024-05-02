@@ -8,13 +8,6 @@ _base_: [ "./base/model/SA/vit-b.yaml", # model
 
 # ===========Dataset===========
 coco_root: "./data/500/coco/original_class_2"
-number_of_class: 2
-class_names:
-  - "Pass"
-  - "Defect"
-class_color: # B G R
-  - [0, 255, 0]
-  - [0, 0, 255]
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)

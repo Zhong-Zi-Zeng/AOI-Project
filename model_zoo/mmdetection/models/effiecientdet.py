@@ -23,6 +23,10 @@ class EfficientDet(BaseMMdetection, BaseDetectModel):
         transforms = self._build_augmentation()
         BaseMMdetection.__init__(self, cfg, optimizer, transforms)
         BaseDetectModel.__init__(self, cfg)
+        self._check_img_size()
+    def _check_img_size(self):
+        assert self.cfg['imgsz'][0] % 512 == 0, "imgsz[0] must be a multiple of 512"
+        assert self.cfg['imgsz'][1] % 512 == 0, "imgsz[1] must be a multiple of 512"
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
