@@ -32,5 +32,5 @@ save_period: 25
 eval_period: 25
 use_points: False
 use_boxes: False
-device: "1"
+device: "cpu"
 

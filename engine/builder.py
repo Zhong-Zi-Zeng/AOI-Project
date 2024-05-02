@@ -1,6 +1,6 @@
 from typing import Union
 from model_zoo import BaseInstanceModel, BaseDetectModel, BaseSemanticModel
-from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml, get_class_names_and_colors)
+from .general import (get_work_dir_path, get_works_dir_path, load_yaml, save_yaml, get_class_names_and_colors, check_gpu_available)
 import importlib
 import os
 import copy
@@ -96,6 +96,9 @@ class Builder:
 
         # Create work dir
         self._create_work_dir(final_config)
+
+        # Check GPU
+        check_gpu_available(final_config)
 
         # Save final config
         save_yaml(os.path.join(get_work_dir_path(final_config), "final_config.yaml"), final_config)

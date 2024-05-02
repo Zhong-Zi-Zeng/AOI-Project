@@ -22,6 +22,15 @@ def check_path(path: str) -> bool:
     return os.path.exists(path)
 
 
+def check_gpu_available(cfg: dict):
+    gpus = torch.cuda.device_count()
+
+    # check device
+    if gpus == 0 and cfg['device'] != 'cpu':
+        raise Exception('No GPU found, please set --device cpu')
+    elif cfg["device"].isdigit() and int(cfg["device"]) >= gpus:
+        raise Exception(f'--device {cfg["device"]} not found, available devices is {gpus - 1}')
+
 def get_device(device: Union[str: int]) -> torch.device:
     device = torch.device(int(device) if device.isdigit() and device != 'cpu' else device)
     return device
