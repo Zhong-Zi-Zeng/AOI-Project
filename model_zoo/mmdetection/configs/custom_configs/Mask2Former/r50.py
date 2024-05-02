@@ -21,6 +21,7 @@ warmup_begin = 0
 warmup_end = 3
 nms_threshold = 0.7
 check_interval = 1
+eval_interval = 1
 optimizer = 'SGD'
 backend_args = None
 
@@ -97,7 +98,7 @@ test_pipeline = [
 ]
 
 # ==========train_cfg==========
-train_cfg = dict(_delete_=True, type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=check_interval)
+train_cfg = dict(_delete_=True, type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=eval_interval)
 
 
 # ==========model==========

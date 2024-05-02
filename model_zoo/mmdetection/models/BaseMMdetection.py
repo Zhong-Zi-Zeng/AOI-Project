@@ -38,6 +38,7 @@ class BaseMMdetection:
             'optim_wrapper': self.optimizer,
             'albu_train_transforms': self.transforms,
             'check_interval': self.cfg['save_period'],
+            'eval_interval': self.cfg['eval_period'],
             'nms_threshold': self.cfg['nms_thres'],
         }
 
