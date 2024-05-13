@@ -15,8 +15,6 @@ import torch
 
 @HOOKS.register_module()
 class ValidationHook(Hook):
-    def __init__(self):
-        self.step = 0
 
     def after_train_epoch(self, runner) -> None:
         if not hasattr(self, "tb_writer"):
@@ -29,17 +27,24 @@ class ValidationHook(Hook):
         model = runner.model
         model.eval()
 
-        # Validation loss
-        bar = tqdm(runner.val_dataloader)
-        for data in bar:
-            outputs = runner.model.train_step(data, runner.optim_wrapper)
-            for key, value in outputs.items():
-                self.tb_writer.add_scalar('Val/' + key, value.item(), self.step)
-            self.step += 1
-
         # Evaluate recall and FPR
         if (runner.epoch + 1) % self.final_config['eval_period'] == 0:
             print("Evaluate:")
+
+            # Validation loss
+            bar = tqdm(runner.val_dataloader)
+            val_loss = {}
+
+            for data in bar:
+                outputs = runner.model.train_step(data, runner.optim_wrapper)
+                for key, value in outputs.items():
+                    if key not in val_loss:
+                        val_loss[key] = []
+                    val_loss[key].append(value)
+
+            for key, value in val_loss.items():
+                value = torch.stack(value).mean()
+                self.tb_writer.add_scalar('Val/' + key, value.item(), runner.epoch)
 
             # Save last epoch
             last_weight_path = os.path.join(runner.work_dir, "last.pt")

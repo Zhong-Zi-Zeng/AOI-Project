@@ -30,7 +30,7 @@ lr: 0.0002 # The learning rate after warmup
 minimum_lr: 0.0 # Minimum learning rate
 batch_size: 1
 imgsz: [1536, 1536] # must can be divided by 512
-save_period: 10
-eval_period: 10
+save_period: 25
+eval_period: 25
 device: "0"
 
