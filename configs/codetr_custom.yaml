@@ -5,7 +5,7 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: ./data/Synth-14400
+coco_root: ./data/WC-100+CD-WC-6000
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -22,7 +22,7 @@ fliplr: 0.5  # image flip left-right (probability)
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
 weight: " "
-end_epoch: 25
+end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.00005 # Initial learning rate
 lr: 0.0002 # The learning rate after warmup
