@@ -94,7 +94,7 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                 bbox_xywh_list = np.array(bbox_xywh_list)[indices].tolist()
                 score_list = np.array(score_list)[indices].tolist()
                 rle_list = np.array(rle_list)[indices].tolist()
-                polygon_list = np.array(polygon_list)[indices]
+                polygon_list = np.array(polygon_list, dtype=object)[indices]
 
                 for conf, cls, bbox, poly in zip(score_list, class_list, bbox_xywh_list, polygon_list):
                     # Draw bounding box and mask

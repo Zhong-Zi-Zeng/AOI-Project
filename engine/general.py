@@ -4,6 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from pycocotools.coco import COCO
 import pycocotools.mask as ms
+from io import BytesIO
 import numpy as np
 import os
 import random
@@ -15,12 +16,26 @@ import astor
 import cv2
 import torch
 
+
 ROOT = os.getcwd()
 
 
 def check_path(path: str) -> bool:
     return os.path.exists(path)
 
+
+def allowed_file(filename: str):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def convert_image_to_numpy(image) -> np.ndarray:
+    in_memory_file = BytesIO()
+    image.save(in_memory_file)
+    data = np.frombuffer(in_memory_file.getvalue(), dtype=np.uint8)
+    image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+    return image
 
 def check_gpu_available(cfg: dict):
     gpus = torch.cuda.device_count()

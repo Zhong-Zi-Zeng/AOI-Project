@@ -5,41 +5,23 @@ sys.path.append(os.path.join(os.getcwd()))
 import cv2
 import json
 import base64
-import numpy as np
 
-from io import BytesIO
 from flask import Flask, request, jsonify
 
-from engine.builder import Builder
-from engine.general import get_works_dir_path, load_yaml
+from engine.general import get_works_dir_path, load_yaml, allowed_file, convert_image_to_numpy
+from model_manager import ModelManager
 
 app = Flask(__name__)
-UPLOAD_FOLDER = '/path/to/upload'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
-model = None
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def convert_image_to_numpy(image) -> np.ndarray:
-    in_memory_file = BytesIO()
-    image.save(in_memory_file)
-    data = np.frombuffer(in_memory_file.getvalue(), dtype=np.uint8)
-    image = cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-    return image
-
-
-@app.route('/model_list', methods=['GET'])
+@app.route('/get_model_list', methods=['GET'])
 def get_model_list():
     """
     搜尋當前work_dirs下，已training好的model所有的weight檔名稱與final_config.yaml
 
     return:
         {
-            model_name:
+            "model_name":
                 {
                     "weight_list": [weight1, weight2, ...],
                     "final_config": final_config
@@ -63,15 +45,36 @@ def get_model_list():
     return jsonify(model_list), 200
 
 
+@app.route('/initialize_model', methods=['POST'])
+def initialize_model():
+    """
+    給定final_config，初始化model
+    """
+    if 'final_config' not in request.form:
+        return jsonify({"message": "final_config is required"}), 400
+
+    final_config = request.form.get('final_config')
+    final_config = json.loads(final_config)
+
+    model_manager.initialize_model(final_config)
+    return jsonify({"message": "success"}), 200
+
+
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    給定圖片與final_config，對圖片進行預測，並回傳結果
-    :return:
-    """
-    global model
+    給定圖片進行預測，並回傳結果
 
-    # 检查是否有圖片
+    Returns:
+        {
+            "result_image": Base64的編碼圖片
+            "class_list" (list[int]): (M, ) 檢測到的類別編號，M為檢測到的物體數量
+            "score_list" (list[float]): (M, ) 每個物體的信心值
+            "bbox_list" (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
+            "rle_list" (list[dict["size":list, "counts": str]]): (M, ) RLE編碼格式
+        }
+    """
+    # 检查是否包含圖片
     if 'image' not in request.files:
         return jsonify({"error": "No image part"}), 400
 
@@ -82,32 +85,26 @@ def predict():
     else:
         return jsonify({"error": "Unsupported image type"}), 400
 
-    # 檢查是否有final_config
-    if 'final_config' not in request.form:
-        return jsonify({"error": "No final_config part"}), 400
-
-    # 取出final_config
-    final_config = request.form.get('final_config')
-    final_config = json.loads(final_config)
-
-    # 建立模型
+    # 確認是否已經初始化model
+    model = model_manager.get_model()
     if model is None:
-        builder = Builder(yaml_dict=final_config, task='predict')
-        cfg = builder.build_config()
-        model = builder.build_model(cfg)
+        return jsonify({"error": "Model is not initialized. Please call /initialize_model first."}), 400
 
+    # 預測
     result = model.predict(image)
     _, buffer = cv2.imencode('.jpg', result['result_image'])
     jpg_as_text = base64.b64encode(buffer).decode()
     data = {
         'result_image': jpg_as_text,
-        'class_list': result['class_list'],
-        'score_list': result['score_list'],
-        'bbox_list': result['bbox_list'],
+        'class_list': result.get('class_list'),
+        'score_list': result.get('score_list'),
+        'bbox_list': result.get('bbox_list'),
+        'rle_list': result.get('rle_list'),
     }
 
     return jsonify(data), 200
 
 
 if __name__ == '__main__':
+    model_manager = ModelManager()
     app.run(debug=True, host='0.0.0.0', port=5000)
