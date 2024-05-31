@@ -1,0 +1,36 @@
+_base_: [ "./base/model/EfficientDet/d0.yaml", # model
+          "./base/evaluation/object_detection.yaml", # task
+          "./base/dataset.yaml", # dataset
+          "./base/hyp.yaml" # hyperparameter
+]
+
+
+# ===========Dataset===========
+coco_root: "./data/1500/coco/original_class_2"
+
+# ===========Augmentation===========
+hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction), range 0-1
+hsv_v: 0.4  # image HSV-Value augmentation (fraction), range 0-1
+degrees: 10  # image rotation (+/- deg), range 0-360
+translate: 0.1  # image translation (+/- fraction), range 0-1
+scale: 0.9  # image scale (+/- gain), range 0-1, 1 means no scaling
+shear: 0.  # image shear (+/- deg), range 0-180
+perspective: 0.5  # image perspective (+/- fraction), range 0-1
+flipud: 0.  # image flip up-down (probability), range 0-1
+fliplr: 0.5  # image flip left-right (probability), range 0-1
+
+# ===========Hyperparameter===========
+optimizer: "AdamW" # Adam、AdamW、SGD
+weight: " "
+end_epoch: 900
+warmup_epoch: 3
+initial_lr: 0.00005 # Initial learning rate
+lr: 0.0002 # The learning rate after warmup
+minimum_lr: 0.0 # Minimum learning rate
+batch_size: 1
+imgsz: [1536, 1536] # must can be divided by 512
+save_period: 25
+eval_period: 25
+device: "0"
+

@@ -1,4 +1,0 @@
-model_name: 'SAN'
-model_dir_name: 'mmsegmentation'
-
-cfg_file: "./model_zoo/sa/configs/vit-b.py"
