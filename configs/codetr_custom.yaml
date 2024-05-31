@@ -5,7 +5,7 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: ./data/WC-100+CD-WC-6000
+coco_root: ./data/WC-500+CD-WC-1200
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -15,7 +15,7 @@ degrees: 10  # image rotation (+/- deg)
 translate: 0.1  # image translation (+/- fraction)
 scale: 0.9  # image scale (+/- gain)
 shear: 0.  # image shear (+/- deg)
-perspective: 0.5  # image perspective (+/- fraction), range 0-0.001
+perspective: 0.5  # image perspective (+/- fraction), range 0-1
 flipud: 0.  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 

@@ -58,7 +58,8 @@ class CustomDataset(Dataset):
         self.img_ids = self._filter_image()
 
     def _filter_image(self) -> list[int]:
-        """Filter out images that didn't has label"""
+        """Filter out images that didn't have label"""
+        # TODO: Now will filter out images that don't have any object and only have 'Pass' class
         all_img_ids = self.coco.getImgIds(catIds=[1])
         result = []
         for img_id in all_img_ids:

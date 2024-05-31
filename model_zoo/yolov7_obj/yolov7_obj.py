@@ -63,7 +63,7 @@ class Yolov7Obj(BaseDetectModel):
         hyp_file['translate'] = self.cfg['translate']
         hyp_file['scale'] = 1 - self.cfg['scale']
         hyp_file['shear'] = self.cfg['shear']
-        hyp_file['perspective'] = self.cfg['perspective']
+        hyp_file['perspective'] = self.cfg['perspective'] / 1000  # 0 ~ 0.001
         hyp_file['flipud'] = self.cfg['flipud']
         hyp_file['fliplr'] = self.cfg['fliplr']
         hyp_file['mosaic'] = self.cfg['mosaic']

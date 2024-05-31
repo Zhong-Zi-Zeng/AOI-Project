@@ -14,6 +14,9 @@ from model_manager import ModelManager
 app = Flask(__name__)
 
 
+
+
+
 @app.route('/get_model_list', methods=['GET'])
 def get_model_list():
     """
@@ -107,4 +110,4 @@ def predict():
 
 if __name__ == '__main__':
     model_manager = ModelManager()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

@@ -7,30 +7,30 @@ _base_: [ "./base/model/SA/vit-b.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/500/coco/original_class_2"
+coco_root: "./data/1500/coco/original_class_2"
 
 # ===========Augmentation===========
-hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
-hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)
-hsv_v: 0.4  # image HSV-Value augmentation (fraction)
+hsv_h: 0.  # image HSV-Hue augmentation (fraction)
+hsv_s: 0.  # image HSV-Saturation augmentation (fraction)
+hsv_v: 0.  # image HSV-Value augmentation (fraction)
 degrees: 0  # image rotation (+/- deg)
 translate: 0.0  # image translation (+/- fraction)
 scale: 1.0  # image scale (+/- gain)
 shear: 0  # image shear (+/- deg)
 perspective: 0.  # image perspective (+/- fraction)
-flipud: 0.5  # image flip up-down (probability)
-fliplr: 0.5  # image flip left-right (probability)
+flipud: 0.  # image flip up-down (probability)
+fliplr: 0.  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
 weight: " "
-end_epoch: 200
+end_epoch: 500
 lr: 0.001
 minimum_lr: 0.0 # Minimum learning rate
-batch_size: 1
-save_period: 25
+batch_size: 2
+save_period: 100
 eval_period: 25
 use_points: False
 use_boxes: False
-device: "cpu"
+device: "0"
 
