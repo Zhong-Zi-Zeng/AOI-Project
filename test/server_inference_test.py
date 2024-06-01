@@ -7,7 +7,7 @@ import json
 import numpy as np
 from io import BytesIO
 
-URL = "http://127.0.0.1:5000/"
+URL = "http://localhost:5000/"
 
 
 def predict():

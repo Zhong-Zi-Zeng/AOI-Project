@@ -5,16 +5,72 @@ sys.path.append(os.path.join(os.getcwd()))
 import cv2
 import json
 import base64
+import subprocess
+from threading import Thread
 
 from flask import Flask, request, jsonify
 
-from engine.general import get_works_dir_path, load_yaml, allowed_file, convert_image_to_numpy
+from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
+                            allowed_file, convert_image_to_numpy)
 from model_manager import ModelManager
 
 app = Flask(__name__)
 
 
+@app.route('/get_template', methods=['GET'])
+def get_template():
+    """
+    取得所有模型預設的config
+    return:
+        {
+            "model_name":
+                {
+                    "config": 每個model預設的config
+                }
+        }
+    """
 
+    TEMPLATE_DIR = "./configs"
+
+    model_dict = {model_name.replace(".yaml", ""): {'config': None}
+                  for model_name in os.listdir(TEMPLATE_DIR) if model_name.endswith(".yaml")
+                  }
+
+    for model_name in model_dict:
+        # 取出每個model預設的config
+        model_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
+
+    return jsonify(model_dict), 200
+
+
+@app.route('/train', methods=['POST'])
+def train():
+    """
+    給定config後執行training
+    """
+
+    def open_tensorboard(final_config):
+        subprocess.run(['tensorboard',
+                        '--logdir', get_work_dir_path(final_config),
+                        '--host', '0.0.0.0',
+                        '--port', '1000'])
+
+    if 'config' not in request.form:
+        return jsonify({"message": "config is required"}), 400
+
+    config = request.form.get('config')
+    config = json.loads(config)
+
+    final_config = model_manager.initialize_model(config, task='train')
+    model = model_manager.get_model()
+
+    # Open tensorboard
+    Thread(target=open_tensorboard, args=[final_config]).start()
+
+    # Training
+    Thread(target=model.train).start()
+
+    return jsonify({"message": "success"}), 200
 
 
 @app.route('/get_model_list', methods=['GET'])
@@ -32,26 +88,26 @@ def get_model_list():
         }
     """
     train_dir_path = os.path.join(get_works_dir_path(), "train")
-    model_list = {model_name: {'weight_list': [], 'final_config': None}
+    model_dict = {model_name: {'weight_list': [], 'final_config': None}
                   for model_name in os.listdir(train_dir_path)}
 
-    for model_name in model_list:
+    for model_name in model_dict:
         # 取出每個model可用的weight
-        model_list[model_name]['weight_list'] = [os.path.join(train_dir_path, model_name, weight) for weight in
+        model_dict[model_name]['weight_list'] = [os.path.join(train_dir_path, model_name, weight) for weight in
                                                  os.listdir(os.path.join(train_dir_path, model_name)) if
                                                  weight.endswith(".pth") or weight.endswith(".pt")]
 
         # 取出final_config.yaml的所有設定值
-        model_list[model_name]['final_config'] = load_yaml(
+        model_dict[model_name]['final_config'] = load_yaml(
             os.path.join(train_dir_path, model_name, "final_config.yaml"))
 
-    return jsonify(model_list), 200
+    return jsonify(model_dict), 200
 
 
 @app.route('/initialize_model', methods=['POST'])
 def initialize_model():
     """
-    給定final_config，初始化model
+    給定final_config，初始化model，用於predict之前
     """
     if 'final_config' not in request.form:
         return jsonify({"message": "final_config is required"}), 400
@@ -59,7 +115,7 @@ def initialize_model():
     final_config = request.form.get('final_config')
     final_config = json.loads(final_config)
 
-    model_manager.initialize_model(final_config)
+    model_manager.initialize_model(final_config, task='predict')
     return jsonify({"message": "success"}), 200
 
 
@@ -110,4 +166,4 @@ def predict():
 
 if __name__ == '__main__':
     model_manager = ModelManager()
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

@@ -6,7 +6,7 @@ _base_: [ "./base/model/Cascade-Mask RCNN/r101.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/1500/coco/original_class_2"
+coco_root: " "
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
@@ -23,14 +23,14 @@ fliplr: 0.5  # image flip left-right (probability), range 0-1
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
-end_epoch: 900
+end_epoch: 50
 warmup_epoch: 3
-save_period: 25
 initial_lr: 0.0003 # Initial learning rate
 lr: 0.001 # The learning rate after warmup
 minimum_lr: 0.0001 # Minimum learning rate
 batch_size: 1
-imgsz: [1024, 1024]
-use_patch: false
-device: "1"
+imgsz: [1600, 1600]
+save_period: 5
+eval_period: 5
+device: "0"
 
