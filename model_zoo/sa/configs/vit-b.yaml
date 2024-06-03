@@ -21,7 +21,7 @@ eval_interval: 1
 save_interval: 25
 shuffle: True
 use_points: False
-use_boxes: True
+use_boxes: False
 device: 0
 end_epoch: 200
 num_workers: 0
@@ -29,7 +29,7 @@ weight: " "
 
 # ===========Optimizer===========
 optimizer: "Adam" # SGD、Adam、AdamW
-weight_decay: 0.0
+weight_decay: 0.0001
 lr: 0.001
 minimum_lr: 0.0
 momentum: 0.937 # For SGD

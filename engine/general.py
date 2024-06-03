@@ -75,9 +75,9 @@ def mask_to_polygon(mask: np.ndarray) -> list:
     polygons = []
     for contour in contours:
         if contour.size >= 6:
-            polygons.extend(contour.flatten().tolist())
+            polygons.append(contour.flatten().tolist())
 
-    return [polygons]
+    return polygons
 
 
 def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:

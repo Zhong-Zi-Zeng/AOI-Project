@@ -68,7 +68,7 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                 polygons = mask_to_polygon(ms.decode(rle))
 
                 for polygon in polygons:
-                    poly = np.reshape(np.array(polygon), (-1, 2))
+                    poly = np.reshape(np.array(polygon, dtype=np.int32), (-1, 2))
                     try:
                         x, y, w, h = cv2.boundingRect(poly)
                     except:

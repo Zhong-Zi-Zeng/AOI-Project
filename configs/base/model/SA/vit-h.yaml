@@ -2,3 +2,5 @@ model_name: 'SA'
 model_dir_name: 'sa'
 
 cfg_file: "./model_zoo/sa/configs/vit-h.yaml"
+use_points: False
+use_boxes: False
