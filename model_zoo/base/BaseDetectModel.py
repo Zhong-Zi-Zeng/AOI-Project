@@ -53,7 +53,7 @@ class BaseDetectModel(BaseModel):
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
                 nms_thres: float = 0.5,
-                verbose: bool = False,
+                verbose: bool = True,
                 *args: Any,
                 **kwargs: Any) -> dict:
 
@@ -129,8 +129,10 @@ class BaseDetectModel(BaseModel):
 
         # Print timer
         if verbose:
+            print('\n\n')
             for timer in TIMER:
                 print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+            print('\n\n')
 
         if set(result.keys()) == set(self.default_key):
             return result
