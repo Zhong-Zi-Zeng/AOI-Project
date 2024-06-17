@@ -53,7 +53,7 @@ class BaseDetectModel(BaseModel):
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
                 nms_thres: float = 0.5,
-                verbose: bool = True,
+                verbose: bool = False,
                 *args: Any,
                 **kwargs: Any) -> dict:
 

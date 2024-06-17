@@ -31,19 +31,19 @@ class ValidationHook(Hook):
             print("Evaluate:")
 
             # Validation loss
-            bar = tqdm(runner.val_dataloader)
-            val_loss = {}
-
-            for data in bar:
-                outputs = runner.model.train_step(data, runner.optim_wrapper)
-                for key, value in outputs.items():
-                    if key not in val_loss:
-                        val_loss[key] = []
-                    val_loss[key].append(value)
-
-            for key, value in val_loss.items():
-                value = torch.stack(value).mean()
-                self.tb_writer.add_scalar('Val/' + key, value.item(), runner.epoch)
+            # bar = tqdm(runner.val_dataloader)
+            # val_loss = {}
+            #
+            # for data in bar:
+            #     outputs = runner.model.train_step(data, runner.optim_wrapper)
+            #     for key, value in outputs.items():
+            #         if key not in val_loss:
+            #             val_loss[key] = []
+            #         val_loss[key].append(value)
+            #
+            # for key, value in val_loss.items():
+            #     value = torch.stack(value).mean()
+            #     self.tb_writer.add_scalar('Val/' + key, value.item(), runner.epoch)
 
             # Save last epoch
             last_weight_path = os.path.join(runner.work_dir, "last.pt")
