@@ -43,7 +43,7 @@ class CODETR(BaseMMdetection, BaseDetectModel):
                 else:
                     raise ValueError
 
-            result = self.model(original_image, show=False, print_result=False, return_vis=True)
+            result = self.model(original_image, show=False, print_result=False, return_vis=False)
 
             class_list = []
             score_list = []

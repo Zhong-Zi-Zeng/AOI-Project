@@ -26,14 +26,14 @@ copy_paste: 0.0  # segment copy-paste (probability), range 0-1
 # ===========Hyperparameter===========
 optimizer: "SGD" # Adam、AdamW、SGD
 weight: " "
-end_epoch: 900
+end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.003 # Initial learning rate
 lr: 0.01 # The learning rate after warmup
 minimum_lr: 0.001 # Minimum learning rate
-batch_size: 2
-save_period: 25
-eval_period: 25
+batch_size: 1
 imgsz: [1600, 1600] # [train, test] image size
-device: "1"
+save_period: 5
+eval_period: 5
+device: "0"
 

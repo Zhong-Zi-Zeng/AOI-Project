@@ -73,7 +73,7 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                         x, y, w, h = cv2.boundingRect(poly)
                     except:
                         print('Unable to generate a box from the given polygon.')
-                        continue
+                        break
                     x1, y1, x2, y2 = x, y, x + w, y + h
 
                     class_list.append(cls)
@@ -102,7 +102,7 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
                     self.plot_one_box_mask(image=original_image,
                                            xywh_bbox=bbox,
                                            text=text,
-                                           polygon=poly,
+                                           polygon=poly.astype(np.int32),
                                            color=self.class_color[int(cls)])
 
         return {"result_image": original_image,

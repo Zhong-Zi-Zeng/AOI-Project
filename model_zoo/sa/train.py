@@ -5,6 +5,7 @@ from torch import nn
 import torch
 import cv2
 
+
 def train_one_epoch(model: torch.nn.Module,
                     train_dataloader: DataLoader,
                     epoch: int,
@@ -54,16 +55,16 @@ def train_one_epoch(model: torch.nn.Module,
         learning_rates = [param_group['lr'] for param_group in optimizer.param_groups][0]
 
         step = b + len(train_dataloader) * epoch
-        tb_writer.add_scalar('training loss', loss.item(), step)
+        tb_writer.add_scalar('training loss', loss.item() * tr_image.size(0), step)
 
         pbar.set_description(
-            f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item():.7f} | Learning rate:{learning_rates:.7f}")
+            f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item() * tr_image.size(0):.7f} | Learning rate:{learning_rates:.7f}")
 
-        if epoch > 50:
-            tr_image = tr_image.permute(0, 2, 3, 1).cpu().numpy()
-            ground_truth_masks = ground_truth_masks.cpu().numpy()
-            predicted_masks = predicted_masks.detach().cpu().numpy()
-            cv2.imshow('gt', ground_truth_masks[0][0])
-            cv2.imshow('predicted_masks', predicted_masks[0][0])
-            cv2.imshow('input', tr_image[0])
-            cv2.waitKey(0)
+        # if epoch > 50:
+        #     tr_image = tr_image.permute(0, 2, 3, 1).cpu().numpy()
+        #     ground_truth_masks = ground_truth_masks.cpu().numpy()
+        #     predicted_masks = predicted_masks.detach().cpu().numpy()
+        #     cv2.imshow('gt', ground_truth_masks[0][0])
+        #     cv2.imshow('predicted_masks', predicted_masks[0][0])
+        #     cv2.imshow('input', tr_image[0])
+        #     cv2.waitKey(0)

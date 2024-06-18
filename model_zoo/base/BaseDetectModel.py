@@ -8,6 +8,7 @@ from typing import Union, Any
 from abc import abstractmethod
 from model_zoo.base.BaseModel import BaseModel
 from engine.general import xywh_to_xyxy
+from engine.timer import TIMER
 from torchvision.ops import nms
 from patchify import patchify
 import numpy as np
@@ -16,6 +17,8 @@ import cv2
 
 
 class BaseDetectModel(BaseModel):
+    default_key = {'result_image', 'class_list', 'score_list', 'bbox_list'}
+
     def __init__(self, cfg: dict):
         super().__init__(cfg)
 
@@ -50,6 +53,7 @@ class BaseDetectModel(BaseModel):
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
                 nms_thres: float = 0.5,
+                verbose: bool = False,
                 *args: Any,
                 **kwargs: Any) -> dict:
 
@@ -113,7 +117,6 @@ class BaseDetectModel(BaseModel):
                                        xywh_bbox=bbox,
                                        text=text,
                                        color=self.class_color[int(cls)])
-
             result = {
                 'result_image': result_image,
                 'class_list': class_list,
@@ -123,9 +126,15 @@ class BaseDetectModel(BaseModel):
         # If not use patch to predict
         else:
             result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
-        default_key = {'result_image', 'class_list', 'score_list', 'bbox_list'}
 
-        if set(result.keys()) == set(default_key):
+        # Print timer
+        if verbose:
+            print('\n\n')
+            for timer in TIMER:
+                print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+            print('\n\n')
+
+        if set(result.keys()) == set(self.default_key):
             return result
         else:
             raise ValueError("You must return the same key with default keys.")

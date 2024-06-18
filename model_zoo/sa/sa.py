@@ -130,7 +130,10 @@ class SA(BaseSemanticModel):
 
             predicted_masks = torch.sigmoid(predicted_masks[0][0])  # [H, W]
             predicted_masks = predicted_masks.detach().cpu().numpy()  # [H, W]
-            predicted_masks = np.where(predicted_masks > conf_thres, 255, 0).astype(np.uint8)  # [H, W]
+            predicted_masks = np.where(predicted_masks >= conf_thres, 255, 0).astype(np.uint8)  # [H, W]
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+            predicted_masks = cv2.erode(predicted_masks, kernel)   # 侵蝕
+            predicted_masks = cv2.dilate(predicted_masks, kernel)
             polygons = mask_to_polygon(predicted_masks)
 
             # For evaluation

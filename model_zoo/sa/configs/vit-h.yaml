@@ -22,7 +22,7 @@ eval_interval: 1
 save_interval: 25
 shuffle: True
 use_points: False
-use_boxes: True
+use_boxes: False
 device: 0
 end_epoch: 200
 num_workers: 0

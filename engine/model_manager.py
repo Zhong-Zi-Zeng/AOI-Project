@@ -10,10 +10,18 @@ class ModelManager:
             cls._instance.model = None
         return cls._instance
 
-    def initialize_model(self, final_config):
-        builder = Builder(yaml_dict=final_config, task='predict')
-        cfg = builder.build_config()
-        self.model = builder.build_model(cfg)
+    def initialize_model(self,
+                         config: dict,
+                         task: str,
+                         work_dir_name: str = None) -> dict:
+
+        assert task in ['train', 'predict']
+
+        builder = Builder(yaml_dict=config, task=task, work_dir_name=work_dir_name)
+        final_config = builder.build_config()
+        self.model = builder.build_model(final_config)
+
+        return final_config
 
     def get_model(self):
         if self.model is None:
