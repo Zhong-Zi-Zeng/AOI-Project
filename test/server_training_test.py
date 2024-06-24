@@ -18,7 +18,7 @@ def training():
     # Step 3:
     # =========  更改超參數 =========
     config['batch_size'] = 1
-    config['end_epoch'] = 24
+    config['end_epoch'] = 3
     config['coco_root'] = "./data/WC-100"
 
     # Step 4:

@@ -13,14 +13,14 @@ from flask import Flask, request, jsonify
 from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
                             allowed_file, convert_image_to_numpy)
 from model_manager import ModelManager
+from training_manager import TrainingManager
 
-app = Flask(__name__)
-
+APP = Flask(__name__)
 
 # =======================================
 # =============For Training==============
 # =======================================
-@app.route('/get_dataset_list', methods=['GET'])
+@APP.route('/get_dataset_list', methods=['GET'])
 def get_dataset_list():
     """
     返回在./data資料夾中可使用的Dataset
@@ -40,7 +40,7 @@ def get_dataset_list():
     return jsonify(dataset_list), 200
 
 
-@app.route('/get_template', methods=['GET'])
+@APP.route('/get_template', methods=['GET'])
 def get_template():
     """
     取得所有模型預設的config
@@ -65,8 +65,16 @@ def get_template():
 
     return jsonify(model_dict), 200
 
+@APP.route('/status', methods=['GET'])
+def status():
+    if training_manager.is_training():
+        return jsonify({"status": "Training in progress"}), 200
+    elif training_manager.is_complete():
+        return jsonify({"status": "Training completed"}), 200
+    else:
+        return jsonify({"status": "No training in progress"}), 200
 
-@app.route('/train', methods=['POST'])
+@APP.route('/train', methods=['POST'])
 def train():
     """
     給定config後執行training
@@ -77,6 +85,9 @@ def train():
                         '--logdir', get_work_dir_path(final_config),
                         '--host', '0.0.0.0',
                         '--port', '1000'])
+
+    def train_model():
+        model.train()
 
     if 'config' not in request.form:
         return jsonify({"message": "config is required"}), 400
@@ -91,14 +102,14 @@ def train():
     Thread(target=open_tensorboard, args=[final_config]).start()
 
     # Training
-    Thread(target=model.train).start()
+    training_manager.start_training(train_model)
 
     return jsonify({"message": "success"}), 200
 
 # =======================================
 # =============For Inference=============
 # =======================================
-@app.route('/get_model_list', methods=['GET'])
+@APP.route('/get_model_list', methods=['GET'])
 def get_model_list():
     """
     搜尋當前work_dirs下，已training好的model所有的weight檔名稱與final_config.yaml
@@ -129,7 +140,7 @@ def get_model_list():
     return jsonify(model_dict), 200
 
 
-@app.route('/initialize_model', methods=['POST'])
+@APP.route('/initialize_model', methods=['POST'])
 def initialize_model():
     """
     給定final_config，初始化model，用於predict之前
@@ -144,7 +155,7 @@ def initialize_model():
     return jsonify({"message": "success"}), 200
 
 
-@app.route('/predict', methods=['POST'])
+@APP.route('/predict', methods=['POST'])
 def predict():
     """
     給定圖片進行預測，並回傳結果
@@ -191,4 +202,5 @@ def predict():
 
 if __name__ == '__main__':
     model_manager = ModelManager()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    training_manager = TrainingManager()
+    APP.run(debug=False, host='0.0.0.0', port=5000)

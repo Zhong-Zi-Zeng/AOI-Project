@@ -58,7 +58,7 @@ class coco2yoloBbox():
 
         with ThreadPoolExecutor() as executor:
             list(tqdm(executor.map(lambda file: self.process_file(file, source_dir, dest_dir), files), total=len(files),
-                      desc=f'Converting {task} images to png...'))
+                      desc=f'Converting {task} to png...'))
 
     def _conv_box(self, size, box):
         dw = 1. / (size[0])
@@ -169,7 +169,7 @@ class coco2yoloSeg():
 
         with ThreadPoolExecutor() as executor:
             list(tqdm(executor.map(lambda file: self.process_file(file, source_dir, dest_dir), files), total=len(files),
-                      desc=f'Converting {task} images to png...'))
+                      desc=f'Converting {task} to png...'))
 
     def _conv_polygon(self, size, seg):  # normalize
         '''
