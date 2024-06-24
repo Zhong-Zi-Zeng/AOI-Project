@@ -39,7 +39,6 @@ def get_dataset_list():
 
     return jsonify(dataset_list), 200
 
-
 @APP.route('/get_template', methods=['GET'])
 def get_template():
     """
@@ -64,6 +63,12 @@ def get_template():
         model_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
 
     return jsonify(model_dict), 200
+
+@APP.route('/get_remaining_time', methods=['GET'])
+def get_remaining_time():
+    remaining_time = training_manager.get_remaining_time()
+
+    return jsonify({"remaining_time": float(remaining_time)}), 200
 
 @APP.route('/status', methods=['GET'])
 def status():
