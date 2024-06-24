@@ -27,16 +27,6 @@ def get_args_parser():
 
     return parser
 
-def open_tensorboard():
-    # Open web
-    webbrowser.open("http://localhost:6007/")
-
-    # Open tensorboard
-    subprocess.run(['tensorboard',
-                    '--logdir', get_work_dir_path(cfg),
-                    '--port', '6007'])
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Model evaluation script.',
                                      parents=[get_args_parser()])
@@ -50,9 +40,6 @@ if __name__ == "__main__":
 
     # Build model
     model = builder.build_model(cfg)
-
-    # Open tensorboard and web
-    Thread(target=open_tensorboard).start()
 
     # Training
     start_time = time.time()

@@ -271,7 +271,7 @@ We provide a [Dockerfile](../../docker/Dockerfile) to build an image. Ensure tha
 
 ```shell
 # build an image with PyTorch 1.9, CUDA 11.1
-# If you prefer other versions, just modified the Dockerfile
+# If you prefer other versions, just modified the Dockerfile_windows
 docker build -t mmdetection docker/
 ```
 

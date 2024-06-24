@@ -17,7 +17,28 @@ from model_manager import ModelManager
 app = Flask(__name__)
 
 
-# TODO: 取得檔前可用的dataset
+# =======================================
+# =============For Training==============
+# =======================================
+@app.route('/get_dataset_list', methods=['GET'])
+def get_dataset_list():
+    """
+    返回在./data資料夾中可使用的Dataset
+    :return:
+        ['WC-500', 'WC-1500', ...]
+    """
+
+    DATASET_DIR = "./data"
+
+    dataset_list = [os.path.join(DATASET_DIR, dataset_name)
+                    for dataset_name in os.listdir(DATASET_DIR)
+                    if os.path.isdir(os.path.join(DATASET_DIR, dataset_name)) and
+                    dataset_name != 'yoloBbox' and
+                    dataset_name != 'yoloSeg'
+                    ]
+
+    return jsonify(dataset_list), 200
+
 
 @app.route('/get_template', methods=['GET'])
 def get_template():
@@ -74,7 +95,9 @@ def train():
 
     return jsonify({"message": "success"}), 200
 
-
+# =======================================
+# =============For Inference=============
+# =======================================
 @app.route('/get_model_list', methods=['GET'])
 def get_model_list():
     """
