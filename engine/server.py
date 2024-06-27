@@ -64,20 +64,23 @@ def get_template():
 
     return jsonify(model_dict), 200
 
-@APP.route('/get_remaining_time', methods=['GET'])
-def get_remaining_time():
-    remaining_time = training_manager.get_remaining_time()
-
-    return jsonify({"remaining_time": float(remaining_time)}), 200
-
 @APP.route('/status', methods=['GET'])
 def status():
+    remaining_time = training_manager.get_remaining_time()
+    progress = training_manager.get_progress()
+
     if training_manager.is_training():
-        return jsonify({"status": "Training in progress"}), 200
+        status_msg = "Training in progress"
     elif training_manager.is_complete():
-        return jsonify({"status": "Training completed"}), 200
+        status_msg = "Training completed"
     else:
-        return jsonify({"status": "No training in progress"}), 200
+        status_msg = "No training in progress"
+
+    return jsonify({
+        "status": status_msg,
+        "remaining_time": remaining_time,
+        "progress": progress
+    }), 200
 
 @APP.route('/train', methods=['POST'])
 def train():

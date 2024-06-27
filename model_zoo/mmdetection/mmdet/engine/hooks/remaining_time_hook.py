@@ -32,5 +32,9 @@ class RemainingTimeHook(Hook):
         remaining_iters = total_iters - runner.iter
 
         remaining_time = avg_iter_time * remaining_iters
+        progress = ((runner.iter + 1) / total_iters) * 100
+
         self.r.set("remaining_time", remaining_time / 60)
+        self.r.set("progress", progress)
+
         self.start_time = time.time()
