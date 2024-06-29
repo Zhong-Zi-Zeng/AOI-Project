@@ -3,6 +3,7 @@ from threading import Thread
 import numpy as np
 import redis
 
+
 class TrainingManager:
     def __init__(self):
         self.thread = None
@@ -10,6 +11,7 @@ class TrainingManager:
         self.r = redis.Redis(host='redis', port=6379, db=0)
 
     def start_training(self, train_func):
+        self._clear_redis_key()
         self.complete = False
         self.thread = Thread(target=self._train_wrapper, args=(train_func,))
         self.thread.start()
@@ -17,7 +19,6 @@ class TrainingManager:
     def _train_wrapper(self, train_func):
         train_func()
         self.complete = True
-        self._clear_redis_key()
 
     def _get_redis_value(self, key: str):
         value = self.r.get(key)
@@ -29,17 +30,19 @@ class TrainingManager:
             return value.decode('utf-8')  # 如果不能轉換為float，就解碼為字串
 
     def _clear_redis_key(self):
-        self.r.delete("remaining_time")
-        self.r.delete("progress")
+        self.r.flushdb()
 
-    def get_remaining_time(self):
-        return self._get_redis_value("remaining_time")
+    def get_status(self) -> dict:
+        status = {}
 
-    def get_progress(self):
-        return self._get_redis_value("progress")
+        if self.thread is not None and self.thread.is_alive():
+            status['status_msg'] = "Training in progress"
+        elif self.complete:
+            status['status_msg'] = "Training completed"
+        else:
+            status['status_msg'] = "No training in progress"
 
-    def is_training(self):
-        return self.thread is not None and self.thread.is_alive()
+        status['remaining_time'] = self._get_redis_value("remaining_time")
+        status['progress'] = self._get_redis_value("progress")
 
-    def is_complete(self):
-        return self.complete
+        return status

@@ -17,6 +17,7 @@ from training_manager import TrainingManager
 
 APP = Flask(__name__)
 
+
 # =======================================
 # =============For Training==============
 # =======================================
@@ -38,6 +39,7 @@ def get_dataset_list():
                     ]
 
     return jsonify(dataset_list), 200
+
 
 @APP.route('/get_template', methods=['GET'])
 def get_template():
@@ -64,23 +66,22 @@ def get_template():
 
     return jsonify(model_dict), 200
 
-@APP.route('/status', methods=['GET'])
-def status():
-    remaining_time = training_manager.get_remaining_time()
-    progress = training_manager.get_progress()
 
-    if training_manager.is_training():
-        status_msg = "Training in progress"
-    elif training_manager.is_complete():
-        status_msg = "Training completed"
-    else:
-        status_msg = "No training in progress"
+@APP.route('/get_status', methods=['GET'])
+def get_status():
+    """
+    回傳目前模行訓練狀態
+    return:
+        {
+            'status_msg': 狀態訊息
+            'remaining_time': 剩餘時間
+            'progress': 進度
+        }
+    """
+    status = training_manager.get_status()
 
-    return jsonify({
-        "status": status_msg,
-        "remaining_time": remaining_time,
-        "progress": progress
-    }), 200
+    return jsonify(status), 200
+
 
 @APP.route('/train', methods=['POST'])
 def train():
@@ -113,6 +114,7 @@ def train():
     training_manager.start_training(train_model)
 
     return jsonify({"message": "success"}), 200
+
 
 # =======================================
 # =============For Inference=============
