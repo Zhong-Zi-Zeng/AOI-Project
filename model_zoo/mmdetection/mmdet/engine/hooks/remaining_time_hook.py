@@ -4,7 +4,6 @@ from typing import Optional, Union
 import redis
 from mmengine.hooks import Hook
 from mmdet.registry import HOOKS
-from torch.utils.tensorboard import SummaryWriter
 
 @HOOKS.register_module()
 class RemainingTimeHook(Hook):

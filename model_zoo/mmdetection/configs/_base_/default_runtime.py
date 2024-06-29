@@ -8,7 +8,8 @@ default_hooks = dict(
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='DetVisualizationHook'),
     validation=dict(type='ValidationHook'),
-    remainingtime=dict(type='RemainingTimeHook')
+    remainingtime=dict(type='RemainingTimeHook'),
+    checkstoptraining=dict(type='CheckStopTrainingHook')
 )
 
 env_cfg = dict(

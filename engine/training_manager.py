@@ -10,12 +10,6 @@ class TrainingManager:
         self.complete = False
         self.r = redis.Redis(host='redis', port=6379, db=0)
 
-    def start_training(self, train_func):
-        self._clear_redis_key()
-        self.complete = False
-        self.thread = Thread(target=self._train_wrapper, args=(train_func,))
-        self.thread.start()
-
     def _train_wrapper(self, train_func):
         train_func()
         self.complete = True
@@ -31,6 +25,15 @@ class TrainingManager:
 
     def _clear_redis_key(self):
         self.r.flushdb()
+
+    def start_training(self, train_func):
+        self._clear_redis_key()
+        self.complete = False
+        self.thread = Thread(target=self._train_wrapper, args=(train_func,))
+        self.thread.start()
+
+    def stop_training(self):
+        self.r.set("stop_training", 1)
 
     def get_status(self) -> dict:
         status = {}

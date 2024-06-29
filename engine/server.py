@@ -82,6 +82,11 @@ def get_status():
 
     return jsonify(status), 200
 
+@APP.route('/stop_training', methods=['GET'])
+def stop_training():
+    training_manager.stop_training()
+
+    return jsonify({"message": "success"}), 200
 
 @APP.route('/train', methods=['POST'])
 def train():
