@@ -97,12 +97,6 @@ def train():
     給定config後執行training
     """
 
-    def open_tensorboard(final_config):
-        subprocess.run(['tensorboard',
-                        '--logdir', get_work_dir_path(final_config),
-                        '--host', '0.0.0.0',
-                        '--port', '1000'])
-
     if 'config' not in request.form:
         return jsonify({"message": "config is required"}), 400
 
@@ -112,11 +106,8 @@ def train():
     final_config = model_manager.initialize_model(config, task='train')
     model = model_manager.get_model()
 
-    # Open tensorboard
-    Thread(target=open_tensorboard, args=[final_config]).start()
-
     # Training
-    training_manager.start_training(model.train)
+    training_manager.start_training(model.train, final_config)
 
     return jsonify({"message": "success"}), 200
 

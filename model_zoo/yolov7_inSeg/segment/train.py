@@ -66,6 +66,7 @@ from utils.segment.metrics import KEYS, fitness
 from utils.segment.plots import plot_images_and_masks, plot_results_with_masks
 from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer,
                                smart_resume, torch_distributed_zero_first)
+from hooks import CheckStopTrainingHook, RemainingTimeHook
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -282,6 +283,12 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                 f'Using {train_loader.num_workers * WORLD_SIZE} dataloader workers\n'
                 f"Logging results to {colorstr('bold', save_dir)}\n"
                 f'Starting training for {epochs} epochs...')
+
+    # Hooks
+    max_iter = (epochs - start_epoch) * len(train_loader)
+    remaining_time_hook = RemainingTimeHook(max_iter)
+    check_stop_training_hook = CheckStopTrainingHook(str(save_dir))
+
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         # callbacks.run('on_train_epoch_start')
         model.train()
@@ -309,6 +316,10 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             # callbacks.run('on_train_batch_start')
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
+
+            # Update Hook
+            remaining_time_hook.update(iter=epoch * len(train_loader) + i)
+            check_stop_training_hook.update(model=model)
 
             # Warmup
             if ni <= nw:
@@ -342,7 +353,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             scaler.scale(loss).backward()
 
             # record value on tensorboard
-            # tb_writer.add_scalar('Training loss', loss.item(), ni)
+            tb_writer.add_scalar('Training loss', loss.item(), ni)
 
             # Optimize - https://pytorch.org/docs/master/notes/amp_examples.html
             if ni - last_opt_step >= accumulate:
@@ -385,7 +396,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             # callbacks.run('on_train_epoch_end', epoch=epoch)
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'names', 'stride', 'class_weights'])
             final_epoch = (epoch + 1 == epochs) or stopper.possible_stop
-            if not noval or final_epoch:  # Calculate mAP
+            if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 results, maps, _ = validate.run(data_dict,
                                                 batch_size=batch_size // WORLD_SIZE * 2,
                                                 imgsz=imgsz,
@@ -400,19 +411,19 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
                                                 mask_downsample_ratio=mask_ratio,
                                                 overlap=overlap)
 
-            # Update best mAP
-            fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
-            stop = stopper(epoch=epoch, fitness=fi)  # early stop check
-            if fi > best_fitness:
-                best_fitness = fi
-            log_vals = list(mloss) + list(results) + lr
-            # callbacks.run('on_fit_epoch_end', log_vals, epoch, best_fitness, fi)
-            # Log val metrics and media
-            metrics_dict = dict(zip(KEYS, log_vals))
-            logger.log_metrics(metrics_dict, epoch)
-            if plots:
-                files = sorted(save_dir.glob('val*.jpg'))
-                logger.log_images(files, "Validation", epoch)
+                # Update best mAP
+                fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+                stop = stopper(epoch=epoch, fitness=fi)  # early stop check
+                if fi > best_fitness:
+                    best_fitness = fi
+                log_vals = list(mloss) + list(results) + lr
+                # callbacks.run('on_fit_epoch_end', log_vals, epoch, best_fitness, fi)
+                # Log val metrics and media
+                metrics_dict = dict(zip(KEYS, log_vals))
+                logger.log_metrics(metrics_dict, epoch)
+                if plots:
+                    files = sorted(save_dir.glob('val*.jpg'))
+                    logger.log_images(files, "Validation", epoch)
 
             # Save model
             if (not nosave) or (final_epoch and not evolve):  # if save

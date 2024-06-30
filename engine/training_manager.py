@@ -1,18 +1,29 @@
+import os
+import sys
+
+sys.path.append(os.path.join(os.getcwd()))
+import subprocess
 from threading import Thread
 
 import numpy as np
 import redis
 
+from engine.general import get_work_dir_path
+
 
 class TrainingManager:
     def __init__(self):
-        self.thread = None
-        self.complete = False
+        self.training_thread = None
+        self.tensorboard_proc = None
+        self.training_complete = False
         self.r = redis.Redis(host='redis', port=6379, db=0)
 
     def _train_wrapper(self, train_func):
         train_func()
-        self.complete = True
+        self.training_complete = True
+        if self.tensorboard_proc:
+            self.tensorboard_proc.terminate()
+            self.tensorboard_proc = None
 
     def _get_redis_value(self, key: str):
         value = self.r.get(key)
@@ -26,11 +37,18 @@ class TrainingManager:
     def _clear_redis_key(self):
         self.r.flushdb()
 
-    def start_training(self, train_func):
+    def _open_tensorboard(self, final_config):
+        self.tensorboard_proc = subprocess.Popen(['tensorboard',
+                                                  '--logdir', get_work_dir_path(final_config),
+                                                  '--host', '0.0.0.0',
+                                                  '--port', '1000'])
+
+    def start_training(self, train_func, final_config):
         self._clear_redis_key()
-        self.complete = False
-        self.thread = Thread(target=self._train_wrapper, args=(train_func,))
-        self.thread.start()
+        self.training_complete = False
+        self._open_tensorboard(final_config)
+        self.training_thread = Thread(target=self._train_wrapper, args=(train_func,))
+        self.training_thread.start()
 
     def stop_training(self):
         self.r.set("stop_training", 1)
@@ -38,9 +56,9 @@ class TrainingManager:
     def get_status(self) -> dict:
         status = {}
 
-        if self.thread is not None and self.thread.is_alive():
+        if self.training_thread is not None and self.training_thread.is_alive():
             status['status_msg'] = "Training in progress"
-        elif self.complete:
+        elif self.training_complete:
             status['status_msg'] = "Training completed"
         else:
             status['status_msg'] = "No training in progress"

@@ -28,3 +28,4 @@ services:
       - redis
     stdin_open: true
     tty: true
+    shm_size: 16G
