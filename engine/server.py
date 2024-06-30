@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd()))
 import cv2
 import json
+import glob
 import base64
 import subprocess
 from threading import Thread
@@ -82,11 +83,13 @@ def get_status():
 
     return jsonify(status), 200
 
+
 @APP.route('/stop_training', methods=['GET'])
 def stop_training():
     training_manager.stop_training()
 
     return jsonify({"message": "success"}), 200
+
 
 @APP.route('/train', methods=['POST'])
 def train():
@@ -99,9 +102,6 @@ def train():
                         '--logdir', get_work_dir_path(final_config),
                         '--host', '0.0.0.0',
                         '--port', '1000'])
-
-    def train_model():
-        model.train()
 
     if 'config' not in request.form:
         return jsonify({"message": "config is required"}), 400
@@ -116,7 +116,7 @@ def train():
     Thread(target=open_tensorboard, args=[final_config]).start()
 
     # Training
-    training_manager.start_training(train_model)
+    training_manager.start_training(model.train)
 
     return jsonify({"message": "success"}), 200
 
@@ -144,9 +144,11 @@ def get_model_list():
 
     for model_name in model_dict:
         # 取出每個model可用的weight
-        model_dict[model_name]['weight_list'] = [os.path.join(train_dir_path, model_name, weight) for weight in
-                                                 os.listdir(os.path.join(train_dir_path, model_name)) if
-                                                 weight.endswith(".pth") or weight.endswith(".pt")]
+        model_work_dir_path = os.path.join(train_dir_path, model_name)
+        model_dict[model_name]['weight_list'] = glob.glob(os.path.join(model_work_dir_path, '**', '*.pth'),
+                                                          recursive=True) + \
+                                                glob.glob(os.path.join(model_work_dir_path, '**', '*.pt'),
+                                                          recursive=True)
 
         # 取出final_config.yaml的所有設定值
         model_dict[model_name]['final_config'] = load_yaml(

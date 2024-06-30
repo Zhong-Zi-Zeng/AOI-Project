@@ -13,12 +13,12 @@ def training():
 
     # Step 2:
     # =========  選擇其中一個模型 =========
-    config = model_dict['Cascade-Mask-RCNN-ResNet50']['config']
+    config = model_dict['YOLOv7-Object-Detection']['config']
 
     # Step 3:
     # =========  更改超參數 =========
-    config['batch_size'] = 1
-    config['end_epoch'] = 3
+    config['batch_size'] = 2
+    config['end_epoch'] = 10
     config['coco_root'] = "./data/WC-100"
 
     # Step 4:
