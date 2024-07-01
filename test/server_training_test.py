@@ -13,11 +13,11 @@ def training():
 
     # Step 2:
     # =========  選擇其中一個模型 =========
-    config = model_dict['YOLOv7-Object-Detection']['config']
+    config = model_dict['YOLOv7-Instance-Segmentation']['config']
 
     # Step 3:
     # =========  更改超參數 =========
-    config['batch_size'] = 2
+    config['batch_size'] = 1
     config['end_epoch'] = 10
     config['coco_root'] = "./data/WC-100"
 

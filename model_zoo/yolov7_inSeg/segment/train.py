@@ -121,7 +121,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
         #     callbacks.register_action(k, callback=getattr(loggers, k))
 
     # Config
-    plots = not evolve and not opt.noplots  # create plots
+    plots = False  # create plots
     overlap = not opt.no_overlap
     cuda = device.type != 'cpu'
     init_seeds(opt.seed + 1 + RANK, deterministic=True)

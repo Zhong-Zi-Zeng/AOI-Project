@@ -490,13 +490,23 @@ if __name__ == "__main__":
     else:
         confidences = [cfg['conf_thres']]
 
+    results_df = pd.DataFrame(
+        columns=['Confidence Threshold', 'Recall (Image)', 'FPR (Image)', 'Recall (Defect)', 'FPR (Defect)'])
+
     for idx, conf in enumerate(confidences):
         cfg['conf_thres'] = conf
 
         # Build evaluator
         evaluator = Evaluator(model=model, cfg=cfg, excel_path=args.excel, detected_json=detected_json)
-        evaluator.eval()
+        _result = evaluator.eval()
+
+        results_df.loc[idx] = [conf, _result[0], _result[1], _result[2], _result[3]]
 
         # Save detected result
         if idx == 0:
             detected_json = evaluator.detected_json
+
+    results_df['Recall (Image)'] = results_df['Recall (Image)'].apply(lambda x: f"{x}%")
+    results_df['FPR (Image)'] = results_df['FPR (Image)'].apply(lambda x: f"{x}%")
+    transposed_results_df = results_df.set_index('Confidence Threshold').T
+    transposed_results_df.to_excel('evaluation_results_transposed.xlsx')
