@@ -133,10 +133,10 @@ if __name__ == '__main__':
         classes_data = yaml.safe_load(file)     # yaml
         classes_name = {cls: data.get('super') for cls, data in classes_data.items()}  # {'Border': 'aaa'...}
 
-    os.mkdir(os.path.join(args.source_dir, 'train'))
-    os.mkdir(os.path.join(args.source_dir, 'test'))
-    os.mkdir(os.path.join(args.source_dir, 'delete'))
-    os.mkdir(os.path.join(args.source_dir, 'normal'))
+    os.makedirs(os.path.join(args.source_dir, 'train'), exist_ok=True)
+    os.makedirs(os.path.join(args.source_dir, 'test'), exist_ok=True)
+    os.makedirs(os.path.join(args.source_dir, 'delete'), exist_ok=True)
+    os.makedirs(os.path.join(args.source_dir, 'normal'), exist_ok=True)
 
     check_file(args.source_dir)
     slice_file(source_dir=args.source_dir,

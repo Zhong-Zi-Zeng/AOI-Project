@@ -361,6 +361,7 @@ class Evaluator:
             nf_recall_ann = 0
             nf_fpr_ann = 0
             fpr_image_name = []
+            undetected_image_name = []
             each_detect_score = {defect_category_id: [] for defect_category_id in defect_category_ids}
 
             for img_id in all_defect_images:
@@ -384,6 +385,8 @@ class Evaluator:
                 # ==========To detected all classes recall and fpr==========
                 # Calculate the recall
                 nf_recall = np.sum(np.any(dt_gt_iou != 0, axis=1))
+                if nf_recall < len(defected_gt_bboxes):
+                    undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
                 nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
                 nf_recall_ann += nf_recall
                 nf_recall_img += 1 if nf_recall > 0 else 0
@@ -452,6 +455,7 @@ class Evaluator:
             table.add_row("Number of defect image", str(len(all_defect_images)))
             table.add_row("Number of defect", str(all_defects))
             table.add_row("FPR images", ", ".join(fpr_image_name))
+            table.add_row("Undetected images", ", ".join(undetected_image_name))
 
             console.print(table)
 
