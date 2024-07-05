@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+
+  AOI:
+    image: miislab/aoi_cuda11.8:ubuntu
+    container_name: AOI
+    ports:
+      - "5000:5000"
+      - "1000:1000"
+    volumes:
+      - .:/WORKDIR
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    stdin_open: true
+    tty: true
+    shm_size: 16G

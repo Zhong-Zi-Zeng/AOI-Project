@@ -1,7 +1,6 @@
 albumentations==1.4.2
 addict==2.4.0
 astor==0.8.1
-albumentations==1.4.3
 boto3==1.34.5
 botocore==1.34.5
 cityscapesscripts==2.2.2
@@ -25,7 +24,6 @@ model_index==0.1.11
 motmetrics==1.4.0
 monai==1.3.0
 nltk==3.8.1
-numpy==1.23.0
 onnx==1.15.0
 onnxruntime==1.16.3
 onnxsim==0.4.35
@@ -45,7 +43,7 @@ pytorch_sphinx_theme==0.0.19
 PyYAML==6.0.1
 Requests==2.31.0
 rich==13.7.0
-roboflow==1.1.12
+roboflow
 sahi==0.11.15
 scikit-image==0.21.0
 scikit_learn==1.3.2

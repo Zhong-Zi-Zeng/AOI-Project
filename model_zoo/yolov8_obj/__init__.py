@@ -1,1 +1,0 @@
-from .yolov8_obj import Yolov8Obj

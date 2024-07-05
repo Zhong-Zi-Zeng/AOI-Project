@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 from tqdm import tqdm
@@ -44,16 +45,20 @@ class coco2yoloBbox():
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'train'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloBbox_save_path, 'labels', 'val'), exist_ok=True)
 
-    def _copy_images_png(self, source_dir, dest_dir, task):
-        # 轉成 png
-        for file in tqdm(os.listdir(source_dir), desc=f'Converting {task} images to png...'):
-            if file.endswith('.jpg'):
-                img = cv2.imread(os.path.join(source_dir, file))
-                new_file_name = file.replace('.jpg', '.png')
-                cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
-            else:
-                shutil.copy(os.path.join(source_dir, file), dest_dir)
+    def process_file(self, file, source_dir, dest_dir):
+        if file.endswith('.jpg'):
+            img = cv2.imread(os.path.join(source_dir, file))
+            new_file_name = file.replace('.jpg', '.png')
+            cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
+        else:
+            shutil.copy(os.path.join(source_dir, file), dest_dir)
 
+    def _copy_images_png(self, source_dir, dest_dir, task):
+        files = os.listdir(source_dir)
+
+        with ThreadPoolExecutor() as executor:
+            list(tqdm(executor.map(lambda file: self.process_file(file, source_dir, dest_dir), files), total=len(files),
+                      desc=f'Converting {task} to png...'))
 
     def _conv_box(self, size, box):
         dw = 1. / (size[0])
@@ -151,15 +156,20 @@ class coco2yoloSeg():
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'images'), exist_ok=True)
         os.makedirs(os.path.join(self.yoloSeg_save_path, 'test', 'labels'), exist_ok=True)
 
+    def process_file(self, file, source_dir, dest_dir):
+        if file.endswith('.jpg'):
+            img = cv2.imread(os.path.join(source_dir, file))
+            new_file_name = file.replace('.jpg', '.png')
+            cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
+        else:
+            shutil.copy(os.path.join(source_dir, file), dest_dir)
+
     def _copy_images_png(self, source_dir, dest_dir, task):
-        # 轉成 png
-        for file in tqdm(os.listdir(source_dir), desc=f'Converting {task} images to png...'):
-            if file.endswith('.jpg'):
-                img = cv2.imread(os.path.join(source_dir, file))
-                new_file_name = file.replace('.jpg', '.png')
-                cv2.imwrite(os.path.join(dest_dir, new_file_name), img)
-            else:
-                shutil.copy(os.path.join(source_dir, file), dest_dir)
+        files = os.listdir(source_dir)
+
+        with ThreadPoolExecutor() as executor:
+            list(tqdm(executor.map(lambda file: self.process_file(file, source_dir, dest_dir), files), total=len(files),
+                      desc=f'Converting {task} to png...'))
 
     def _conv_polygon(self, size, seg):  # normalize
         '''

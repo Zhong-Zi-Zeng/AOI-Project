@@ -55,4 +55,4 @@ class ValidationHook(Hook):
             recall_and_fpr_for_all = evaluator.eval()
             tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]
             for x, tag in zip(recall_and_fpr_for_all, tags):
-                self.tb_writer.add_scalar(tag, x, runner.epoch)
+                self.tb_writer.add_scalar(tag, x, runner.epoch + 1)

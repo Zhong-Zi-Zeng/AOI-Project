@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.join(os.getcwd()))
 import cv2
 import json
+import glob
 import base64
 import subprocess
 from threading import Thread
@@ -13,13 +14,35 @@ from flask import Flask, request, jsonify
 from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
                             allowed_file, convert_image_to_numpy)
 from model_manager import ModelManager
+from training_manager import TrainingManager
 
-app = Flask(__name__)
+APP = Flask(__name__)
 
 
-# TODO: 取得檔前可用的dataset
+# =======================================
+# =============For Training==============
+# =======================================
+@APP.route('/get_dataset_list', methods=['GET'])
+def get_dataset_list():
+    """
+    返回在./data資料夾中可使用的Dataset
+    :return:
+        ['WC-500', 'WC-1500', ...]
+    """
 
-@app.route('/get_template', methods=['GET'])
+    DATASET_DIR = "./data"
+
+    dataset_list = [os.path.join(DATASET_DIR, dataset_name)
+                    for dataset_name in os.listdir(DATASET_DIR)
+                    if os.path.isdir(os.path.join(DATASET_DIR, dataset_name)) and
+                    dataset_name != 'yoloBbox' and
+                    dataset_name != 'yoloSeg'
+                    ]
+
+    return jsonify(dataset_list), 200
+
+
+@APP.route('/get_template', methods=['GET'])
 def get_template():
     """
     取得所有模型預設的config
@@ -45,17 +68,34 @@ def get_template():
     return jsonify(model_dict), 200
 
 
-@app.route('/train', methods=['POST'])
+@APP.route('/get_status', methods=['GET'])
+def get_status():
+    """
+    回傳目前模行訓練狀態
+    return:
+        {
+            'status_msg': 狀態訊息
+            'remaining_time': 剩餘時間
+            'progress': 進度
+        }
+    """
+    status = training_manager.get_status()
+
+    return jsonify(status), 200
+
+
+@APP.route('/stop_training', methods=['GET'])
+def stop_training():
+    training_manager.stop_training()
+
+    return jsonify({"message": "success"}), 200
+
+
+@APP.route('/train', methods=['POST'])
 def train():
     """
     給定config後執行training
     """
-
-    def open_tensorboard(final_config):
-        subprocess.run(['tensorboard',
-                        '--logdir', get_work_dir_path(final_config),
-                        '--host', '0.0.0.0',
-                        '--port', '1000'])
 
     if 'config' not in request.form:
         return jsonify({"message": "config is required"}), 400
@@ -66,16 +106,16 @@ def train():
     final_config = model_manager.initialize_model(config, task='train')
     model = model_manager.get_model()
 
-    # Open tensorboard
-    Thread(target=open_tensorboard, args=[final_config]).start()
-
     # Training
-    Thread(target=model.train).start()
+    training_manager.start_training(model.train, final_config)
 
     return jsonify({"message": "success"}), 200
 
 
-@app.route('/get_model_list', methods=['GET'])
+# =======================================
+# =============For Inference=============
+# =======================================
+@APP.route('/get_model_list', methods=['GET'])
 def get_model_list():
     """
     搜尋當前work_dirs下，已training好的model所有的weight檔名稱與final_config.yaml
@@ -95,9 +135,11 @@ def get_model_list():
 
     for model_name in model_dict:
         # 取出每個model可用的weight
-        model_dict[model_name]['weight_list'] = [os.path.join(train_dir_path, model_name, weight) for weight in
-                                                 os.listdir(os.path.join(train_dir_path, model_name)) if
-                                                 weight.endswith(".pth") or weight.endswith(".pt")]
+        model_work_dir_path = os.path.join(train_dir_path, model_name)
+        model_dict[model_name]['weight_list'] = glob.glob(os.path.join(model_work_dir_path, '**', '*.pth'),
+                                                          recursive=True) + \
+                                                glob.glob(os.path.join(model_work_dir_path, '**', '*.pt'),
+                                                          recursive=True)
 
         # 取出final_config.yaml的所有設定值
         model_dict[model_name]['final_config'] = load_yaml(
@@ -106,7 +148,7 @@ def get_model_list():
     return jsonify(model_dict), 200
 
 
-@app.route('/initialize_model', methods=['POST'])
+@APP.route('/initialize_model', methods=['POST'])
 def initialize_model():
     """
     給定final_config，初始化model，用於predict之前
@@ -121,7 +163,7 @@ def initialize_model():
     return jsonify({"message": "success"}), 200
 
 
-@app.route('/predict', methods=['POST'])
+@APP.route('/predict', methods=['POST'])
 def predict():
     """
     給定圖片進行預測，並回傳結果
@@ -168,4 +210,5 @@ def predict():
 
 if __name__ == '__main__':
     model_manager = ModelManager()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    training_manager = TrainingManager()
+    APP.run(debug=False, host='0.0.0.0', port=5000)

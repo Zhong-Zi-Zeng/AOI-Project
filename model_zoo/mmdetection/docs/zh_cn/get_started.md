@@ -205,7 +205,7 @@ print(mmdet.__version__)
 
 ```shell
 # 基于 PyTorch 1.9，CUDA 11.1 构建镜像
-# 如果你想要其他版本，只需要修改 Dockerfile
+# 如果你想要其他版本，只需要修改 Dockerfile_windows
 docker build -t mmdetection docker/
 ```
 

@@ -40,6 +40,7 @@ from utils.loss import ComputeLoss, ComputeLossOTA
 from utils.plots import plot_images, plot_labels, plot_results, plot_evolution
 from utils.torch_utils import ModelEMA, select_device, intersect_dicts, torch_distributed_zero_first, is_parallel
 from utils.wandb_logging.wandb_utils import WandbLogger, check_wandb_resume
+from hooks import RemainingTimeHook, CheckStopTrainingHook
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +317,11 @@ def train(hyp, opt, device, tb_writer=None):
                 f'Using {dataloader.num_workers} dataloader workers\n'
                 f'Logging results to {save_dir}\n'
                 f'Starting training for {epochs} epochs...')
-    torch.save(model, wdir / 'init.pt')
+
+    # Hooks
+    max_iter = (epochs - start_epoch) * len(dataloader)
+    remaining_time_hook = RemainingTimeHook(max_iter)
+    check_stop_training_hook = CheckStopTrainingHook(str(save_dir))
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
@@ -350,6 +355,10 @@ def train(hyp, opt, device, tb_writer=None):
         for i, (imgs, targets, paths, _) in pbar:  # batch -------------------------------------------------------------
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
+
+            # Update Hook
+            remaining_time_hook.update(iter=epoch * len(dataloader) + i)
+            check_stop_training_hook.update(model=model)
 
             # Warmup
             if ni <= nw:
@@ -427,7 +436,7 @@ def train(hyp, opt, device, tb_writer=None):
             # mAP
             ema.update_attr(model, include=['yaml', 'nc', 'hyp', 'gr', 'names', 'stride', 'class_weights'])
             final_epoch = epoch + 1 == epochs
-            if not opt.notest or final_epoch:  # Calculate mAP
+            if opt.eval_period > 0 and (epoch + 1) % opt.eval_period == 0:
                 wandb_logger.current_epoch = epoch + 1
                 results, maps, times = test.test(data_dict,
                                                  batch_size=batch_size * 2,
@@ -443,23 +452,34 @@ def train(hyp, opt, device, tb_writer=None):
                                                  is_coco=is_coco,
                                                  v5_metric=opt.v5_metric)
 
-            # Write
-            with open(results_file, 'a') as f:
-                f.write(s + '%10.4g' * 7 % results + '\n')  # append metrics, val_loss
-            if len(opt.name) and opt.bucket:
-                os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
+                # Write
+                with open(results_file, 'a') as f:
+                    f.write(s + '%10.4g' * 7 % results + '\n')  # append metrics, val_loss
+                if len(opt.name) and opt.bucket:
+                    os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-            # Update best mAP
-            fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
-            if fi > best_fitness:
-                best_fitness = fi
-            wandb_logger.end_epoch(best_result=best_fitness == fi)
+                # Update best mAP
+                fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
+                if fi > best_fitness:
+                    best_fitness = fi
+                wandb_logger.end_epoch(best_result=best_fitness == fi)
+
+                # Log
+                tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
+                        'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                        'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
+                        'x/lr0', 'x/lr1', 'x/lr2']  # params
+
+                for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
+                    if tb_writer:
+                        tb_writer.add_scalar(tag, x, epoch)  # tensorboard
+                    if wandb_logger.wandb:
+                        wandb_logger.log({tag: x})  # W&B
 
             # Save model
             if (not opt.nosave) or (final_epoch and not opt.evolve):  # if save
                 ckpt = {'epoch': epoch,
                         'best_fitness': best_fitness,
-                        'training_results': results_file.read_text(),
                         'model': deepcopy(model.module if is_parallel(model) else model).half(),
                         'ema': deepcopy(ema.ema).half(),
                         'updates': ema.updates,
@@ -492,17 +512,6 @@ def train(hyp, opt, device, tb_writer=None):
                 del evaluator
                 model.to(device)
 
-            # Log
-            tags = ['train/box_loss', 'train/obj_loss', 'train/cls_loss',  # train loss
-                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                    'val/box_loss', 'val/obj_loss', 'val/cls_loss',  # val loss
-                    'x/lr0', 'x/lr1', 'x/lr2']  # params
-
-            for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
-                if tb_writer:
-                    tb_writer.add_scalar(tag, x, epoch)  # tensorboard
-                if wandb_logger.wandb:
-                    wandb_logger.log({tag: x})  # W&B
 
         # end epoch ----------------------------------------------------------------------------------------------------
     # end training
