@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd()))
 import subprocess
+import platform
 from threading import Thread
 
 import numpy as np
@@ -16,7 +17,19 @@ class TrainingManager:
         self.training_thread = None
         self.tensorboard_proc = None
         self.training_complete = False
-        self.r = redis.Redis(host='redis', port=6379, db=0)
+
+        os_name = platform.system()
+        if os_name == "Windows":
+            print("Running on Windows")
+            redis_host = '127.0.0.1'
+        elif os_name == "Linux":
+            print("Running on Linux")
+            redis_host = 'redis'
+        else:
+            print(f"Running on {os_name}")
+            redis_host = 'redis'
+
+        self.r = redis.Redis(host=redis_host, port=6379, db=0)
 
     def _train_wrapper(self, train_func):
         train_func()
