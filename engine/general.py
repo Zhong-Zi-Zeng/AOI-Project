@@ -7,6 +7,7 @@ import pycocotools.mask as ms
 from io import BytesIO
 import numpy as np
 import os
+import shutil
 import random
 import yaml
 import json
@@ -15,7 +16,6 @@ import ast
 import astor
 import cv2
 import torch
-
 
 ROOT = os.getcwd()
 
@@ -29,6 +29,7 @@ def allowed_file(filename: str):
 
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def convert_image_to_numpy(image) -> np.ndarray:
     in_memory_file = BytesIO()
     image.save(in_memory_file)
@@ -36,6 +37,7 @@ def convert_image_to_numpy(image) -> np.ndarray:
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
     return image
+
 
 def check_gpu_available(cfg: dict):
     gpus = torch.cuda.device_count()
@@ -185,6 +187,21 @@ def get_model_path(cfg: dict) -> str:
         提取當前model的資料夾路徑
     """
     return os.path.join(os.getcwd(), 'model_zoo', cfg['model_dir_name'])
+
+
+def copy_logfile_to_work_dir(cfg: dict):
+    """
+        將log檔案複製到當前work_dir底下
+    """
+    shutil.copyfile('./output.log', get_work_dir_path(cfg) + '/output.log')
+
+
+def clear_logfile():
+    """
+        將外部的logfile檔案清空
+    """
+    with open('./output.log', 'w') as f:
+        f.write('')
 
 
 def get_work_dir_path(cfg: dict) -> str:

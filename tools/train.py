@@ -1,17 +1,15 @@
 from __future__ import annotations
 import sys
 import os
-
 sys.path.append(os.path.join(os.getcwd()))
-from engine.builder import Builder
-from engine.general import get_work_dir_path
-from threading import Thread
-import numpy as np
+
 import time
 import argparse
+
+import numpy as np
 import torch
-import subprocess
-import webbrowser
+
+from engine.builder import Builder
 
 torch.manual_seed(10)
 np.random.seed(10)

@@ -3,13 +3,14 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd()))
 import subprocess
+import shutil
 import platform
 from threading import Thread
 
 import numpy as np
 import redis
 
-from engine.general import get_work_dir_path
+from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_logfile)
 
 
 class TrainingManager:
@@ -17,6 +18,7 @@ class TrainingManager:
         self.training_thread = None
         self.tensorboard_proc = None
         self.training_complete = False
+        self.final_config = None
 
         os_name = platform.system()
         if os_name == "Windows":
@@ -34,9 +36,18 @@ class TrainingManager:
     def _train_wrapper(self, train_func):
         train_func()
         self.training_complete = True
+
+        # stop tensorboard
         if self.tensorboard_proc:
             self.tensorboard_proc.terminate()
             self.tensorboard_proc = None
+
+        # Copy log file to work dir
+        copy_logfile_to_work_dir(self.final_config)
+        clear_logfile()
+
+        # Clear redis key
+        self._clear_redis_key()
 
     def _get_redis_value(self, key: str):
         value = self.r.get(key)
@@ -50,16 +61,16 @@ class TrainingManager:
     def _clear_redis_key(self):
         self.r.flushdb()
 
-    def _open_tensorboard(self, final_config):
+    def _open_tensorboard(self):
         self.tensorboard_proc = subprocess.Popen(['tensorboard',
-                                                  '--logdir', get_work_dir_path(final_config),
+                                                  '--logdir', get_work_dir_path(self.final_config),
                                                   '--host', '0.0.0.0',
                                                   '--port', '1000'])
 
     def start_training(self, train_func, final_config):
-        self._clear_redis_key()
+        self.final_config = final_config
         self.training_complete = False
-        self._open_tensorboard(final_config)
+        self._open_tensorboard()
         self.training_thread = Thread(target=self._train_wrapper, args=(train_func,))
         self.training_thread.start()
 

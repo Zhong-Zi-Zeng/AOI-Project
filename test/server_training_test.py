@@ -13,7 +13,7 @@ def training():
 
     # Step 2:
     # =========  選擇其中一個模型 =========
-    config = model_dict['YOLOv7-Instance-Segmentation']['config']
+    config = model_dict['Cascade-Mask-RCNN-ResNet50']['config']
 
     # Step 3:
     # =========  更改超參數 =========
