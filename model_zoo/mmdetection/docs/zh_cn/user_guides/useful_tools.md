@@ -233,7 +233,7 @@ python tools/test.py \
 python tools/analysis_tools/coco_error_analysis.py \
        results.bbox.json \
        results \
-       --ann=data/coco/annotations/instances_val2017.json \
+       --ann=data/coco/annotations/instances_val.json \
 ```
 
 2. 得到每一类的 COCO 分割误差结果，并保存分析结果图像至指定目录。
@@ -242,7 +242,7 @@ python tools/analysis_tools/coco_error_analysis.py \
 python tools/analysis_tools/coco_error_analysis.py \
        results.segm.json \
        results \
-       --ann=data/coco/annotations/instances_val2017.json \
+       --ann=data/coco/annotations/instances_val.json \
        --types='segm'
 ```
 
@@ -618,7 +618,7 @@ Evaluation results have been saved to occluded_separated_recall.json.
 ```python
 val_evaluator = dict(
     type='CocoOccludedSeparatedMetric',  # 修改此处
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/instances_val.json',
     metric=['bbox', 'segm'],
     format_only=False)
 test_evaluator = val_evaluator

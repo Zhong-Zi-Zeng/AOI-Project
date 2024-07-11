@@ -16,7 +16,7 @@ Cascaded architectures have brought significant performance improvement in objec
 
 ## Dataset
 
-SCNet requires COCO and [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip) dataset for training. You need to download and extract it in the COCO dataset path.
+SCNet requires COCO and [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval.zip) dataset for training. You need to download and extract it in the COCO dataset path.
 The directory should be like this.
 
 ```none
@@ -27,8 +27,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 |   |   ├── stuffthingmaps
 ```

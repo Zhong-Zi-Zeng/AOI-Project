@@ -214,8 +214,8 @@ train_dataloader = dict(   # Train dataloader config
     dataset=dict(  # Train dataset config
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_train2017.json',  # Path of annotation file
-        data_prefix=dict(img='train2017/'),  # Prefix of image path
+        ann_file='annotations/instances_train.json',  # Path of annotation file
+        data_prefix=dict(img='train/'),  # Prefix of image path
         filter_cfg=dict(filter_empty_gt=True, min_size=32),  # Config of filtering images and annotations
         pipeline=train_pipeline,
         backend_args=backend_args))
@@ -230,8 +230,8 @@ val_dataloader = dict(  # Validation dataloader config
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/'),
+        ann_file='annotations/instances_val.json',
+        data_prefix=dict(img='val/'),
         test_mode=True,  # Turn on the test mode of the dataset to avoid filtering annotations or images
         pipeline=test_pipeline,
         backend_args=backend_args))
@@ -243,7 +243,7 @@ test_dataloader = val_dataloader  # Testing dataloader config
 ```python
 val_evaluator = dict(  # Validation evaluator config
     type='CocoMetric',  # The coco metric used to evaluate AR, AP, and mAP for detection and instance segmentation
-    ann_file=data_root + 'annotations/instances_val2017.json',  # Annotation file path
+    ann_file=data_root + 'annotations/instances_val.json',  # Annotation file path
     metric=['bbox', 'segm'],  # Metrics to be evaluated, `bbox` for detection and `segm` for instance segmentation
     format_only=False,
     backend_args=backend_args)

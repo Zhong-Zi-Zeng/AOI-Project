@@ -27,13 +27,13 @@ The `pred_instance` is an `InstanceData` containing the sorted boxes and scores 
   # For training set
   val_dataloader = dict(
       dataset=dict(
-          ann_file='data/coco/annotations/instances_train2017.json',
-          data_prefix=dict(img='val2017/')))
+          ann_file='data/coco/annotations/instances_train.json',
+          data_prefix=dict(img='val/')))
   val_dataloader = dict(
       _delete_=True,
       type='DumpProposals',
       output_dir='data/coco/proposals/',
-      proposals_file='rpn_r50_fpn_1x_train2017.pkl')
+      proposals_file='rpn_r50_fpn_1x_train.pkl')
   test_dataloader = val_dataloader
   test_evaluator = val_dataloader
   ```
@@ -46,7 +46,7 @@ The `pred_instance` is an `InstanceData` containing the sorted boxes and scores 
     _delete_=True,
     type='DumpProposals',
     output_dir='data/coco/proposals/',
-    proposals_file='rpn_r50_fpn_1x_val2017.pkl')
+    proposals_file='rpn_r50_fpn_1x_val.pkl')
   test_evaluator = val_dataloader
   ```
 
@@ -96,11 +96,11 @@ The `pred_instance` is an `InstanceData` containing the sorted boxes and scores 
   ]
   train_dataloader = dict(
       dataset=dict(
-          proposal_file='proposals/rpn_r50_fpn_1x_train2017.pkl',
+          proposal_file='proposals/rpn_r50_fpn_1x_train.pkl',
           pipeline=train_pipeline))
   val_dataloader = dict(
       dataset=dict(
-          proposal_file='proposals/rpn_r50_fpn_1x_val2017.pkl',
+          proposal_file='proposals/rpn_r50_fpn_1x_val.pkl',
           pipeline=test_pipeline))
   test_dataloader = val_dataloader
   ```

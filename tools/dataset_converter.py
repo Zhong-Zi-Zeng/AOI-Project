@@ -13,8 +13,8 @@ import cv2
 class coco2yoloBbox():
     def __init__(self, coco_path):
         self.coco_path = coco_path
-        self.coco_train = self.coco_path + '/annotations/instances_train2017.json'
-        self.coco_val = self.coco_path + '/annotations/instances_val2017.json'
+        self.coco_train = self.coco_path + '/annotations/instances_train.json'
+        self.coco_val = self.coco_path + '/annotations/instances_val.json'
 
         # The storage path of the yoloBbox dataset
         folder_name = os.path.basename(self.coco_path)
@@ -28,12 +28,12 @@ class coco2yoloBbox():
             self._generate_dir()
 
         if not any(file.endswith('.png') for file in os.listdir(yoloBbox_train_images)):
-            self._copy_images_png(os.path.join(self.coco_path, 'train2017'), yoloBbox_train_images, 'training images')
+            self._copy_images_png(os.path.join(self.coco_path, 'train'), yoloBbox_train_images, 'training images')
         else:
             print('Training images already exist.')
 
         if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloBbox_val_images)):
-            self._copy_images_png(os.path.join(self.coco_path, 'val2017'), yoloBbox_val_images, 'validation images')
+            self._copy_images_png(os.path.join(self.coco_path, 'val'), yoloBbox_val_images, 'validation images')
         else:
             print('Validation images already exist.')
 
@@ -125,8 +125,8 @@ class coco2yoloSeg():
     def __init__(self, coco_path):
 
         self.coco_path = coco_path
-        self.coco_train = self.coco_path + '/annotations/instances_train2017.json'
-        self.coco_test = self.coco_path + '/annotations/instances_val2017.json'
+        self.coco_train = self.coco_path + '/annotations/instances_train.json'
+        self.coco_test = self.coco_path + '/annotations/instances_val.json'
 
         # The storage path of the yoloSeg dataset
         folder_name = os.path.basename(self.coco_path)
@@ -139,12 +139,12 @@ class coco2yoloSeg():
             self._generate_dir()
 
         if not any(file.endswith('.png') for file in os.listdir(yoloSeg_train_images)):
-            self._copy_images_png(os.path.join(self.coco_path, 'train2017'), yoloSeg_train_images, 'training images')
+            self._copy_images_png(os.path.join(self.coco_path, 'train'), yoloSeg_train_images, 'training images')
         else:
             print('Training images already exist.')
 
         if not any(file.endswith('.jpg') or file.endswith('.png') for file in os.listdir(yoloSeg_test_images)):
-            self._copy_images_png(os.path.join(self.coco_path, 'val2017'), yoloSeg_test_images, 'testing images')
+            self._copy_images_png(os.path.join(self.coco_path, 'val'), yoloSeg_test_images, 'testing images')
         else:
             print('Validation images already exist.')
 

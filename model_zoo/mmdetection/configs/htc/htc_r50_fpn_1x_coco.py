@@ -29,5 +29,5 @@ train_pipeline = [
 ]
 train_dataloader = dict(
     dataset=dict(
-        data_prefix=dict(img='train2017/', seg='stuffthingmaps/train2017/'),
+        data_prefix=dict(img='train/', seg='stuffthingmaps/train/'),
         pipeline=train_pipeline))

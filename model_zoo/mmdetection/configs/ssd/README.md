@@ -48,7 +48,7 @@ There are some differences between our implementation of MobileNetV2 SSD-Lite an
 1. Use 320x320 as input size instead of 300x300.
 2. The anchor sizes are different.
 3. The C4 feature map is taken from the last layer of stage 4 instead of the middle of the block.
-4. The model in TensorFlow1.x is trained on coco 2014 and validated on coco minival2014, but we trained and validated the model on coco 2017. The mAP on val2017 is usually a little lower than minival2014 (refer to the results in TensorFlow Object Detection API, e.g., MobileNetV2 SSD gets 22 mAP on minival2014 but 20.2 mAP on val2017).
+4. The model in TensorFlow1.x is trained on coco 2014 and validated on coco minival2014, but we trained and validated the model on coco 2017. The mAP on val is usually a little lower than minival2014 (refer to the results in TensorFlow Object Detection API, e.g., MobileNetV2 SSD gets 22 mAP on minival2014 but 20.2 mAP on val).
 
 ## Citation
 

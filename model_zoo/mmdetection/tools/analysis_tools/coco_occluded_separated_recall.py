@@ -26,7 +26,7 @@ def main():
         help='IoU threshold for the recall calculation. Defaults to 0.75.')
     parser.add_argument(
         '--ann',
-        default='data/coco/annotations/instances_val2017.json',
+        default='data/coco/annotations/instances_val.json',
         help='coco annotation file path')
     args = parser.parse_args()
 

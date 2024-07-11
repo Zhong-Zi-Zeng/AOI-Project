@@ -213,8 +213,8 @@ train_dataloader = dict(  # 训练 dataloader 配置
     dataset=dict(  # 训练数据集的配置
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_train2017.json',  # 标注文件路径
-        data_prefix=dict(img='train2017/'),  # 图片路径前缀
+        ann_file='annotations/instances_train.json',  # 标注文件路径
+        data_prefix=dict(img='train/'),  # 图片路径前缀
         filter_cfg=dict(filter_empty_gt=True, min_size=32),  # 图片和标注的过滤配置
         pipeline=train_pipeline))  # 这是由之前创建的 train_pipeline 定义的数据处理流程。
 val_dataloader = dict(  # 验证 dataloader 配置
@@ -228,8 +228,8 @@ val_dataloader = dict(  # 验证 dataloader 配置
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/'),
+        ann_file='annotations/instances_val.json',
+        data_prefix=dict(img='val/'),
         test_mode=True,  # 开启测试模式，避免数据集过滤图片和标注
         pipeline=test_pipeline))
 test_dataloader = val_dataloader  # 测试 dataloader 配置
@@ -240,7 +240,7 @@ test_dataloader = val_dataloader  # 测试 dataloader 配置
 ```python
 val_evaluator = dict(  # 验证过程使用的评测器
     type='CocoMetric',  # 用于评估检测和实例分割的 AR、AP 和 mAP 的 coco 评价指标
-    ann_file=data_root + 'annotations/instances_val2017.json',  # 标注文件路径
+    ann_file=data_root + 'annotations/instances_val.json',  # 标注文件路径
     metric=['bbox', 'segm'],  # 需要计算的评价指标，`bbox` 用于检测，`segm` 用于实例分割
     format_only=False)
 test_evaluator = val_evaluator  # 测试过程使用的评测器

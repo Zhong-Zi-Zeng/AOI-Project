@@ -43,13 +43,13 @@ model = dict(
         min_pseudo_bbox_wh=(1e-2, 1e-2)),
     semi_test_cfg=dict(predict_on='teacher'))
 
-# 10% coco train2017 is set as labeled dataset
+# 10% coco train is set as labeled dataset
 labeled_dataset = _base_.labeled_dataset
 unlabeled_dataset = _base_.unlabeled_dataset
-labeled_dataset.ann_file = 'semi_anns/instances_train2017.1@10.json'
+labeled_dataset.ann_file = 'semi_anns/instances_train.1@10.json'
 unlabeled_dataset.ann_file = 'semi_anns/' \
-                             'instances_train2017.1@10-unlabeled.json'
-unlabeled_dataset.data_prefix = dict(img='train2017/')
+                             'instances_train.1@10-unlabeled.json'
+unlabeled_dataset.data_prefix = dict(img='train/')
 train_dataloader = dict(
     dataset=dict(datasets=[labeled_dataset, unlabeled_dataset]))
 

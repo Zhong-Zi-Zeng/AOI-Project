@@ -111,23 +111,23 @@ test_pipeline = [
 batch_size = 5
 num_workers = 5
 # There are two common semi-supervised learning settings on the coco dataset：
-# (1) Divide the train2017 into labeled and unlabeled datasets
+# (1) Divide the train into labeled and unlabeled datasets
 # by a fixed percentage, such as 1%, 2%, 5% and 10%.
 # The format of labeled_ann_file and unlabeled_ann_file are
-# instances_train2017.{fold}@{percent}.json, and
-# instances_train2017.{fold}@{percent}-unlabeled.json
+# instances_train.{fold}@{percent}.json, and
+# instances_train.{fold}@{percent}-unlabeled.json
 # `fold` is used for cross-validation, and `percent` represents
-# the proportion of labeled data in the train2017.
-# (2) Choose the train2017 as the labeled dataset
+# the proportion of labeled data in the train.
+# (2) Choose the train as the labeled dataset
 # and unlabeled2017 as the unlabeled dataset.
 # The labeled_ann_file and unlabeled_ann_file are
-# instances_train2017.json and image_info_unlabeled2017.json
+# instances_train.json and image_info_unlabeled2017.json
 # We use this configuration by default.
 labeled_dataset = dict(
     type=dataset_type,
     data_root=data_root,
-    ann_file='annotations/instances_train2017.json',
-    data_prefix=dict(img='train2017/'),
+    ann_file='annotations/instances_train.json',
+    data_prefix=dict(img='train/'),
     filter_cfg=dict(filter_empty_gt=True, min_size=32),
     pipeline=sup_pipeline,
     backend_args=backend_args)
@@ -161,8 +161,8 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/'),
+        ann_file='annotations/instances_val.json',
+        data_prefix=dict(img='val/'),
         test_mode=True,
         pipeline=test_pipeline,
         backend_args=backend_args))
@@ -171,7 +171,7 @@ test_dataloader = val_dataloader
 
 val_evaluator = dict(
     type='CocoMetric',
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/instances_val.json',
     metric='bbox',
     format_only=False,
     backend_args=backend_args)

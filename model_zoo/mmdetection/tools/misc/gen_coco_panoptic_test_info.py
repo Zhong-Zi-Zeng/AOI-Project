@@ -17,11 +17,11 @@ def parse_args():
 def main():
     args = parse_args()
     data_root = args.data_root
-    val_info = load(osp.join(data_root, 'panoptic_val2017.json'))
+    val_info = load(osp.join(data_root, 'panoptic_val.json'))
     test_old_info = load(osp.join(data_root, 'image_info_test-dev2017.json'))
 
     # replace categories from image_info_test-dev2017.json
-    # with categories from panoptic_val2017.json which
+    # with categories from panoptic_val.json which
     # has attribute `isthing`.
     test_info = test_old_info
     test_info.update({'categories': val_info['categories']})

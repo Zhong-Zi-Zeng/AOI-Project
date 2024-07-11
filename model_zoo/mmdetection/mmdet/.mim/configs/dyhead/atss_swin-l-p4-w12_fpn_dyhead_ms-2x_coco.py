@@ -117,8 +117,8 @@ train_dataloader = dict(
         dataset=dict(
             type={{_base_.dataset_type}},
             data_root={{_base_.data_root}},
-            ann_file='annotations/instances_train2017.json',
-            data_prefix=dict(img='train2017/'),
+            ann_file='annotations/instances_train.json',
+            data_prefix=dict(img='train/'),
             filter_cfg=dict(filter_empty_gt=True, min_size=32),
             pipeline=train_pipeline,
             backend_args={{_base_.backend_args}})))

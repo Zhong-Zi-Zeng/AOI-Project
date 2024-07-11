@@ -148,7 +148,7 @@ class Evaluator:
         self.cfg = cfg
         self.detected_json = detected_json
 
-        self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val2017.json'))
+        self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val.json'))
         self.writer = Writer(cfg, excel_path=excel_path)
 
     @classmethod
@@ -293,10 +293,10 @@ class Evaluator:
         for img_id in tqdm(img_id_list):
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]
-            img_file = os.path.join(self.cfg['coco_root'], 'val2017', img_info['file_name'])
+            img_file = os.path.join(self.cfg['coco_root'], 'val', img_info['file_name'])
 
             # Inference
-            result = self.model.predict(img_file, conf_thres=self.cfg['conf_thres'], nms_thres=self.cfg['nms_thres'])
+            result = self.model.predict(img_file, conf_thres=0.3, nms_thres=self.cfg['nms_thres'])
 
             class_list = result['class_list']
             score_list = result['score_list']

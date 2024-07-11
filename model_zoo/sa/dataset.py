@@ -300,8 +300,8 @@ if __name__ == "__main__":
     use_points = False
     use_boxes = False
 
-    coco_root = Path(config['coco_root']) / 'train2017'
-    coco_ann_file = Path(config['coco_root']) / "annotations" / "instances_train2017.json"
+    coco_root = Path(config['coco_root']) / 'train'
+    coco_ann_file = Path(config['coco_root']) / "annotations" / "instances_train.json"
     train_dataset = CustomDataset(root=coco_root,
                                   ann_file=coco_ann_file,
                                   use_points=use_points,

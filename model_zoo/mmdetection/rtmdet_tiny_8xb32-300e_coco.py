@@ -181,9 +181,9 @@ test_cfg = dict(type='TestLoop')
 test_dataloader = dict(
     batch_size=5,
     dataset=dict(
-        ann_file='annotations/instances_val2017.json',
+        ann_file='annotations/instances_val.json',
         backend_args=None,
-        data_prefix=dict(img='val2017/'),
+        data_prefix=dict(img='val/'),
         data_root='data/coco/',
         pipeline=[
             dict(backend_args=None, type='LoadImageFromFile'),
@@ -220,7 +220,7 @@ test_dataloader = dict(
     persistent_workers=True,
     sampler=dict(shuffle=False, type='DefaultSampler'))
 test_evaluator = dict(
-    ann_file='data/coco/annotations/instances_val2017.json',
+    ann_file='data/coco/annotations/instances_val.json',
     backend_args=None,
     format_only=False,
     metric='bbox',
@@ -269,9 +269,9 @@ train_dataloader = dict(
     batch_sampler=None,
     batch_size=32,
     dataset=dict(
-        ann_file='annotations/instances_train2017.json',
+        ann_file='annotations/instances_train.json',
         backend_args=None,
-        data_prefix=dict(img='train2017/'),
+        data_prefix=dict(img='train/'),
         data_root='data/coco/',
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         pipeline=[
@@ -487,9 +487,9 @@ val_cfg = dict(type='ValLoop')
 val_dataloader = dict(
     batch_size=5,
     dataset=dict(
-        ann_file='annotations/instances_val2017.json',
+        ann_file='annotations/instances_val.json',
         backend_args=None,
-        data_prefix=dict(img='val2017/'),
+        data_prefix=dict(img='val/'),
         data_root='data/coco/',
         pipeline=[
             dict(backend_args=None, type='LoadImageFromFile'),
@@ -526,7 +526,7 @@ val_dataloader = dict(
     persistent_workers=True,
     sampler=dict(shuffle=False, type='DefaultSampler'))
 val_evaluator = dict(
-    ann_file='data/coco/annotations/instances_val2017.json',
+    ann_file='data/coco/annotations/instances_val.json',
     backend_args=None,
     format_only=False,
     metric='bbox',

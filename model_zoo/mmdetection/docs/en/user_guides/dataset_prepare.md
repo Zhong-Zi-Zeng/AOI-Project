@@ -21,8 +21,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   ├── cityscapes
 │   │   ├── annotations
@@ -37,32 +37,32 @@ mmdetection
 │   │   ├── VOC2012
 ```
 
-Some models require additional [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip) datasets, such as HTC, DetectoRS and SCNet, you can download, unzip, and then move them to the coco folder. The directory should be like this.
+Some models require additional [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval.zip) datasets, such as HTC, DetectoRS and SCNet, you can download, unzip, and then move them to the coco folder. The directory should be like this.
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 ```
 
-Panoptic segmentation models like PanopticFPN require additional [COCO Panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip) datasets, you can download, unzip, and then move them to the coco annotation folder. The directory should be like this.
+Panoptic segmentation models like PanopticFPN require additional [COCO Panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval.zip) datasets, you can download, unzip, and then move them to the coco annotation folder. The directory should be like this.
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   │   ├── panoptic_train2017.json
-│   │   │   ├── panoptic_train2017
-│   │   │   ├── panoptic_val2017.json
-│   │   │   ├── panoptic_val2017
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   │   ├── panoptic_train.json
+│   │   │   ├── panoptic_train
+│   │   │   ├── panoptic_val.json
+│   │   │   ├── panoptic_val
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 ```
 
@@ -121,15 +121,15 @@ There are two types of annotations for COCO semantic segmentation, which differ 
 
 **(1) Use stuffthingmaps dataset**
 
-The download link for this dataset is [stuffthingmaps_trainval2017](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip). Please download and extract it to the `data/coco` folder.
+The download link for this dataset is [stuffthingmaps_trainval](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval.zip). Please download and extract it to the `data/coco` folder.
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 ```
@@ -147,8 +147,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 │   │   ├── stuffthingmaps_semseg
@@ -171,18 +171,18 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   │   ├── panoptic_train2017.json
-│   │   │   ├── panoptic_train2017
-│   │   │   ├── panoptic_val2017.json
-│   │   │   ├── panoptic_val2017
-│   │   │   ├── panoptic_semseg_train2017
-│   │   │   ├── panoptic_semseg_val2017
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   │   ├── panoptic_train.json
+│   │   │   ├── panoptic_train
+│   │   │   ├── panoptic_val.json
+│   │   │   ├── panoptic_val
+│   │   │   ├── panoptic_semseg_train
+│   │   │   ├── panoptic_semseg_val
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 ```
 
-`panoptic_semseg_train2017` and `panoptic_semseg_val2017` are the newly generated COCO semantic segmentation datasets that can be directly used for training and testing. Note that their category information is the same as that of COCO panoptic segmentation, including both "thing" and "stuff" categories.
+`panoptic_semseg_train` and `panoptic_semseg_val` are the newly generated COCO semantic segmentation datasets that can be directly used for training and testing. Note that their category information is the same as that of COCO panoptic segmentation, including both "thing" and "stuff" categories.
 
 ### RefCOCO Dataset Preparation
 

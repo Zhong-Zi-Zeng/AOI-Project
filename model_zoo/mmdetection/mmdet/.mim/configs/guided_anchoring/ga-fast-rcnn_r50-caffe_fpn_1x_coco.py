@@ -54,13 +54,13 @@ test_pipeline = [
 # TODO: support loading proposals
 data = dict(
     train=dict(
-        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_train2017.pkl',
+        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_train.pkl',
         pipeline=train_pipeline),
     val=dict(
-        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_val2017.pkl',
+        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_val.pkl',
         pipeline=test_pipeline),
     test=dict(
-        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_val2017.pkl',
+        proposal_file=data_root + 'proposals/ga_rpn_r50_fpn_1x_val.pkl',
         pipeline=test_pipeline))
 optimizer_config = dict(
     _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))

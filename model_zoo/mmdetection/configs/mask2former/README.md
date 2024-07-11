@@ -14,7 +14,7 @@ Image segmentation is about grouping pixels with different semantics, e.g., cate
 
 ## Introduction
 
-Mask2Former requires COCO and [COCO-panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip) dataset for training and evaluation. You need to download and extract it in the COCO dataset path.
+Mask2Former requires COCO and [COCO-panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval.zip) dataset for training and evaluation. You need to download and extract it in the COCO dataset path.
 The directory should be like this.
 
 ```none
@@ -25,14 +25,14 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-|   |   |   ├── instances_train2017.json
-|   |   |   ├── instances_val2017.json
-│   │   │   ├── panoptic_train2017.json
-│   │   │   ├── panoptic_train2017
-│   │   │   ├── panoptic_val2017.json
-│   │   │   ├── panoptic_val2017
-│   │   ├── train2017
-│   │   ├── val2017
+|   |   |   ├── instances_train.json
+|   |   |   ├── instances_val.json
+│   │   │   ├── panoptic_train.json
+│   │   │   ├── panoptic_train
+│   │   │   ├── panoptic_val.json
+│   │   │   ├── panoptic_val
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 ```
 

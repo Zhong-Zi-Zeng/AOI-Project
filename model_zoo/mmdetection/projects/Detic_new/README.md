@@ -38,8 +38,8 @@ mmdetection
 │   │   |	├── lvis_v1_train.json
 │   │   |	├── lvis_v1_val.json
 │   │   |	├── lvis_v1_train_norare.json
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 ```
 
 ### ImageNet-LVIS

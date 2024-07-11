@@ -6,7 +6,7 @@
 
 ### 前提条件
 
-- 下载 [COCO测试数据集图像](http://images.cocodataset.org/zips/test2017.zip)，[测试图像信息](http://images.cocodataset.org/annotations/image_info_test2017.zip)，和[全景训练/相关注释](http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip)，然后解压缩它们，把 `test2017` 放到 `data/coco/`，把 json 文件和注释文件放到 `data/coco/annotations/` 。
+- 下载 [COCO测试数据集图像](http://images.cocodataset.org/zips/test2017.zip)，[测试图像信息](http://images.cocodataset.org/annotations/image_info_test2017.zip)，和[全景训练/相关注释](http://images.cocodataset.org/annotations/panoptic_annotations_trainval.zip)，然后解压缩它们，把 `test2017` 放到 `data/coco/`，把 json 文件和注释文件放到 `data/coco/annotations/` 。
 
 ```shell
 # 假设 data/coco/ 不存在
@@ -14,16 +14,16 @@ mkdir -pv data/coco/
 # 下载 test2017
 wget -P data/coco/ http://images.cocodataset.org/zips/test2017.zip
 wget -P data/coco/ http://images.cocodataset.org/annotations/image_info_test2017.zip
-wget -P data/coco/ http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip
+wget -P data/coco/ http://images.cocodataset.org/annotations/panoptic_annotations_trainval.zip
 # 解压缩它们
 unzip data/coco/test2017.zip -d data/coco/
 unzip data/coco/image_info_test2017.zip -d data/coco/
-unzip data/coco/panoptic_annotations_trainval2017.zip -d data/coco/
+unzip data/coco/panoptic_annotations_trainval.zip -d data/coco/
 # 删除 zip 文件(可选)
-rm -rf data/coco/test2017.zip data/coco/image_info_test2017.zip data/coco/panoptic_annotations_trainval2017.zip
+rm -rf data/coco/test2017.zip data/coco/image_info_test2017.zip data/coco/panoptic_annotations_trainval.zip
 ```
 
-- 运行以下代码更新测试图像信息中的类别信息。由于 `image_info_test-dev2017.json` 的类别信息中缺少属性 `isthing` ，我们需要用 `panoptic_val2017.json` 中的类别信息更新它。
+- 运行以下代码更新测试图像信息中的类别信息。由于 `image_info_test-dev2017.json` 的类别信息中缺少属性 `isthing` ，我们需要用 `panoptic_val.json` 中的类别信息更新它。
 
 ```shell
 python tools/misc/gen_coco_panoptic_test_info.py data/coco/annotations
@@ -38,10 +38,10 @@ data
     |   |-- image_info_test-dev2017.json
     |   |-- image_info_test2017.json
     |   |-- panoptic_image_info_test-dev2017.json
-    |   |-- panoptic_train2017.json
-    |   |-- panoptic_train2017.zip
-    |   |-- panoptic_val2017.json
-    |   `-- panoptic_val2017.zip
+    |   |-- panoptic_train.json
+    |   |-- panoptic_train.zip
+    |   |-- panoptic_val.json
+    |   `-- panoptic_val.zip
     `-- test2017
 ```
 
