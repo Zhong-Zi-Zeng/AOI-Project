@@ -25,7 +25,7 @@ def check_path(path: str) -> bool:
 
 
 def allowed_file(filename: str):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'json'}
 
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 

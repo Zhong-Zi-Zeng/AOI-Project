@@ -8,11 +8,13 @@ import glob
 import base64
 import subprocess
 from threading import Thread
+from pathlib import Path
+from werkzeug.utils import secure_filename
 
 from flask import Flask, request, jsonify
 
 from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
-                            allowed_file, convert_image_to_numpy)
+                            allowed_file, convert_image_to_numpy, save_yaml)
 from model_manager import ModelManager
 from training_manager import TrainingManager
 
@@ -40,6 +42,24 @@ def get_dataset_list():
                     ]
 
     return jsonify(dataset_list), 200
+
+@APP.route('/upload_dataset', methods=['POST'])
+def upload_dataset():
+    """
+    上傳dataset，並儲存到/data資料夾中
+    """
+    files = request.files.getlist('files[]')
+    paths = request.form.getlist('paths[]')
+
+    for file, path in zip(files, paths):
+        if not allowed_file(file.filename):
+            return jsonify({"message": "File type not allowed"}), 400
+
+        relative_path = os.path.join('./data', path).replace('\\', '/')
+        os.makedirs(Path(relative_path).parent, exist_ok=True)
+        file.save(relative_path)
+
+    return jsonify({"message": "success"}), 200
 
 
 @APP.route('/get_template', methods=['GET'])
@@ -89,6 +109,33 @@ def stop_training():
     training_manager.stop_training()
 
     return jsonify({"message": "success"}), 200
+
+
+@APP.route('/save_config', methods=['POST'])
+def save_config():
+    """
+    將傳入的config儲存成template，需為以下格式:
+    {
+        'config_name': xxx,
+        'config': {
+            config's content
+        }
+    }
+    """
+    if 'config_name' not in request.form:
+        return jsonify({"message": "config_name is required"}), 400
+
+    if 'config' not in request.form:
+        return jsonify({"message": "config is required"}), 400
+
+    config = request.form.get('config')
+    config = json.loads(config)
+
+    # Save to /configs directory
+    save_yaml(os.path.join("./configs", request.form.get('config_name') + ".yaml"), config)
+
+    return jsonify({"message": "success"}), 200
+
 
 
 @APP.route('/train', methods=['POST'])
