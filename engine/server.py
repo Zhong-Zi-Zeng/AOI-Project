@@ -6,14 +6,11 @@ import cv2
 import json
 import glob
 import base64
-import subprocess
-from threading import Thread
 from pathlib import Path
-from werkzeug.utils import secure_filename
 
 from flask import Flask, request, jsonify
 
-from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
+from engine.general import (get_works_dir_path, load_yaml,
                             allowed_file, convert_image_to_numpy, save_yaml)
 from model_manager import ModelManager
 from training_manager import TrainingManager
@@ -42,6 +39,7 @@ def get_dataset_list():
                     ]
 
     return jsonify(dataset_list), 200
+
 
 @APP.route('/upload_dataset', methods=['POST'])
 def upload_dataset():
@@ -137,7 +135,6 @@ def save_config():
     return jsonify({"message": "success"}), 200
 
 
-
 @APP.route('/train', methods=['POST'])
 def train():
     """
@@ -150,7 +147,9 @@ def train():
     config = request.form.get('config')
     config = json.loads(config)
 
-    final_config = model_manager.initialize_model(config, task='train')
+    work_dir_name = request.form.get('work_dir_name')
+
+    final_config = model_manager.initialize_model(config, task='train', work_dir_name=work_dir_name)
     model = model_manager.get_model()
 
     # Training

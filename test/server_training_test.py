@@ -4,8 +4,6 @@ import requests
 import json
 from pathlib import Path
 
-
-
 URL = "http://localhost:5000/"
 
 
@@ -53,7 +51,10 @@ def training():
     # =========  訓練模型 =========
     webbrowser.open("http://localhost:1000/")
 
-    json_data = {"config": json.dumps(config)}
+    json_data = {
+        "config": json.dumps(config),
+        "work_dir_name": "Test"  # 可選擇專案名稱, 不提供則使用模型名稱作為專案名稱
+    }
     response = requests.post(URL + "train", data=json_data)
     print(response.json())
 
