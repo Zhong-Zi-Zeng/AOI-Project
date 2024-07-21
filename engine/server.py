@@ -63,27 +63,50 @@ def upload_dataset():
 @APP.route('/get_template', methods=['GET'])
 def get_template():
     """
-    取得所有模型預設的config
+    取得所有模型預設的config以及之前訓練時使用的config
     return:
         {
-            "model_name":
+            "default_config":{
+                "model_name":
                 {
                     "config": 每個model預設的config
                 }
+            },
+
+            "custom_config":{
+                "work_dir_name":
+                {
+                    "config": 之前訓練時使用的config
+                }
+            }
         }
     """
 
     TEMPLATE_DIR = "./configs"
+    CUSTOM_DIR = "./work_dirs/train"
 
-    model_dict = {model_name.replace(".yaml", ""): {'config': None}
-                  for model_name in os.listdir(TEMPLATE_DIR) if model_name.endswith(".yaml")
-                  }
+    # 取出預設的config
+    default_config_dict = {model_name.replace(".yaml", ""): {'config': None}
+                           for model_name in os.listdir(TEMPLATE_DIR) if model_name.endswith(".yaml")
+                           }
 
-    for model_name in model_dict:
-        # 取出每個model預設的config
-        model_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
+    for model_name in default_config_dict:
+        default_config_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
 
-    return jsonify(model_dict), 200
+    # 遍歷所有在CUSTOM_DIR下, 所有final_config.yaml
+    custom_config_dict = {}
+
+    for work_dir_name in os.listdir(CUSTOM_DIR):
+        custom_config_dict.setdefault(work_dir_name, {'config': None})
+        custom_config_dict[work_dir_name]['config'] = load_yaml(
+            os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml"))
+
+    config_dict = {
+        "default_config": default_config_dict,
+        "custom_config": custom_config_dict
+    }
+
+    return jsonify(config_dict), 200
 
 
 @APP.route('/get_status', methods=['GET'])
