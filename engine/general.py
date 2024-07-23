@@ -18,7 +18,7 @@ import cv2
 import torch
 
 ROOT = os.getcwd()
-
+TEMP_DIR = "./temp"
 
 def check_path(path: str) -> bool:
     return os.path.exists(path)
@@ -170,15 +170,19 @@ def save_yaml(path: str, data: dict):
 
 
 def load_json(path: str):
-    with open(path, 'r') as file:
-        data = json.load(file)
-    return data
-
+    try:
+        with open(path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data
+    except json.decoder.JSONDecodeError:
+        return None
 
 def save_json(path: str,
               data: Union[list | dict],
-              indent: Optional[int] = None):
-    with open(path, 'w') as file:
+              indent: Optional[int] = None,
+              mode: str = 'w'):
+
+    with open(path, mode) as file:
         json.dump(data, file, indent=indent)
 
 
@@ -193,14 +197,17 @@ def copy_logfile_to_work_dir(cfg: dict):
     """
         將log檔案複製到當前work_dir底下
     """
-    shutil.copyfile('./output.log', get_work_dir_path(cfg) + '/output.log')
+    shutil.copyfile(os.path.join(ROOT, TEMP_DIR, 'output.log'), get_work_dir_path(cfg) + '/output.log')
 
 
-def clear_logfile():
+def clear_cache():
     """
-        將外部的logfile檔案清空
+        清空temp資料夾底下的cache
     """
-    with open('./output.log', 'w') as f:
+    with open(os.path.join(ROOT, TEMP_DIR, 'output.log'), 'w') as f:
+        f.write('')
+
+    with open(os.path.join(ROOT, TEMP_DIR, 'loss.json'), 'w') as f:
         f.write('')
 
 

@@ -10,14 +10,14 @@ from threading import Thread
 import numpy as np
 import redis
 
-from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_logfile)
+from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_cache,
+                            load_json, check_path, ROOT, TEMP_DIR)
 
 
 class TrainingManager:
     def __init__(self):
         self.training_thread = None
         self.tensorboard_proc = None
-        self.training_complete = False
         self.final_config = None
 
         os_name = platform.system()
@@ -35,19 +35,16 @@ class TrainingManager:
 
     def _train_wrapper(self, train_func):
         train_func()
-        self.training_complete = True
 
+        # ========= After Training =========
         # stop tensorboard
         if self.tensorboard_proc:
             self.tensorboard_proc.terminate()
             self.tensorboard_proc = None
 
-        # Copy log file to work dir
         copy_logfile_to_work_dir(self.final_config)
-        clear_logfile()
-
-        # Clear redis key
         self._clear_redis_key()
+        clear_cache()
 
     def _get_redis_value(self, key: str):
         value = self.r.get(key)
@@ -68,9 +65,12 @@ class TrainingManager:
                                                   '--port', '1000'])
 
     def start_training(self, train_func, final_config):
+        # ========= Before Training =========
         self.final_config = final_config
-        self.training_complete = False
         self._open_tensorboard()
+        self._clear_redis_key()
+        clear_cache()
+
         self.training_thread = Thread(target=self._train_wrapper, args=(train_func,))
         self.training_thread.start()
 
@@ -82,12 +82,13 @@ class TrainingManager:
 
         if self.training_thread is not None and self.training_thread.is_alive():
             status['status_msg'] = "Training in progress"
-        elif self.training_complete:
-            status['status_msg'] = "Training completed"
         else:
             status['status_msg'] = "No training in progress"
 
         status['remaining_time'] = self._get_redis_value("remaining_time")
         status['progress'] = self._get_redis_value("progress")
+
+        loss_json_path = os.path.join(ROOT, TEMP_DIR, 'loss.json')
+        status['loss'] = load_json(loss_json_path) if check_path(loss_json_path) else None
 
         return status

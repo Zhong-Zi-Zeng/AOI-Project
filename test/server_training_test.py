@@ -31,7 +31,7 @@ def training():
 
     # Step 3:
     # =========  選擇其中一個模型 =========
-    config = model_dict['Cascade-Mask-RCNN-ResNet50']['config']
+    config = model_dict['default_config']['Cascade-Mask-RCNN-ResNet50']['config']
 
     # Step 4:
     # =========  更改超參數 =========
