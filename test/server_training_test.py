@@ -30,7 +30,7 @@ def training():
     # requests.post(URL + "upload_dataset", files=files, data=data)
 
     # Step 3:
-    # =========  選擇其中一個模型 =========
+    # =========  選擇其中一個預設模型 =========
     config = model_dict['default_config']['Cascade-Mask-RCNN-ResNet50']['config']
 
     # Step 4:
@@ -40,14 +40,6 @@ def training():
     config['coco_root'] = "./data/WC-100"
 
     # Step 5:
-    # =========  儲存自定義的config =========
-    # json_data = {
-    #     "config_name": "test",
-    #     "config": json.dumps(config)
-    # }
-    # response = requests.post(URL + "save_config", data=json_data)
-
-    # Step 6:
     # =========  訓練模型 =========
     webbrowser.open("http://localhost:1000/")
 
