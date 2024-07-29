@@ -1,9 +1,12 @@
 from __future__ import annotations
-from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
-from mmdet.apis import DetInferencer
-import os
 import subprocess
 import platform
+import os
+
+import torch
+from mmdet.apis import DetInferencer
+
+from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
 
 
 class BaseMMdetection:
@@ -86,6 +89,18 @@ class BaseMMdetection:
         ]
         return transforms
 
+    def _reset_epoch_and_iter(self):
+        """
+            Because mmdet could not reset epoch and iter during resume training,
+            so we reset them here.
+        """
+        work_dir_path = get_work_dir_path(self.cfg)
+        checkpoint = torch.load(self.cfg["weight"])
+        checkpoint['meta']['epoch'] = 0
+        checkpoint['meta']['iter'] = 0
+        torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pth'))
+        self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pth')
+
     def train(self):
         system = platform.system()
 
@@ -103,6 +118,7 @@ class BaseMMdetection:
 
             if self.cfg['weight'] is not None:
                 assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
+                self._reset_epoch_and_iter()
                 command += f' --resume {self.cfg["weight"]}'
 
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
@@ -125,6 +141,7 @@ class BaseMMdetection:
 
             if self.cfg['weight'] is not None:
                 assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
+                self._reset_epoch_and_iter()
                 command += f' --resume {self.cfg["weight"]}'
 
             subprocess.run(command)
