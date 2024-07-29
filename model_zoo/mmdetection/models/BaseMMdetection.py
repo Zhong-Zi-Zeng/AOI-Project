@@ -88,6 +88,7 @@ class BaseMMdetection:
 
     def train(self):
         system = platform.system()
+
         if system == 'Linux':
             env_vars = {'CUDA_VISIBLE_DEVICES': self.cfg['device'], 'PORT': '29500'}
             dist_train_sh = os.path.join(get_model_path(self.cfg), 'tools', 'dist_train.sh')
@@ -99,7 +100,9 @@ class BaseMMdetection:
                 file.write(script_content)
 
             command = f'{dist_train_sh} {self.cfg["cfg_file"]} 1 --work-dir {get_work_dir_path(self.cfg)}'
-            if os.path.exists(self.cfg['weight']):
+
+            if self.cfg['weight'] is not None:
+                assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
                 command += f' --resume {self.cfg["weight"]}'
 
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
@@ -119,8 +122,10 @@ class BaseMMdetection:
                 self.cfg['cfg_file'],
                 '--work-dir', get_work_dir_path(self.cfg)
             ]
-            if os.path.exists(self.cfg['weight']):
-                command.extend(['--resume', self.cfg['weight']])
+
+            if self.cfg['weight'] is not None:
+                assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
+                command += f' --resume {self.cfg["weight"]}'
 
             subprocess.run(command)
 
