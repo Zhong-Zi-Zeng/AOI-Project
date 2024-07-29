@@ -192,9 +192,9 @@ def convert_to_trainID(maskpath, out_mask_dir, is_train):
     mask_copy = mask.copy()
     for clsID, trID in clsID_to_trID.items():
         mask_copy[mask == clsID] = trID
-    seg_filename = osp.join(out_mask_dir, 'train2017',
+    seg_filename = osp.join(out_mask_dir, 'train',
                             osp.basename(maskpath)) if is_train else osp.join(
-                                out_mask_dir, 'val2017',
+                                out_mask_dir, 'val',
                                 osp.basename(maskpath))
     Image.fromarray(mask_copy).save(seg_filename, 'PNG')
 
@@ -221,11 +221,11 @@ def main():
     out_dir = osp.join(coco_path, args.out_dir_name)
     nproc = args.nproc
 
-    mkdir_or_exist(osp.join(out_dir, 'train2017'))
-    mkdir_or_exist(osp.join(out_dir, 'val2017'))
+    mkdir_or_exist(osp.join(out_dir, 'train'))
+    mkdir_or_exist(osp.join(out_dir, 'val'))
 
-    train_list = glob(osp.join(coco_path, 'stuffthingmaps/train2017', '*.png'))
-    val_list = glob(osp.join(coco_path, 'stuffthingmaps/val2017', '*.png'))
+    train_list = glob(osp.join(coco_path, 'stuffthingmaps/train', '*.png'))
+    val_list = glob(osp.join(coco_path, 'stuffthingmaps/val', '*.png'))
     assert (len(train_list) +
             len(val_list)) == COCO_LEN, 'Wrong length of list {} & {}'.format(
                 len(train_list), len(val_list))

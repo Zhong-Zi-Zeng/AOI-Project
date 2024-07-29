@@ -1,9 +1,12 @@
 from __future__ import annotations
-from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
-from mmdet.apis import DetInferencer
-import os
 import subprocess
 import platform
+import os
+
+import torch
+from mmdet.apis import DetInferencer
+
+from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
 
 
 class BaseMMdetection:
@@ -86,8 +89,21 @@ class BaseMMdetection:
         ]
         return transforms
 
+    def _reset_epoch_and_iter(self):
+        """
+            Because mmdet could not reset epoch and iter during resume training,
+            so we reset them here.
+        """
+        work_dir_path = get_work_dir_path(self.cfg)
+        checkpoint = torch.load(self.cfg["weight"])
+        checkpoint['meta']['epoch'] = 0
+        checkpoint['meta']['iter'] = 0
+        torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pth'))
+        self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pth')
+
     def train(self):
         system = platform.system()
+
         if system == 'Linux':
             env_vars = {'CUDA_VISIBLE_DEVICES': self.cfg['device'], 'PORT': '29500'}
             dist_train_sh = os.path.join(get_model_path(self.cfg), 'tools', 'dist_train.sh')
@@ -99,7 +115,10 @@ class BaseMMdetection:
                 file.write(script_content)
 
             command = f'{dist_train_sh} {self.cfg["cfg_file"]} 1 --work-dir {get_work_dir_path(self.cfg)}'
-            if os.path.exists(self.cfg['weight']):
+
+            if self.cfg['weight'] is not None:
+                assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
+                self._reset_epoch_and_iter()
                 command += f' --resume {self.cfg["weight"]}'
 
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
@@ -119,8 +138,11 @@ class BaseMMdetection:
                 self.cfg['cfg_file'],
                 '--work-dir', get_work_dir_path(self.cfg)
             ]
-            if os.path.exists(self.cfg['weight']):
-                command.extend(['--resume', self.cfg['weight']])
+
+            if self.cfg['weight'] is not None:
+                assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
+                self._reset_epoch_and_iter()
+                command += f' --resume {self.cfg["weight"]}'
 
             subprocess.run(command)
 

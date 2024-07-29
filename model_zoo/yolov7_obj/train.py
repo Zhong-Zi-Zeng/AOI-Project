@@ -40,7 +40,7 @@ from utils.loss import ComputeLoss, ComputeLossOTA
 from utils.plots import plot_images, plot_labels, plot_results, plot_evolution
 from utils.torch_utils import ModelEMA, select_device, intersect_dicts, torch_distributed_zero_first, is_parallel
 from utils.wandb_logging.wandb_utils import WandbLogger, check_wandb_resume
-from hooks import RemainingTimeHook, CheckStopTrainingHook
+from hooks import RemainingTimeHook, CheckStopTrainingHook, RecordTrainingLossHook
 
 logger = logging.getLogger(__name__)
 
@@ -322,6 +322,7 @@ def train(hyp, opt, device, tb_writer=None):
     max_iter = (epochs - start_epoch) * len(dataloader)
     remaining_time_hook = RemainingTimeHook(max_iter)
     check_stop_training_hook = CheckStopTrainingHook(str(save_dir))
+    record_training_loss_hook = RecordTrainingLossHook()
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
@@ -356,10 +357,6 @@ def train(hyp, opt, device, tb_writer=None):
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255.0  # uint8 to float32, 0-255 to 0.0-1.0
 
-            # Update Hook
-            remaining_time_hook.update(iter=epoch * len(dataloader) + i)
-            check_stop_training_hook.update(model=model)
-
             # Warmup
             if ni <= nw:
                 xi = [0, nw]  # x interp
@@ -393,6 +390,11 @@ def train(hyp, opt, device, tb_writer=None):
 
             # Backward
             scaler.scale(loss).backward()
+
+            # Update Hook
+            remaining_time_hook.update(iter=epoch * len(dataloader) + i)
+            check_stop_training_hook.update(model=model)
+            record_training_loss_hook.update(iter=epoch * len(dataloader) + i, loss=loss.item())
 
             # record value on tensorboard
             tb_writer.add_scalar('training loss', loss.item(), ni)

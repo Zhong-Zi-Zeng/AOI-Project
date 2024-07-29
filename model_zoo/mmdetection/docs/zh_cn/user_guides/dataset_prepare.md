@@ -18,8 +18,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   ├── cityscapes
 │   │   ├── annotations
@@ -34,32 +34,32 @@ mmdetection
 │   │   ├── VOC2012
 ```
 
-有些模型需要额外的 [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip) 数据集，比如 HTC，DetectoRS 和 SCNet，你可以下载并解压它们到 `coco` 文件夹下。文件夹会是如下结构：
+有些模型需要额外的 [COCO-stuff](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval.zip) 数据集，比如 HTC，DetectoRS 和 SCNet，你可以下载并解压它们到 `coco` 文件夹下。文件夹会是如下结构：
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 ```
 
-PanopticFPN 等全景分割模型需要额外的 [COCO Panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval2017.zip) 数据集，你可以下载并解压它们到 `coco/annotations` 文件夹下。文件夹会是如下结构：
+PanopticFPN 等全景分割模型需要额外的 [COCO Panoptic](http://images.cocodataset.org/annotations/panoptic_annotations_trainval.zip) 数据集，你可以下载并解压它们到 `coco/annotations` 文件夹下。文件夹会是如下结构：
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   │   ├── panoptic_train2017.json
-│   │   │   ├── panoptic_train2017
-│   │   │   ├── panoptic_val2017.json
-│   │   │   ├── panoptic_val2017
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   │   ├── panoptic_train.json
+│   │   │   ├── panoptic_train
+│   │   │   ├── panoptic_val.json
+│   │   │   ├── panoptic_val
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 ```
 
@@ -118,15 +118,15 @@ COCO 语义分割有两种类型标注，主要差别在于类别名定义不一
 
 **(1) 使用 stuffthingmaps 数据集**
 
-该数据集的下载地址为 [stuffthingmaps_trainval2017](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval2017.zip)，请下载后解压到 `data/coco` 文件夹下。
+该数据集的下载地址为 [stuffthingmaps_trainval](http://calvin.inf.ed.ac.uk/wp-content/uploads/data/cocostuffdataset/stuffthingmaps_trainval.zip)，请下载后解压到 `data/coco` 文件夹下。
 
 ```text
 mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 ```
@@ -144,8 +144,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── stuffthingmaps
 │   │   ├── stuffthingmaps_semseg
@@ -168,18 +168,18 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   │   ├── panoptic_train2017.json
-│   │   │   ├── panoptic_train2017
-│   │   │   ├── panoptic_val2017.json
-│   │   │   ├── panoptic_val2017
-│   │   │   ├── panoptic_semseg_train2017
-│   │   │   ├── panoptic_semseg_val2017
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   │   ├── panoptic_train.json
+│   │   │   ├── panoptic_train
+│   │   │   ├── panoptic_val.json
+│   │   │   ├── panoptic_val
+│   │   │   ├── panoptic_semseg_train
+│   │   │   ├── panoptic_semseg_val
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 ```
 
-`panoptic_semseg_train2017` 和 `panoptic_semseg_val2017` 即为新生成的可以直接训练和测试的 COCO 语义分割数据集。注意其类别信息就是 COCO 全景分割的类别信息，包括 thing 和 stuff。
+`panoptic_semseg_train` 和 `panoptic_semseg_val` 即为新生成的可以直接训练和测试的 COCO 语义分割数据集。注意其类别信息就是 COCO 全景分割的类别信息，包括 thing 和 stuff。
 
 ### RefCOCO 数据集准备
 

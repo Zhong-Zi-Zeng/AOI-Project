@@ -7,7 +7,7 @@ _base_: [ "./base/model/SA/vit-l.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/1500/coco/original_class_2"
+coco_root: null
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction)
@@ -23,7 +23,7 @@ fliplr: 0.5  # image flip left-right (probability)
 
 # ===========Hyperparameter===========
 optimizer: "Adam" # Adam、AdamW、SGD
-weight: " "
+weight: null
 end_epoch: 50
 lr: 0.00001
 weight_decay : 0.

@@ -16,12 +16,12 @@ model = dict(
 
 # MMEngine support the following two ways, users can choose
 # according to convenience
-# train_dataloader = dict(dataset=dict(proposal_file='proposals/crpn_r50_caffe_fpn_1x_train2017.pkl'))  # noqa
-_base_.train_dataloader.dataset.proposal_file = 'proposals/crpn_r50_caffe_fpn_1x_train2017.pkl'  # noqa
+# train_dataloader = dict(dataset=dict(proposal_file='proposals/crpn_r50_caffe_fpn_1x_train.pkl'))  # noqa
+_base_.train_dataloader.dataset.proposal_file = 'proposals/crpn_r50_caffe_fpn_1x_train.pkl'  # noqa
 
-# val_dataloader = dict(dataset=dict(proposal_file='proposals/crpn_r50_caffe_fpn_1x_val2017.pkl'))  # noqa
+# val_dataloader = dict(dataset=dict(proposal_file='proposals/crpn_r50_caffe_fpn_1x_val.pkl'))  # noqa
 # test_dataloader = val_dataloader
-_base_.val_dataloader.dataset.proposal_file = 'proposals/crpn_r50_caffe_fpn_1x_val2017.pkl'  # noqa
+_base_.val_dataloader.dataset.proposal_file = 'proposals/crpn_r50_caffe_fpn_1x_val.pkl'  # noqa
 test_dataloader = _base_.val_dataloader
 
 optim_wrapper = dict(clip_grad=dict(max_norm=35, norm_type=2))

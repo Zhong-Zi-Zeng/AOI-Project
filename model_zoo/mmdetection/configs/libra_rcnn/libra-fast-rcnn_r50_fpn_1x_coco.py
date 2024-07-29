@@ -41,12 +41,12 @@ model = dict(
 
 # MMEngine support the following two ways, users can choose
 # according to convenience
-# _base_.train_dataloader.dataset.proposal_file = 'libra_proposals/rpn_r50_fpn_1x_train2017.pkl'  # noqa
+# _base_.train_dataloader.dataset.proposal_file = 'libra_proposals/rpn_r50_fpn_1x_train.pkl'  # noqa
 train_dataloader = dict(
-    dataset=dict(proposal_file='libra_proposals/rpn_r50_fpn_1x_train2017.pkl'))
+    dataset=dict(proposal_file='libra_proposals/rpn_r50_fpn_1x_train.pkl'))
 
-# _base_.val_dataloader.dataset.proposal_file = 'libra_proposals/rpn_r50_fpn_1x_val2017.pkl'  # noqa
+# _base_.val_dataloader.dataset.proposal_file = 'libra_proposals/rpn_r50_fpn_1x_val.pkl'  # noqa
 # test_dataloader = _base_.val_dataloader
 val_dataloader = dict(
-    dataset=dict(proposal_file='libra_proposals/rpn_r50_fpn_1x_val2017.pkl'))
+    dataset=dict(proposal_file='libra_proposals/rpn_r50_fpn_1x_val.pkl'))
 test_dataloader = val_dataloader

@@ -240,7 +240,7 @@ python tools/test.py \
 python tools/analysis_tools/coco_error_analysis.py \
        results.bbox.json \
        results \
-       --ann=data/coco/annotations/instances_val2017.json \
+       --ann=data/coco/annotations/instances_val.json \
 ```
 
 2. Get COCO segmentation error results per category , save analyze result images to the directory
@@ -249,7 +249,7 @@ python tools/analysis_tools/coco_error_analysis.py \
 python tools/analysis_tools/coco_error_analysis.py \
        results.segm.json \
        results \
-       --ann=data/coco/annotations/instances_val2017.json \
+       --ann=data/coco/annotations/instances_val.json \
        --types='segm'
 ```
 
@@ -642,7 +642,7 @@ To evaluate the recall of separated and occluded masks during training, just rep
 ```python
 val_evaluator = dict(
     type='CocoOccludedSeparatedMetric',  # modify this
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/instances_val.json',
     metric=['bbox', 'segm'],
     format_only=False)
 test_evaluator = val_evaluator

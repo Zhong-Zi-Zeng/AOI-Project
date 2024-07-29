@@ -311,7 +311,7 @@ def main():
     parser.add_argument('out_dir', help='dir to save analyze result images')
     parser.add_argument(
         '--ann',
-        default='data/coco/annotations/instances_val2017.json',
+        default='data/coco/annotations/instances_val.json',
         help='annotation file path')
     parser.add_argument(
         '--types', type=str, nargs='+', default=['bbox'], help='result types')

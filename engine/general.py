@@ -7,6 +7,7 @@ import pycocotools.mask as ms
 from io import BytesIO
 import numpy as np
 import os
+import shutil
 import random
 import yaml
 import json
@@ -16,18 +17,18 @@ import astor
 import cv2
 import torch
 
-
 ROOT = os.getcwd()
-
+TEMP_DIR = "./temp"
 
 def check_path(path: str) -> bool:
     return os.path.exists(path)
 
 
 def allowed_file(filename: str):
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'json'}
 
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def convert_image_to_numpy(image) -> np.ndarray:
     in_memory_file = BytesIO()
@@ -36,6 +37,7 @@ def convert_image_to_numpy(image) -> np.ndarray:
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
     return image
+
 
 def check_gpu_available(cfg: dict):
     gpus = torch.cuda.device_count()
@@ -56,7 +58,7 @@ def get_class_names_and_colors(cfg: dict) -> Tuple[list[str], list[list]]:
     assert cfg.get('coco_root') is not None, "Please set the 'coco_root' in the config file."
 
     # Class name
-    coco = COCO(os.path.join(cfg['coco_root'], 'annotations', 'instances_train2017.json'))
+    coco = COCO(os.path.join(cfg['coco_root'], 'annotations', 'instances_train.json'))
     class_names = [info['name'] for info in coco.loadCats(coco.getCatIds())]
 
     # Class color
@@ -168,15 +170,19 @@ def save_yaml(path: str, data: dict):
 
 
 def load_json(path: str):
-    with open(path, 'r') as file:
-        data = json.load(file)
-    return data
-
+    try:
+        with open(path, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        return data
+    except json.decoder.JSONDecodeError:
+        return None
 
 def save_json(path: str,
               data: Union[list | dict],
-              indent: Optional[int] = None):
-    with open(path, 'w') as file:
+              indent: Optional[int] = None,
+              mode: str = 'w'):
+
+    with open(path, mode) as file:
         json.dump(data, file, indent=indent)
 
 
@@ -185,6 +191,24 @@ def get_model_path(cfg: dict) -> str:
         提取當前model的資料夾路徑
     """
     return os.path.join(os.getcwd(), 'model_zoo', cfg['model_dir_name'])
+
+
+def copy_logfile_to_work_dir(cfg: dict):
+    """
+        將log檔案複製到當前work_dir底下
+    """
+    shutil.copyfile(os.path.join(ROOT, TEMP_DIR, 'output.log'), get_work_dir_path(cfg) + '/output.log')
+
+
+def clear_cache():
+    """
+        清空temp資料夾底下的cache
+    """
+    with open(os.path.join(ROOT, TEMP_DIR, 'output.log'), 'w') as f:
+        f.write('')
+
+    with open(os.path.join(ROOT, TEMP_DIR, 'loss.json'), 'w') as f:
+        f.write('')
 
 
 def get_work_dir_path(cfg: dict) -> str:

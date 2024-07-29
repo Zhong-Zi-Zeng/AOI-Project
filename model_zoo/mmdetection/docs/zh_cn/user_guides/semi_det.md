@@ -28,27 +28,27 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_train.json
+│   │   │   ├── instances_val.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
 半监督目标检测在 coco 数据集上有两种比较通用的实验设置：
 
-（1）将 `train2017` 按照固定百分比（1%，2%，5% 和 10%）划分出一部分数据作为标签数据集，剩余的训练集数据作为无标签数据集，同时考虑划分不同的训练集数据作为标签数据集对半监督训练的结果影响较大，所以采用五折交叉验证来评估算法性能。我们提供了数据集划分脚本：
+（1）将 `train` 按照固定百分比（1%，2%，5% 和 10%）划分出一部分数据作为标签数据集，剩余的训练集数据作为无标签数据集，同时考虑划分不同的训练集数据作为标签数据集对半监督训练的结果影响较大，所以采用五折交叉验证来评估算法性能。我们提供了数据集划分脚本：
 
 ```shell
 python tools/misc/split_coco.py
 ```
 
-该脚本默认会按照 1%，2%，5% 和 10% 的标签数据占比划分 `train2017`，每一种划分会随机重复 5 次，用于交叉验证。生成的半监督标注文件名称格式如下：
+该脚本默认会按照 1%，2%，5% 和 10% 的标签数据占比划分 `train`，每一种划分会随机重复 5 次，用于交叉验证。生成的半监督标注文件名称格式如下：
 
-- 标签数据集标注名称格式：`instances_train2017.{fold}@{percent}.json`
+- 标签数据集标注名称格式：`instances_train.{fold}@{percent}.json`
 
-- 无标签数据集名称标注：`instances_train2017.{fold}@{percent}-unlabeled.json`
+- 无标签数据集名称标注：`instances_train.{fold}@{percent}-unlabeled.json`
 
 其中，`fold` 用于交叉验证，`percent` 表示标签数据的占比。 划分后的数据集目录结构如下：
 
@@ -58,31 +58,31 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_train.json
+│   │   │   ├── instances_val.json
 │   │   ├── semi_anns
-│   │   │   ├── instances_train2017.1@1.json
-│   │   │   ├── instances_train2017.1@1-unlabeled.json
-│   │   │   ├── instances_train2017.1@2.json
-│   │   │   ├── instances_train2017.1@2-unlabeled.json
-│   │   │   ├── instances_train2017.1@5.json
-│   │   │   ├── instances_train2017.1@5-unlabeled.json
-│   │   │   ├── instances_train2017.1@10.json
-│   │   │   ├── instances_train2017.1@10-unlabeled.json
-│   │   │   ├── instances_train2017.2@1.json
-│   │   │   ├── instances_train2017.2@1-unlabeled.json
+│   │   │   ├── instances_train.1@1.json
+│   │   │   ├── instances_train.1@1-unlabeled.json
+│   │   │   ├── instances_train.1@2.json
+│   │   │   ├── instances_train.1@2-unlabeled.json
+│   │   │   ├── instances_train.1@5.json
+│   │   │   ├── instances_train.1@5-unlabeled.json
+│   │   │   ├── instances_train.1@10.json
+│   │   │   ├── instances_train.1@10-unlabeled.json
+│   │   │   ├── instances_train.2@1.json
+│   │   │   ├── instances_train.2@1-unlabeled.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
-（2）将 `train2017` 作为标签数据集，`unlabeled2017` 作为无标签数据集。由于 `image_info_unlabeled2017.json` 没有 `categories` 信息，无法初始化 `CocoDataset` ，所以需要将 `instances_train2017.json` 的 `categories` 写入 `image_info_unlabeled2017.json` ，另存为 `instances_unlabeled2017.json`，相关脚本如下：
+（2）将 `train` 作为标签数据集，`unlabeled2017` 作为无标签数据集。由于 `image_info_unlabeled2017.json` 没有 `categories` 信息，无法初始化 `CocoDataset` ，所以需要将 `instances_train.json` 的 `categories` 写入 `image_info_unlabeled2017.json` ，另存为 `instances_unlabeled2017.json`，相关脚本如下：
 
 ```python
 from mmengine.fileio import load, dump
 
-anns_train = load('instances_train2017.json')
+anns_train = load('instances_train.json')
 anns_unlabeled = load('image_info_unlabeled2017.json')
 anns_unlabeled['categories'] = anns_train['categories']
 dump(anns_unlabeled, 'instances_unlabeled2017.json')
@@ -96,13 +96,13 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
+│   │   │   ├── instances_train.json
 │   │   │   ├── instances_unlabeled2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_val.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
 ## 配置多分支数据流程
@@ -182,8 +182,8 @@ unsup_pipeline = [
 labeled_dataset = dict(
     type=dataset_type,
     data_root=data_root,
-    ann_file='annotations/instances_train2017.json',
-    data_prefix=dict(img='train2017/'),
+    ann_file='annotations/instances_train.json',
+    data_prefix=dict(img='train/'),
     filter_cfg=dict(filter_empty_gt=True, min_size=32),
     pipeline=sup_pipeline)
 

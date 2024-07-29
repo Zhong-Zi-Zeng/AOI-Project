@@ -28,7 +28,7 @@ inferencer = DetInferencer(model=r"D:\Heng_shared\AOI-Project\work_dirs\train\Ca
                            weights=r"D:\Heng_shared\AOI-Project\work_dirs\train\CascadeMaskRCNN\epoch_400.pth")
 
 # Perform inference
-results_dict = inferencer(r"D:\Heng_shared\AOI-Project\data\white_controller\coco\original_class_1\val2017\0.jpg",
+results_dict = inferencer(r"D:\Heng_shared\AOI-Project\data\white_controller\coco\original_class_1\val\0.jpg",
                           show=False, print_result=False, return_vis=True, pred_score_thr=0.5)
 
 predictions = results_dict['predictions'][0]
@@ -39,7 +39,7 @@ scores = predictions['scores']
 bboxes = predictions['bboxes']
 rles = predictions['masks']
 fig, ax = plt.subplots(1)
-image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\white_controller\coco\original_class_1\val2017\0.jpg")
+image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\white_controller\coco\original_class_1\val\0.jpg")
 plt.axis('off')
 plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 

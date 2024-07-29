@@ -6,13 +6,12 @@ import cv2
 import json
 import glob
 import base64
-import subprocess
-from threading import Thread
+from pathlib import Path
 
 from flask import Flask, request, jsonify
 
-from engine.general import (get_work_dir_path, get_works_dir_path, load_yaml,
-                            allowed_file, convert_image_to_numpy)
+from engine.general import (get_works_dir_path, load_yaml,
+                            allowed_file, convert_image_to_numpy, save_yaml)
 from model_manager import ModelManager
 from training_manager import TrainingManager
 
@@ -42,30 +41,72 @@ def get_dataset_list():
     return jsonify(dataset_list), 200
 
 
+@APP.route('/upload_dataset', methods=['POST'])
+def upload_dataset():
+    """
+    上傳dataset，並儲存到/data資料夾中
+    """
+    files = request.files.getlist('files[]')
+    paths = request.form.getlist('paths[]')
+
+    for file, path in zip(files, paths):
+        if not allowed_file(file.filename):
+            return jsonify({"message": "File type not allowed"}), 400
+
+        relative_path = os.path.join('./data', path).replace('\\', '/')
+        os.makedirs(Path(relative_path).parent, exist_ok=True)
+        file.save(relative_path)
+
+    return jsonify({"message": "success"}), 200
+
+
 @APP.route('/get_template', methods=['GET'])
 def get_template():
     """
-    取得所有模型預設的config
+    取得所有模型預設的config以及之前訓練時使用的config
     return:
         {
-            "model_name":
+            "default_config":{
+                "model_name":
                 {
                     "config": 每個model預設的config
                 }
+            },
+
+            "custom_config":{
+                "work_dir_name":
+                {
+                    "config": 之前訓練時使用的config
+                }
+            }
         }
     """
 
     TEMPLATE_DIR = "./configs"
+    CUSTOM_DIR = "./work_dirs/train"
 
-    model_dict = {model_name.replace(".yaml", ""): {'config': None}
-                  for model_name in os.listdir(TEMPLATE_DIR) if model_name.endswith(".yaml")
-                  }
+    # 取出預設的config
+    default_config_dict = {model_name.replace(".yaml", ""): {'config': None}
+                           for model_name in os.listdir(TEMPLATE_DIR) if model_name.endswith(".yaml")
+                           }
 
-    for model_name in model_dict:
-        # 取出每個model預設的config
-        model_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
+    for model_name in default_config_dict:
+        default_config_dict[model_name]['config'] = load_yaml(os.path.join(TEMPLATE_DIR, model_name + ".yaml"))
 
-    return jsonify(model_dict), 200
+    # 遍歷所有在CUSTOM_DIR下, 所有final_config.yaml
+    custom_config_dict = {}
+
+    for work_dir_name in os.listdir(CUSTOM_DIR):
+        custom_config_dict.setdefault(work_dir_name, {'config': None})
+        custom_config_dict[work_dir_name]['config'] = load_yaml(
+            os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml"))
+
+    config_dict = {
+        "default_config": default_config_dict,
+        "custom_config": custom_config_dict
+    }
+
+    return jsonify(config_dict), 200
 
 
 @APP.route('/get_status', methods=['GET'])
@@ -91,6 +132,32 @@ def stop_training():
     return jsonify({"message": "success"}), 200
 
 
+@APP.route('/save_config', methods=['POST'])
+def save_config():
+    """
+    將傳入的config儲存成template，需為以下格式:
+    {
+        'config_name': xxx,
+        'config': {
+            config's content
+        }
+    }
+    """
+    if 'config_name' not in request.form:
+        return jsonify({"message": "config_name is required"}), 400
+
+    if 'config' not in request.form:
+        return jsonify({"message": "config is required"}), 400
+
+    config = request.form.get('config')
+    config = json.loads(config)
+
+    # Save to /configs directory
+    save_yaml(os.path.join("./configs", request.form.get('config_name') + ".yaml"), config)
+
+    return jsonify({"message": "success"}), 200
+
+
 @APP.route('/train', methods=['POST'])
 def train():
     """
@@ -103,7 +170,9 @@ def train():
     config = request.form.get('config')
     config = json.loads(config)
 
-    final_config = model_manager.initialize_model(config, task='train')
+    work_dir_name = request.form.get('work_dir_name')
+
+    final_config = model_manager.initialize_model(config, task='train', work_dir_name=work_dir_name)
     model = model_manager.get_model()
 
     # Training

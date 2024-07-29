@@ -54,9 +54,9 @@ train_dataloader = dict(
     dataset=dict(
         type=CocoPanopticDataset,
         data_root=data_root,
-        ann_file='annotations/panoptic_train2017.json',
+        ann_file='annotations/panoptic_train.json',
         data_prefix=dict(
-            img='train2017/', seg='annotations/panoptic_train2017/'),
+            img='train/', seg='annotations/panoptic_train/'),
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         pipeline=train_pipeline,
         backend_args=backend_args))
@@ -69,8 +69,8 @@ val_dataloader = dict(
     dataset=dict(
         type=CocoPanopticDataset,
         data_root=data_root,
-        ann_file='annotations/panoptic_val2017.json',
-        data_prefix=dict(img='val2017/', seg='annotations/panoptic_val2017/'),
+        ann_file='annotations/panoptic_val.json',
+        data_prefix=dict(img='val/', seg='annotations/panoptic_val/'),
         test_mode=True,
         pipeline=test_pipeline,
         backend_args=backend_args))
@@ -78,8 +78,8 @@ test_dataloader = val_dataloader
 
 val_evaluator = dict(
     type=CocoPanopticMetric,
-    ann_file=data_root + 'annotations/panoptic_val2017.json',
-    seg_prefix=data_root + 'annotations/panoptic_val2017/',
+    ann_file=data_root + 'annotations/panoptic_val.json',
+    seg_prefix=data_root + 'annotations/panoptic_val/',
     backend_args=backend_args)
 test_evaluator = val_evaluator
 

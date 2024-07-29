@@ -80,18 +80,18 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_train2017.json',
-        img_prefix=data_root + 'train2017/',
+        ann_file=data_root + 'annotations/instances_train.json',
+        img_prefix=data_root + 'train/',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        ann_file=data_root + 'annotations/instances_val.json',
+        img_prefix=data_root + 'val/',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        ann_file=data_root + 'annotations/instances_val.json',
+        img_prefix=data_root + 'val/',
         pipeline=test_pipeline))
 ```
 
@@ -110,8 +110,8 @@ train_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_train2017.json',
-        data_prefix=dict(img='train2017/'),
+        ann_file='annotations/instances_train.json',
+        data_prefix=dict(img='train/'),
         filter_cfg=dict(filter_empty_gt=True, min_size=32),
         pipeline=train_pipeline))
 # In version 3.x, validation and test dataloaders can be configured independently
@@ -124,8 +124,8 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='annotations/instances_val2017.json',
-        data_prefix=dict(img='val2017/'),
+        ann_file='annotations/instances_val.json',
+        data_prefix=dict(img='val/'),
         test_mode=True,
         pipeline=test_pipeline))
 test_dataloader = val_dataloader  # The configuration of the testing dataloader is the same as that of the validation dataloader, which is omitted here
@@ -366,7 +366,7 @@ The following table shows the corresponding relationship between Evaluators in v
 data = dict(
     val=dict(
         type='CocoDataset',
-        ann_file=data_root + 'annotations/instances_val2017.json'))
+        ann_file=data_root + 'annotations/instances_val.json'))
 evaluation = dict(metric=['bbox', 'segm'])
 ```
 
@@ -377,7 +377,7 @@ evaluation = dict(metric=['bbox', 'segm'])
 ```python
 val_evaluator = dict(
     type='CocoMetric',
-    ann_file=data_root + 'annotations/instances_val2017.json',
+    ann_file=data_root + 'annotations/instances_val.json',
     metric=['bbox', 'segm'],
     format_only=False)
 ```

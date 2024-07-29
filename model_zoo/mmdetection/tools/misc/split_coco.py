@@ -64,7 +64,7 @@ def split_coco(data_root, out_dir, percent, fold):
 
     # set random seed with the fold
     np.random.seed(fold)
-    ann_file = osp.join(data_root, 'annotations/instances_train2017.json')
+    ann_file = osp.join(data_root, 'annotations/instances_train.json')
     anns = load(ann_file)
 
     image_list = anns['images']
@@ -91,8 +91,8 @@ def split_coco(data_root, out_dir, percent, fold):
             unlabeled_annotations.append(ann)
 
     # save labeled and unlabeled
-    labeled_name = f'instances_train2017.{fold}@{percent}'
-    unlabeled_name = f'instances_train2017.{fold}@{percent}-unlabeled'
+    labeled_name = f'instances_train.{fold}@{percent}'
+    unlabeled_name = f'instances_train.{fold}@{percent}-unlabeled'
 
     save_anns(labeled_name, labeled_images, labeled_annotations)
     save_anns(unlabeled_name, unlabeled_images, unlabeled_annotations)

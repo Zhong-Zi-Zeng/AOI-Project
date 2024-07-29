@@ -969,7 +969,7 @@ class CornerHead(BaseDenseHead):
             # `mmdet/core/export/model_wrappers.py`. Though difference between
             # pytorch and exported onnx model, it might be ignored since
             # comparable performance is achieved between them (e.g. 40.4 vs
-            # 40.6 on COCO val2017, for CornerNet without test-time flip)
+            # 40.6 on COCO val, for CornerNet without test-time flip)
             if 'border' in img_meta:
                 x_off = img_meta['border'][2]
                 y_off = img_meta['border'][0]

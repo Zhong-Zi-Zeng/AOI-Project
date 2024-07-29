@@ -46,14 +46,14 @@ def main(args, config: dict):
     #     raise ValueError("Now not support use boxes and use points be the prompt at the same time")
 
     # dataset
-    train_dataset = CustomDataset(root=Path(config['coco_root']) / "train2017",
-                                  ann_file=Path(config['coco_root']) / "annotations/instances_train2017.json",
+    train_dataset = CustomDataset(root=Path(config['coco_root']) / "train",
+                                  ann_file=Path(config['coco_root']) / "annotations/instances_train.json",
                                   use_points=config['use_points'],
                                   use_boxes=config['use_boxes'],
                                   **create_augmentation(hyp=config, mode='training'))
 
-    test_dataset = CustomDataset(root=Path(config['coco_root']) / "val2017",
-                                 ann_file=Path(config['coco_root']) / "annotations/instances_val2017.json",
+    test_dataset = CustomDataset(root=Path(config['coco_root']) / "val",
+                                 ann_file=Path(config['coco_root']) / "annotations/instances_val.json",
                                  use_points=False,
                                  use_boxes=False,
                                  **create_augmentation(hyp=config, mode='testing'))

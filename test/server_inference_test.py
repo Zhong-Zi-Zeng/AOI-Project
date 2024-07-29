@@ -32,7 +32,7 @@ def predict():
 
     # Step 4:
     # ========= 讀取圖片並轉為二進位後進行預測 =========
-    image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\Synth-6000\val2017\0.jpg")
+    image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\Synth-6000\val\0.jpg")
     _, buffer = cv2.imencode('.jpg', image)
     img_bytes = BytesIO(buffer.tobytes())
 

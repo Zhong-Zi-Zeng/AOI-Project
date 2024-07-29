@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 from typing import Optional
 
 import redis
@@ -10,7 +11,18 @@ from mmdet.registry import HOOKS
 @HOOKS.register_module()
 class CheckStopTrainingHook(Hook):
     def __init__(self):
-        self.r = redis.Redis(host='redis', port=6379, db=0)
+        os_name = platform.system()
+        if os_name == "Windows":
+            print("Running on Windows")
+            redis_host = '127.0.0.1'
+        elif os_name == "Linux":
+            print("Running on Linux")
+            redis_host = 'redis'
+        else:
+            print(f"Running on {os_name}")
+            redis_host = 'redis'
+
+        self.r = redis.Redis(host=redis_host, port=6379, db=0)
 
     def after_train_iter(self,
                          runner,

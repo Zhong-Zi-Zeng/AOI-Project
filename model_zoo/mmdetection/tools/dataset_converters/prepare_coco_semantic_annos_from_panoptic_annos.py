@@ -888,7 +888,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     dataset_dir = args.coco_path
-    for s in ['val2017', 'train2017']:
+    for s in ['val', 'train']:
         separate_coco_semantic_from_panoptic(
             os.path.join(dataset_dir,
                          'annotations/panoptic_{}.json'.format(s)),

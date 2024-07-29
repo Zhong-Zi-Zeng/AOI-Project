@@ -65,3 +65,5 @@ xlrd==2.0.1
 xlutils==2.0.0
 plotly==5.18.0
 PyQt6==6.6.1
+redis
+flask==3.0.3

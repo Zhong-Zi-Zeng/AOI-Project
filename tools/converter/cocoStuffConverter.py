@@ -34,10 +34,10 @@ class cocoStuffConverter(BaseConverter):
         self._generate_dir()
 
     def _generate_dir(self):
-        os.makedirs(os.path.join(self.output_dir, 'images', 'train2017'), exist_ok=True)
-        os.makedirs(os.path.join(self.output_dir, 'images', 'val2017'), exist_ok=True)
-        os.makedirs(os.path.join(self.output_dir, 'annotations', 'train2017'), exist_ok=True)
-        os.makedirs(os.path.join(self.output_dir, 'annotations', 'val2017'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'images', 'train'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'images', 'val'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'annotations', 'train'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'annotations', 'val'), exist_ok=True)
 
     def generate_original(self):
         for idx, (image_file, json_file) in enumerate(

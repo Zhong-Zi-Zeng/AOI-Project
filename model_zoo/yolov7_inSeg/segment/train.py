@@ -66,7 +66,7 @@ from utils.segment.metrics import KEYS, fitness
 from utils.segment.plots import plot_images_and_masks, plot_results_with_masks
 from utils.torch_utils import (EarlyStopping, ModelEMA, de_parallel, select_device, smart_DDP, smart_optimizer,
                                smart_resume, torch_distributed_zero_first)
-from hooks import CheckStopTrainingHook, RemainingTimeHook
+from hooks import CheckStopTrainingHook, RemainingTimeHook, RecordTrainingLossHook
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -130,7 +130,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     train_path, val_path = data_dict['train'], data_dict['val']
     nc = 1 if single_cls else int(data_dict['nc'])  # number of classes
     names = {0: 'item'} if single_cls and len(data_dict['names']) != 1 else data_dict['names']  # class names
-    is_coco = isinstance(val_path, str) and val_path.endswith('coco/val2017.txt')  # COCO dataset
+    is_coco = isinstance(val_path, str) and val_path.endswith('coco/val.txt')  # COCO dataset
 
     # Model
     check_suffix(weights, '.pt')  # check weights
@@ -288,6 +288,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     max_iter = (epochs - start_epoch) * len(train_loader)
     remaining_time_hook = RemainingTimeHook(max_iter)
     check_stop_training_hook = CheckStopTrainingHook(str(save_dir))
+    record_training_loss_hook = RecordTrainingLossHook()
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         # callbacks.run('on_train_epoch_start')
@@ -316,10 +317,6 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
             # callbacks.run('on_train_batch_start')
             ni = i + nb * epoch  # number integrated batches (since train start)
             imgs = imgs.to(device, non_blocking=True).float() / 255  # uint8 to float32, 0-255 to 0.0-1.0
-
-            # Update Hook
-            remaining_time_hook.update(iter=epoch * len(train_loader) + i)
-            check_stop_training_hook.update(model=model)
 
             # Warmup
             if ni <= nw:
@@ -351,6 +348,11 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
 
             # Backward
             scaler.scale(loss).backward()
+
+            # Update Hook
+            remaining_time_hook.update(iter=epoch * len(train_loader) + i)
+            check_stop_training_hook.update(model=model)
+            record_training_loss_hook.update(iter=epoch * len(train_loader) + i, loss=loss.item())
 
             # record value on tensorboard
             tb_writer.add_scalar('Training loss', loss.item(), ni)

@@ -12,10 +12,10 @@ test_evaluator = val_evaluator
 #     dict(
 #         type='DumpProposals',
 #         output_dir=data_root + 'proposals/',
-#         proposals_file='rpn_r50_fpn_1x_val2017.pkl'),
+#         proposals_file='rpn_r50_fpn_1x_val.pkl'),
 #     dict(
 #         type='CocoMetric',
-#         ann_file=data_root + 'annotations/instances_val2017.json',
+#         ann_file=data_root + 'annotations/instances_val.json',
 #         metric='proposal_fast',
 #         backend_args={{_base_.backend_args}},
 #         format_only=False)
@@ -25,12 +25,12 @@ test_evaluator = val_evaluator
 # data_root = 'data/coco/'
 # test_dataloader = dict(
 #     dataset=dict(
-#         ann_file='annotations/instances_train2017.json',
-#         data_prefix=dict(img='train2017/')))
+#         ann_file='annotations/instances_train.json',
+#         data_prefix=dict(img='train/')))
 #
 # test_evaluator = [
 #     dict(
 #         type='DumpProposals',
 #         output_dir=data_root + 'proposals/',
-#         proposals_file='rpn_r50_fpn_1x_train2017.pkl'),
+#         proposals_file='rpn_r50_fpn_1x_train.pkl'),
 # ]

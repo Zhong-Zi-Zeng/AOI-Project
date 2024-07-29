@@ -46,16 +46,16 @@ def run():
     else:
         ValueError("Cannot find the source file {}".format(args.source))
 
-    image_1 = cv2.imread("./data/WC-100/val2017/0.jpg")
-    image_2 = cv2.imread("./data/WC-100/val2017/1.jpg")
-    image_3 = cv2.imread("./data/WC-100/val2017/2.jpg")
+    image_1 = cv2.imread("./data/WC-100/val/0.jpg")
+    image_2 = cv2.imread("./data/WC-100/val/1.jpg")
+    image_3 = cv2.imread("./data/WC-100/val/2.jpg")
 
     # input = np.stack((image_1, image_2, image_3), axis=0)
-    input = ["./data/WC-100/val2017/0.jpg",
-             "./data/WC-100/val2017/1.jpg",
-             "./data/WC-100/val2017/2.jpg",
-             "./data/WC-100/val2017/3.jpg",
-             "./data/WC-100/val2017/4.jpg"]
+    input = ["./data/WC-100/val/0.jpg",
+             "./data/WC-100/val/1.jpg",
+             "./data/WC-100/val/2.jpg",
+             "./data/WC-100/val/3.jpg",
+             "./data/WC-100/val/4.jpg"]
 
     for image_file in tqdm(source, total=len(source)):
         result = model.predict(input,

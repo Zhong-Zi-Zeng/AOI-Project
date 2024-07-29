@@ -12,11 +12,12 @@ from .yolox_mode_switch_hook import YOLOXModeSwitchHook
 from .validation_hook import ValidationHook
 from .remaining_time_hook import RemainingTimeHook
 from .check_stop_training import CheckStopTrainingHook
+from .record_training_loss import RecordTrainingLossHook
 
 __all__ = [
     'YOLOXModeSwitchHook', 'SyncNormHook', 'CheckInvalidLossHook',
     'SetEpochInfoHook', 'MemoryProfilerHook', 'DetVisualizationHook',
     'NumClassCheckHook', 'MeanTeacherHook', 'trigger_visualization_hook',
     'PipelineSwitchHook', 'TrackVisualizationHook', 'ValidationHook', 'RemainingTimeHook',
-    'CheckStopTrainingHook'
+    'CheckStopTrainingHook', 'RecordTrainingLossHook'
 ]

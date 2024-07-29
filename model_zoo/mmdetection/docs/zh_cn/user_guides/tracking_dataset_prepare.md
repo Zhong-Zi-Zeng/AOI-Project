@@ -42,8 +42,8 @@ mmdetection
 ├── configs
 ├── data
 │   ├── coco
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── annotations
 │   │
@@ -106,8 +106,8 @@ mmdetection
 ├── configs
 ├── data
 │   ├── coco
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   │   ├── annotations
 │   │

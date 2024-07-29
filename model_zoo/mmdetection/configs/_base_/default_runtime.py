@@ -9,7 +9,8 @@ default_hooks = dict(
     visualization=dict(type='DetVisualizationHook'),
     validation=dict(type='ValidationHook'),
     remainingtime=dict(type='RemainingTimeHook'),
-    checkstoptraining=dict(type='CheckStopTrainingHook')
+    checkstoptraining=dict(type='CheckStopTrainingHook'),
+    recordtrainingloss=dict(type='RecordTrainingLossHook'),
 )
 
 env_cfg = dict(

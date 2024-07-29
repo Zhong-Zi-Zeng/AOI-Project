@@ -29,7 +29,7 @@ class TestLVISMetric(unittest.TestCase):
             'height': 640,
             'neg_category_ids': [],
             'not_exhaustive_category_ids': [],
-            'coco_url': 'http://images.cocodataset.org/val2017/0.jpg',
+            'coco_url': 'http://images.cocodataset.org/val/0.jpg',
         }
 
         annotation_1 = {

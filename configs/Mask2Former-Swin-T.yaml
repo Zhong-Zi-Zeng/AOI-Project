@@ -6,7 +6,7 @@ _base_: [ "./base/model/Mask2Former/swin-T.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: "./data/1500/coco/original_class_2"
+coco_root: null
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
@@ -22,7 +22,7 @@ fliplr: 0.5  # image flip left-right (probability), range 0-1
 
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
-weight: " "
+weight: null
 end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.000005 # Initial learning rate

@@ -18,7 +18,7 @@ class TestLVISDataset(unittest.TestCase):
 
         image1 = {
             # ``coco_url`` for v1 only.
-            'coco_url': 'http://images.cocodataset.org/train2017/0.jpg',
+            'coco_url': 'http://images.cocodataset.org/train/0.jpg',
             # ``file_name`` for v0.5 only.
             'file_name': '0.jpg',
             'height': 1024,
@@ -28,7 +28,7 @@ class TestLVISDataset(unittest.TestCase):
             'id': 0
         }
         image2 = {
-            'coco_url': 'http://images.cocodataset.org/train2017/1.jpg',
+            'coco_url': 'http://images.cocodataset.org/train/1.jpg',
             'file_name': '1.jpg',
             'height': 1024,
             'width': 2048,
@@ -37,7 +37,7 @@ class TestLVISDataset(unittest.TestCase):
             'id': 1
         }
         image3 = {
-            'coco_url': 'http://images.cocodataset.org/train2017/2.jpg',
+            'coco_url': 'http://images.cocodataset.org/train/2.jpg',
             'file_name': '2.jpg',
             'height': 1024,
             'width': 2048,
@@ -46,7 +46,7 @@ class TestLVISDataset(unittest.TestCase):
             'id': 2
         }
         image4 = {
-            'coco_url': 'http://images.cocodataset.org/train2017/3.jpg',
+            'coco_url': 'http://images.cocodataset.org/train/3.jpg',
             'file_name': '3.jpg',
             'height': 31,
             'width': 15,

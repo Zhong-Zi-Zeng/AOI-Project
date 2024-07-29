@@ -39,12 +39,12 @@ curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 d='../datasets/coco/images' # unzip directory
 url=http://images.cocodataset.org/zips/
 if [ "$train" == "true" ]; then
-  f='train2017.zip' # 19G, 118k images
+  f='train.zip' # 19G, 118k images
   echo 'Downloading' $url$f '...'
   curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 fi
 if [ "$val" == "true" ]; then
-  f='val2017.zip' # 1G, 5k images
+  f='val.zip' # 1G, 5k images
   echo 'Downloading' $url$f '...'
   curl -L $url$f -o $f -# && unzip -q $f -d $d && rm $f &
 fi

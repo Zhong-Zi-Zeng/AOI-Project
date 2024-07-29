@@ -25,8 +25,8 @@ mmdetection
 ├── data
 │   ├── coco
 │   │   ├── annotations
-│   │   ├── train2017
-│   │   ├── val2017
+│   │   ├── train
+│   │   ├── val
 │   │   ├── test2017
 │   ├── cityscapes
 │   │   ├── annotations

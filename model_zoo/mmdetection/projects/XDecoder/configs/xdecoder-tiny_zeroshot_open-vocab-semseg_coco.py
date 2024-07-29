@@ -57,8 +57,8 @@ val_dataloader = dict(
         metainfo=dict(classes=x_decoder_coco2017_semseg_classes),
         use_label_map=False,
         data_prefix=dict(
-            img_path='val2017/',
-            seg_map_path='annotations/panoptic_semseg_val2017/'),
+            img_path='val/',
+            seg_map_path='annotations/panoptic_semseg_val/'),
         pipeline=test_pipeline,
         return_classes=True))
 

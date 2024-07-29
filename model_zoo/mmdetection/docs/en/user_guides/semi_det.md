@@ -28,26 +28,26 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_train.json
+│   │   │   ├── instances_val.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
 There are two common experimental settings for semi-supervised object detection on the coco2017 dataset:
 
-(1) Split `train2017` according to a fixed percentage (1%, 2%, 5% and 10%) as a labeled dataset, and the rest of `train2017` as an unlabeled dataset. Because the different splits of `train2017` as labeled datasets will cause significant fluctuation on the accuracy of the semi-supervised detectors, five-fold cross-validation is used in practice to evaluate the algorithm. We provide the dataset split script:
+(1) Split `train` according to a fixed percentage (1%, 2%, 5% and 10%) as a labeled dataset, and the rest of `train` as an unlabeled dataset. Because the different splits of `train` as labeled datasets will cause significant fluctuation on the accuracy of the semi-supervised detectors, five-fold cross-validation is used in practice to evaluate the algorithm. We provide the dataset split script:
 
 ```shell
 python tools/misc/split_coco.py
 ```
 
-By default, the script will split `train2017` according to the labeled data ratio  1%, 2%, 5% and 10%, and each split will be randomly repeated 5 times for cross-validation. The generated semi-supervised annotation file name format is as below:
+By default, the script will split `train` according to the labeled data ratio  1%, 2%, 5% and 10%, and each split will be randomly repeated 5 times for cross-validation. The generated semi-supervised annotation file name format is as below:
 
-- the name format of labeled dataset: `instances_train2017.{fold}@{percent}.json`
-- the name format of unlabeled dataset: `instances_train2017.{fold}@{percent}-unlabeled.json`
+- the name format of labeled dataset: `instances_train.{fold}@{percent}.json`
+- the name format of unlabeled dataset: `instances_train.{fold}@{percent}-unlabeled.json`
 
 Here, `fold` is used for cross-validation, and `percent` represents the ratio of labeled data. The directory structure of the divided dataset is as below:
 
@@ -57,31 +57,31 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_train.json
+│   │   │   ├── instances_val.json
 │   │   ├── semi_anns
-│   │   │   ├── instances_train2017.1@1.json
-│   │   │   ├── instances_train2017.1@1-unlabeled.json
-│   │   │   ├── instances_train2017.1@2.json
-│   │   │   ├── instances_train2017.1@2-unlabeled.json
-│   │   │   ├── instances_train2017.1@5.json
-│   │   │   ├── instances_train2017.1@5-unlabeled.json
-│   │   │   ├── instances_train2017.1@10.json
-│   │   │   ├── instances_train2017.1@10-unlabeled.json
-│   │   │   ├── instances_train2017.2@1.json
-│   │   │   ├── instances_train2017.2@1-unlabeled.json
+│   │   │   ├── instances_train.1@1.json
+│   │   │   ├── instances_train.1@1-unlabeled.json
+│   │   │   ├── instances_train.1@2.json
+│   │   │   ├── instances_train.1@2-unlabeled.json
+│   │   │   ├── instances_train.1@5.json
+│   │   │   ├── instances_train.1@5-unlabeled.json
+│   │   │   ├── instances_train.1@10.json
+│   │   │   ├── instances_train.1@10-unlabeled.json
+│   │   │   ├── instances_train.2@1.json
+│   │   │   ├── instances_train.2@1-unlabeled.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
-(2) Use `train2017` as the labeled dataset and `unlabeled2017` as the unlabeled dataset. Since `image_info_unlabeled2017.json` does not contain `categories` information, the `CocoDataset` cannot be initialized, so you need to write the `categories` of `instances_train2017.json` into `image_info_unlabeled2017.json` and save it as `instances_unlabeled2017.json`, the relevant script is as below:
+(2) Use `train` as the labeled dataset and `unlabeled2017` as the unlabeled dataset. Since `image_info_unlabeled2017.json` does not contain `categories` information, the `CocoDataset` cannot be initialized, so you need to write the `categories` of `instances_train.json` into `image_info_unlabeled2017.json` and save it as `instances_unlabeled2017.json`, the relevant script is as below:
 
 ```python
 from mmengine.fileio import load, dump
 
-anns_train = load('instances_train2017.json')
+anns_train = load('instances_train.json')
 anns_unlabeled = load('image_info_unlabeled2017.json')
 anns_unlabeled['categories'] = anns_train['categories']
 dump(anns_unlabeled, 'instances_unlabeled2017.json')
@@ -95,13 +95,13 @@ mmdetection
 │   ├── coco
 │   │   ├── annotations
 │   │   │   ├── image_info_unlabeled2017.json
-│   │   │   ├── instances_train2017.json
+│   │   │   ├── instances_train.json
 │   │   │   ├── instances_unlabeled2017.json
-│   │   │   ├── instances_val2017.json
+│   │   │   ├── instances_val.json
 │   │   ├── test2017
-│   │   ├── train2017
+│   │   ├── train
 │   │   ├── unlabeled2017
-│   │   ├── val2017
+│   │   ├── val
 ```
 
 ## Configure multi-branch pipeline
@@ -183,8 +183,8 @@ unsup_pipeline = [
 labeled_dataset = dict(
     type=dataset_type,
     data_root=data_root,
-    ann_file='annotations/instances_train2017.json',
-    data_prefix=dict(img='train2017/'),
+    ann_file='annotations/instances_train.json',
+    data_prefix=dict(img='train/'),
     filter_cfg=dict(filter_empty_gt=True, min_size=32),
     pipeline=sup_pipeline)
 
@@ -299,7 +299,7 @@ model = dict(
     semi_test_cfg=dict(predict_on='teacher'))
 ```
 
-Following the semi-supervised training configuration of `SoftTeacher`, change `batch_size` to 2 and `source_ratio` to `[1, 1]`, the experimental results of supervised and semi-supervised training of `RetinaNet`, `Faster R-CNN`, `Cascade R-CNN` and `SoftTeacher` on the 10% coco `train2017` are as below:
+Following the semi-supervised training configuration of `SoftTeacher`, change `batch_size` to 2 and `source_ratio` to `[1, 1]`, the experimental results of supervised and semi-supervised training of `RetinaNet`, `Faster R-CNN`, `Cascade R-CNN` and `SoftTeacher` on the 10% coco `train` are as below:
 
 |      Model       |   Detector    | BackBone | Style | sup-0.1-coco mAP | semi-0.1-coco mAP |
 | :--------------: | :-----------: | :------: | :---: | :--------------: | :---------------: |

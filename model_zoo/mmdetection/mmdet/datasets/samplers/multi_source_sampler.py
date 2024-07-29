@@ -31,23 +31,23 @@ class MultiSourceSampler(Sampler):
         >>> dataset_type = 'ConcatDataset'
         >>> sub_dataset_type = 'CocoDataset'
         >>> data_root = 'data/coco/'
-        >>> sup_ann = '../coco_semi_annos/instances_train2017.1@10.json'
+        >>> sup_ann = '../coco_semi_annos/instances_train.1@10.json'
         >>> unsup_ann = '../coco_semi_annos/' \
-        >>>             'instances_train2017.1@10-unlabeled.json'
+        >>>             'instances_train.1@10-unlabeled.json'
         >>> dataset = dict(type=dataset_type,
         >>>     datasets=[
         >>>         dict(
         >>>             type=sub_dataset_type,
         >>>             data_root=data_root,
         >>>             ann_file=sup_ann,
-        >>>             data_prefix=dict(img='train2017/'),
+        >>>             data_prefix=dict(img='train/'),
         >>>             filter_cfg=dict(filter_empty_gt=True, min_size=32),
         >>>             pipeline=sup_pipeline),
         >>>         dict(
         >>>             type=sub_dataset_type,
         >>>             data_root=data_root,
         >>>             ann_file=unsup_ann,
-        >>>             data_prefix=dict(img='train2017/'),
+        >>>             data_prefix=dict(img='train/'),
         >>>             filter_cfg=dict(filter_empty_gt=True, min_size=32),
         >>>             pipeline=unsup_pipeline),
         >>>         ])

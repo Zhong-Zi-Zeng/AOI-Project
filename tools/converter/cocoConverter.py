@@ -34,8 +34,8 @@ class cocoConverter(BaseConverter):
         self._generate_dir()
 
     def _generate_dir(self):
-        os.makedirs(os.path.join(self.output_dir, 'train2017'), exist_ok=True)
-        os.makedirs(os.path.join(self.output_dir, 'val2017'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'train'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'val'), exist_ok=True)
         os.makedirs(os.path.join(self.output_dir, 'annotations'), exist_ok=True)
 
     def generate_original(self):
