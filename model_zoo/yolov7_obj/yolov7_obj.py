@@ -184,14 +184,7 @@ class Yolov7Obj(BaseDetectModel):
                         class_list.append(cls)
                         score_list.append(conf)
 
-                        # Draw bounding box
-                        text = f'{self.class_names[int(cls)]} {conf:.2f}'
-                        self.plot_one_box_mask(image=original_image,
-                                               xywh_bbox=[x, y, w, h],
-                                               text=text,
-                                               color=self.class_color[int(cls)])
             return {
-                'result_image': original_image,
                 'class_list': class_list,
                 'score_list': score_list,
                 'bbox_list': bbox_list

@@ -17,7 +17,7 @@ import cv2
 
 
 class BaseDetectModel(BaseModel):
-    default_key = {'result_image', 'class_list', 'score_list', 'bbox_list'}
+    DEFAULT_KEY = {'class_list', 'score_list', 'bbox_list'}
 
     def __init__(self, cfg: dict):
         super().__init__(cfg)
@@ -41,7 +41,6 @@ class BaseDetectModel(BaseModel):
         Returns:
             返回一個字典，格式如下:
             {
-                result_image (np.array[np.uint8]): 標註後的圖片
                 class_list (list[int]): (M, ) 檢測到的類別編號，M為檢測到的物體數量
                 score_list (list[float]): (M, ) 每個物體的信心值
                 bbox_list (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
@@ -49,10 +48,40 @@ class BaseDetectModel(BaseModel):
         """
         pass
 
+    def _plot_bbox(self,
+                   source: Union[str | np.ndarray[np.uint8]],
+                   results: dict) -> np.ndarray[np.uint8]:
+        """
+        繪製模型預測結果
+        Args:
+            source: 照片路徑或是已讀取的照片
+            results: 預測結果
+        Returns:
+            繪製後的圖片
+        """
+        # Load image
+        if isinstance(source, str):
+            original_image = cv2.imread(source)
+        elif isinstance(source, np.ndarray):
+            original_image = source
+        else:
+            raise ValueError
+
+        for cls, bbox, conf in zip(results['class_list'], results['bbox_list'], results['score_list']):
+            # Draw bounding box and mask
+            text = f'{self.class_names[int(cls)]} {conf:.2f}'
+            self.plot_one_box_mask(image=original_image,
+                                   xywh_bbox=bbox,
+                                   text=text,
+                                   color=self.class_color[int(cls)])
+
+        return original_image
+
     def predict(self,
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
                 nms_thres: float = 0.5,
+                return_vis: bool = True,
                 verbose: bool = False,
                 *args: Any,
                 **kwargs: Any) -> dict:
@@ -127,6 +156,9 @@ class BaseDetectModel(BaseModel):
         else:
             result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
 
+        if return_vis:
+            result['result_image'] = self._plot_bbox(source, result)
+
         # Print timer
         if verbose:
             print('\n\n')
@@ -134,7 +166,7 @@ class BaseDetectModel(BaseModel):
                 print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
             print('\n\n')
 
-        if set(result.keys()) == set(self.default_key):
+        if self.DEFAULT_KEY.issubset(result.keys()):
             return result
         else:
             raise ValueError("You must return the same key with default keys.")

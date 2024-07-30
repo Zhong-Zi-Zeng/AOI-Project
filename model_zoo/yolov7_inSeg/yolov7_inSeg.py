@@ -179,18 +179,9 @@ class Yolov7inSeg(BaseInstanceModel):
                         score_list.append(conf)
                         rle_list.append(polygon_to_rle(polygons[j], original_image.shape[0], original_image.shape[1]))
 
-                        # Draw bounding box and mask
-                        text = f'{self.class_names[int(cls)]} {conf:.2f}'
-                        self.plot_one_box_mask(image=original_image,
-                                               xywh_bbox=[x, y, w, h],
-                                               text=text,
-                                               polygon=np.array(polygons[j], dtype=np.int32),
-                                               color=self.class_color[int(cls)])
-
             # ----------------------------Post-process (End)----------------------------
 
-        return {"result_image": original_image,
-                "class_list": class_list,
+        return {"class_list": class_list,
                 "bbox_list": bbox_list,
                 "score_list": score_list,
                 "rle_list": rle_list}
