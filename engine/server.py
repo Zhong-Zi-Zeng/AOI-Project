@@ -118,6 +118,7 @@ def get_status():
             'status_msg': 狀態訊息
             'remaining_time': 剩餘時間
             'progress': 進度
+            'loss': 從訓練開始到現在的training loss
         }
     """
     status = training_manager.get_status()
