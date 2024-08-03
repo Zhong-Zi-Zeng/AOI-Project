@@ -7,6 +7,7 @@ from typing import Union, Any, Dict
 from abc import abstractmethod
 from model_zoo.base.BaseModel import BaseModel
 from engine.general import (xywh_to_xyxy, rle_to_polygon, polygon_to_rle)
+from engine.timer import TIMER
 from torchvision.ops import nms
 from patchify import patchify
 import numpy as np
@@ -15,6 +16,8 @@ import cv2
 
 
 class BaseInstanceModel(BaseModel):
+    DEFAULT_KEY = {'class_list', 'score_list', 'bbox_list', 'rle_list'}
+
     def __init__(self, cfg: dict):
         super().__init__(cfg)
 
@@ -37,7 +40,6 @@ class BaseInstanceModel(BaseModel):
         Returns:
             返回一個字典，格式如下:
             {
-                result_image (np.array[np.uint8]): 標註後的圖片
                 class_list (list[int]): (M, ) 檢測到的類別編號，M為檢測到的物體數量
                 score_list (list[float]): (M, ) 每個物體的信心值
                 bbox_list (list[int]): (M, 4) 物體的bbox, 需為 x, y, w, h
@@ -46,10 +48,43 @@ class BaseInstanceModel(BaseModel):
         """
         pass
 
+    def _plot_bbox_and_mask(self,
+                            source: Union[str | np.ndarray[np.uint8]],
+                            results: dict) -> np.ndarray[np.uint8]:
+        """
+        繪製模型預測結果
+        Args:
+            source: 照片路徑或是已讀取的照片
+            results: 預測結果
+        Returns:
+            繪製後的圖片
+        """
+        # Load image
+        if isinstance(source, str):
+            original_image = cv2.imread(source)
+        elif isinstance(source, np.ndarray):
+            original_image = source
+        else:
+            raise ValueError
+
+        for cls, bbox, conf, rle in zip(results['class_list'], results['bbox_list'], results['score_list'],
+                                        results['rle_list']):
+            # Draw bounding box and mask
+            text = f'{self.class_names[int(cls)]} {conf:.2f}'
+            self.plot_one_box_mask(image=original_image,
+                                   xywh_bbox=bbox,
+                                   text=text,
+                                   rle=rle,
+                                   color=self.class_color[int(cls)])
+
+        return original_image
+
     def predict(self,
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
                 nms_thres: float = 0.5,
+                return_vis: bool = True,
+                verbose: bool = False,
                 *args: Any,
                 **kwargs: Any) -> dict:
 
@@ -88,7 +123,8 @@ class BaseInstanceModel(BaseModel):
                     y_offset = row_idx * self.cfg['step']
                     result = self._predict(original_patches[row_idx][col_idx], conf_thres, nms_thres, *args, **kwargs)
 
-                    for bbox, conf, cls, rle in zip(result['bbox_list'], result['score_list'], result['class_list'], result['rle_list']):
+                    for bbox, conf, cls, rle in zip(result['bbox_list'], result['score_list'], result['class_list'],
+                                                    result['rle_list']):
                         bbox[0] += x_offset
                         bbox[1] += y_offset
 
@@ -134,9 +170,18 @@ class BaseInstanceModel(BaseModel):
         # If not use patch to predict
         else:
             result = self._predict(source, conf_thres, nms_thres, *args, **kwargs)
-        default_key = {'result_image', 'class_list', 'score_list', 'bbox_list', 'rle_list'}
 
-        if set(result.keys()) == set(default_key):
+        if return_vis:
+            result['result_image'] = self._plot_bbox_and_mask(source, result)
+
+        # Print timer
+        if verbose:
+            print('\n\n')
+            for timer in TIMER:
+                print(f"{timer.name:15s} {timer.dt:.3f}", end=' | ')
+            print('\n\n')
+
+        if self.DEFAULT_KEY.issubset(result.keys()):
             return result
         else:
             raise ValueError("You must return the same key with default keys.")

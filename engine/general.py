@@ -20,6 +20,7 @@ import torch
 ROOT = os.getcwd()
 TEMP_DIR = "./temp"
 
+
 def check_path(path: str) -> bool:
     return os.path.exists(path)
 
@@ -95,6 +96,11 @@ def polygon_to_rle(polygon: np.ndarray, height: int, width: int) -> dict:
 def rle_to_polygon(rle):
     masked_arr = ms.decode(rle)
     return mask_to_polygon(masked_arr)
+
+
+def rle_to_mask(rle):
+    masked_arr = ms.decode(rle)
+    return masked_arr
 
 
 def xywh_to_xyxy(bboxes: Union[list | np.ndarray]):
@@ -177,11 +183,11 @@ def load_json(path: str):
     except json.decoder.JSONDecodeError:
         return None
 
+
 def save_json(path: str,
               data: Union[list | dict],
               indent: Optional[int] = None,
               mode: str = 'w'):
-
     with open(path, mode) as file:
         json.dump(data, file, indent=indent)
 

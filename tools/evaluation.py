@@ -296,7 +296,10 @@ class Evaluator:
             img_file = os.path.join(self.cfg['coco_root'], 'val', img_info['file_name'])
 
             # Inference
-            result = self.model.predict(img_file, conf_thres=0.3, nms_thres=self.cfg['nms_thres'])
+            result = self.model.predict(img_file,
+                                        conf_thres=0.3,
+                                        nms_thres=self.cfg['nms_thres'],
+                                        return_vis=False)
 
             class_list = result['class_list']
             score_list = result['score_list']

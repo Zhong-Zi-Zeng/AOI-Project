@@ -3,7 +3,7 @@ from typing import Union, Any, Dict, Optional
 from abc import ABC, abstractmethod
 
 import numpy as np
-from engine.general import (check_path, rle_to_polygon)
+from engine.general import (check_path, rle_to_mask)
 import random
 import cv2
 
@@ -58,13 +58,6 @@ class BaseModel(ABC):
         if polygon is not None:
             cv2.fillPoly(image, [polygon], color=color)
 
-        if rle is not None:
-            polygon = rle_to_polygon(rle)
-            polygon = sum(polygon, [])
-            if len(polygon) > 0:
-                polygon = np.array(polygon, dtype=np.int32).reshape((-1, 2))
-                cv2.fillPoly(image, [polygon], color=color)
-
         if text is not None:
             tf = max(tl - 1, 1)  # font thickness
             t_size = cv2.getTextSize(text, 0, fontScale=tl / 3, thickness=tf)[0]
@@ -72,6 +65,13 @@ class BaseModel(ABC):
             cv2.rectangle(image, c1, c2, color, -1, cv2.LINE_AA)  # filled
             cv2.putText(image, text, (c1[0], c1[1] - 2), 0, tl / 3,
                         [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
+
+        if rle is not None:
+            mask = rle_to_mask(rle)
+            color_mask = np.zeros_like(image, dtype=np.uint8)
+            color_mask[mask == 1] = color
+            image[mask == 1] = color
+
     @abstractmethod
     def _config_transform(self):
         """
