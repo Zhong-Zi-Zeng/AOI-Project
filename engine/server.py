@@ -58,7 +58,12 @@ def upload_dataset():
         file.save(relative_path)
 
     return jsonify({"message": "success"}), 200
-
+@APP.route('/get_num_gpu', methods=['GET'])
+def get_num_gpu():
+    """
+    取得可使用的GPU數量
+    """
+    return jsonify(get_gpu_count()), 200
 
 @APP.route('/get_template', methods=['GET'])
 def get_template():
@@ -66,7 +71,6 @@ def get_template():
     取得所有模型預設的config以及之前訓練時使用的config
     return:
         {
-            "num_gpus": Number of GPU
             "default_config":{
                 "model_name":
                 {
