@@ -7,6 +7,8 @@ import pycocotools.mask as ms
 from io import BytesIO
 import numpy as np
 import os
+import subprocess
+import platform
 import shutil
 import random
 import yaml
@@ -19,6 +21,22 @@ import torch
 
 ROOT = os.getcwd()
 TEMP_DIR = "./temp"
+
+
+def get_gpu_count():
+    try:
+        result = subprocess.run(['nvidia-smi', '--query-gpu=name', '--format=csv,noheader'], stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        gpu_count = len(result.stdout.decode('utf-8').strip().split('\n'))
+        return gpu_count
+    except Exception as e:
+        print(f"Error detecting GPUs: {e}")
+        return 0
+
+
+def get_os_type():
+    os_type = platform.system()
+    return os_type
 
 
 def check_path(path: str) -> bool:

@@ -7,7 +7,7 @@ services:
       - "6379:6379"
 
   AOI:
-    image: miislab/aoi_cuda11.8:windows
+    image: IMAGE_PLACEHOLDER
     container_name: AOI
     ports:
       - "5000:5000"
@@ -19,7 +19,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: GPU_COUNT_PLACEHOLDER
               capabilities: [gpu]
     environment:
       - REDIS_HOST=redis
