@@ -10,7 +10,7 @@ from pathlib import Path
 
 from flask import Flask, request, jsonify
 
-from engine.general import (get_works_dir_path, load_yaml,
+from engine.general import (get_works_dir_path, load_yaml, get_gpu_count,
                             allowed_file, convert_image_to_numpy, save_yaml)
 from model_manager import ModelManager
 from training_manager import TrainingManager
@@ -66,6 +66,7 @@ def get_template():
     取得所有模型預設的config以及之前訓練時使用的config
     return:
         {
+            "num_gpus": Number of GPU
             "default_config":{
                 "model_name":
                 {
@@ -102,6 +103,7 @@ def get_template():
             os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml"))
 
     config_dict = {
+        "num_gpus": get_gpu_count(),
         "default_config": default_config_dict,
         "custom_config": custom_config_dict
     }
