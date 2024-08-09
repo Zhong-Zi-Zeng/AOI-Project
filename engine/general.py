@@ -33,6 +33,13 @@ def get_gpu_count():
         print(f"Error detecting GPUs: {e}")
         return 0
 
+def get_device(device: str):
+    if device == 'cpu':
+        return device
+    elif device.isdigit():
+        return f'cuda:{device}'
+    else:
+        raise Exception(f'--device {device} not found')
 
 def get_os_type():
     os_type = platform.system()

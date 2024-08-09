@@ -6,7 +6,8 @@ import os
 import torch
 from mmdet.apis import DetInferencer
 
-from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
+from engine.general import (get_model_path, get_work_dir_path, load_python,
+                            update_python_file, get_device)
 
 
 class BaseMMdetection:
@@ -149,4 +150,5 @@ class BaseMMdetection:
     def _load_model(self):
         self.model = DetInferencer(model=self.cfg['cfg_file'],
                                    weights=self.cfg['weight'],
-                                   show_progress=False)
+                                   show_progress=False,
+                                   device=get_device(self.cfg['device']))

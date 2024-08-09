@@ -24,6 +24,7 @@ def predict():
     weight_list = model_dict[model_name]['weight_list']
 
     final_config['weight'] = weight_list[-1]
+    final_config['device'] = "1"
 
     # Step 3:
     # ========= 初始化模型 (如果後續沒有要改變模型或是weight，則不需要呼叫) =========
@@ -32,7 +33,7 @@ def predict():
 
     # Step 4:
     # ========= 讀取圖片並轉為二進位後進行預測 =========
-    image = cv2.imread(r"D:\Heng_shared\AOI-Project\data\Synth-6000\val\0.jpg")
+    image = cv2.imread("./data/WC-100/val/0.jpg")
     _, buffer = cv2.imencode('.jpg', image)
     img_bytes = BytesIO(buffer.tobytes())
 
@@ -54,8 +55,8 @@ def predict():
     print("BBox List:", data['bbox_list'])
     print("RLE List:", data['rle_list'])
 
-    cv2.imshow("Result Image", img)
-    cv2.waitKey(0)
+    # cv2.imshow("Result Image", img)
+    # cv2.waitKey(0)
 
 
 if __name__ == '__main__':
