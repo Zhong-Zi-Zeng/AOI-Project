@@ -107,7 +107,6 @@ def get_template():
             os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml"))
 
     config_dict = {
-        "num_gpus": get_gpu_count(),
         "default_config": default_config_dict,
         "custom_config": custom_config_dict
     }
