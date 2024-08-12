@@ -61,7 +61,7 @@ train_cfg = dict(
 
 # ==========model==========
 batch_augments = [
-    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=True)
+    dict(type='BatchFixedSizePad', size=(width, height), pad_mask=False)
 ]
 
 model = dict(
@@ -367,7 +367,7 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
     dict(type='Resize', scale=(width, height), keep_ratio=True),  # diff
     dict(type='Pad', size=(width, height), pad_val=dict(img=(114, 114, 114))),
     dict(
