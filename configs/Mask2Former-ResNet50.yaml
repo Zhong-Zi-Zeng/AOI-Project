@@ -27,7 +27,7 @@ end_epoch: 50
 warmup_epoch: 3
 initial_lr: 0.000005 # Initial learning rate
 lr: 0.0002 # The learning rate after warmup
-minimum_lr: 0.0 # Minimum learning rate
+minimum_lr: 0.0000005 # Minimum learning rate
 batch_size: 1
 imgsz: [1600, 2400]
 save_period: 5

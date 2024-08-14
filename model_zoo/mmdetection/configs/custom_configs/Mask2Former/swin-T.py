@@ -20,6 +20,7 @@ minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
 nms_threshold = 0.7
+num_queries = 10
 check_interval = 1
 eval_interval = 1
 optimizer = 'SGD'
@@ -142,12 +143,18 @@ model = dict(
         init_cfg=dict(type='Pretrained', checkpoint='https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth')),
     data_preprocessor=data_preprocessor,
     panoptic_head=dict(
-        type='Mask2FormerHead', in_channels=[96, 192, 384, 768]),
+        type='Mask2FormerHead',
+        in_channels=[96, 192, 384, 768],
+        num_things_classes=num_classes,
+        num_queries=num_queries,
+        num_stuff_classes=0,
+        loss_cls=dict(class_weight=[1.0] * num_classes + [0.1])
+    ),
     panoptic_fusion_head=dict(
         num_things_classes=num_classes,
         num_stuff_classes=0),
     init_cfg=None,
-    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold))
+    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold, max_per_image=num_queries))
 
 # ==========dataloader==========
 dataset_type = 'CocoDataset'

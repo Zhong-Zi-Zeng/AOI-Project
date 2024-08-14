@@ -2,3 +2,4 @@ model_name: 'Mask2Former'
 model_dir_name: 'mmdetection'
 
 cfg_file: "./model_zoo/mmdetection/configs/custom_configs/Mask2Former/r101.py"
+num_queries: 10

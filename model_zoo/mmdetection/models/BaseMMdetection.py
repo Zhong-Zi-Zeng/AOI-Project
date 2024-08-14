@@ -46,8 +46,7 @@ class BaseMMdetection:
             'nms_threshold': self.cfg['nms_thres'],
         }
 
-        update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
-        self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
+        self.update_config_var(var_dict=variables)
 
     def _build_optimizer(self,
                          weight_decay: float = 0.0005,
@@ -101,6 +100,11 @@ class BaseMMdetection:
         checkpoint['meta']['iter'] = 0
         torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pth'))
         self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pth')
+
+    def update_config_var(self, var_dict: dict):
+        assert isinstance(var_dict, dict)
+        update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), var_dict)
+        self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
 
     def train(self):
         system = platform.system()

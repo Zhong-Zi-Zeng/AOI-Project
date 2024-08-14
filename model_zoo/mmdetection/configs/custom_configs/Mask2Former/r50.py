@@ -20,6 +20,7 @@ minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
 nms_threshold = 0.7
+num_queries = 10
 check_interval = 1
 eval_interval = 1
 optimizer = 'SGD'
@@ -127,11 +128,12 @@ model = dict(
     panoptic_head=dict(
         num_things_classes=num_classes,
         num_stuff_classes=0,
+        num_queries=num_queries,
         loss_cls=dict(class_weight=[1.0] * num_classes + [0.1])),
     panoptic_fusion_head=dict(
         num_things_classes=num_classes,
         num_stuff_classes=0),
-    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold)
+    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold, max_per_image=num_queries)
 )
 
 # ==========dataloader==========
