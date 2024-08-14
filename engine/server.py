@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 sys.path.append(os.path.join(os.getcwd()))
 import cv2
@@ -8,6 +9,7 @@ import glob
 import base64
 from pathlib import Path
 
+from flask_socketio import SocketIO, emit
 from flask import Flask, request, jsonify
 
 from engine.general import (get_works_dir_path, load_yaml, get_gpu_count,
@@ -16,6 +18,7 @@ from model_manager import ModelManager
 from training_manager import TrainingManager
 
 APP = Flask(__name__)
+SOCKET_IO = SocketIO(APP)
 
 
 # =======================================
@@ -58,12 +61,15 @@ def upload_dataset():
         file.save(relative_path)
 
     return jsonify({"message": "success"}), 200
+
+
 @APP.route('/get_num_gpu', methods=['GET'])
 def get_num_gpu():
     """
     取得可使用的GPU數量
     """
     return jsonify(get_gpu_count()), 200
+
 
 @APP.route('/get_template', methods=['GET'])
 def get_template():
@@ -283,7 +289,21 @@ def predict():
     return jsonify(data), 200
 
 
+# =======================================
+# =============Websocket=============
+# =======================================
+def background_thread():
+    """
+    主要用來與client保持連接, 並每一秒自動傳送當前訓練狀態給client
+    """
+    while True:
+        time.sleep(1)
+        status = training_manager.get_status()
+        SOCKET_IO.emit('status_update', status)
+
+
 if __name__ == '__main__':
     model_manager = ModelManager()
     training_manager = TrainingManager()
-    APP.run(debug=False, host='0.0.0.0', port=5000)
+    SOCKET_IO.start_background_task(target=background_thread)
+    SOCKET_IO.run(APP, debug=False, host='0.0.0.0', port=5000)
