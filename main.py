@@ -1,6 +1,8 @@
 import subprocess
 import platform
 import os
+import re
+
 
 def get_gpu_count():
     try:
@@ -29,13 +31,19 @@ def get_os_type():
 
 
 def generate_docker_compose(gpu_count, os_type):
-    image = "miislab/aoi_cuda11.8:windows" if os_type == "Windows" or "WSL" \
-        else "miislab/aoi_cuda11.8:ubuntu"
     with open('docker-compose-template.yml', 'r') as file:
         compose_template = file.read()
 
-    compose_content = compose_template.replace('GPU_COUNT_PLACEHOLDER', str(gpu_count)).replace('IMAGE_PLACEHOLDER',
-                                                                                                image)
+    # Check need use which image
+    image = "miislab/aoi_cuda11.8:windows" if os_type == "Windows" or "WSL" \
+        else "miislab/aoi_cuda11.8:ubuntu"
+
+    # If user uses WSL, replace mount path "C:/" to "/mnt/c/" or replace "D:" to "/mnt/d/"
+    if os_type == "WSL":
+        compose_template = re.sub(r'([A-Z]):/', lambda match: f"/mnt/{match.group(1).lower()}/", compose_template)
+
+    compose_content = compose_template.replace('GPU_COUNT_PLACEHOLDER', str(gpu_count)) \
+        .replace('IMAGE_PLACEHOLDER', image)
 
     with open('docker-compose.yml', 'w') as file:
         file.write(compose_content)
