@@ -99,6 +99,7 @@ class BaseMMdetection:
 
         checkpoint['meta']['epoch'] = 0
         checkpoint['meta']['iter'] = 0
+        del checkpoint['optimizer']
         torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pth'))
         self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pth')
 
