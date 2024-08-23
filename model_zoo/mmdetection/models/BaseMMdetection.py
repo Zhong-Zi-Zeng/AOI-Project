@@ -123,7 +123,10 @@ class BaseMMdetection:
 
             if self.cfg['weight'] is not None:
                 assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
-                self._reset_epoch_and_iter()
+
+                if not self.cfg['resume_training']:
+                    self._reset_epoch_and_iter()
+
                 command += f' --resume {self.cfg["weight"]}'
 
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
