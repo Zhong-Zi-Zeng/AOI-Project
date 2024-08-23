@@ -6,7 +6,8 @@ import os
 import torch
 from mmdet.apis import DetInferencer
 
-from engine.general import get_model_path, get_work_dir_path, load_python, update_python_file
+from engine.general import (get_model_path, get_work_dir_path, load_python,
+                            update_python_file, get_device, check_path)
 
 
 class BaseMMdetection:
@@ -45,8 +46,7 @@ class BaseMMdetection:
             'nms_threshold': self.cfg['nms_thres'],
         }
 
-        update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), variables)
-        self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
+        self.update_config_var(var_dict=variables)
 
     def _build_optimizer(self,
                          weight_decay: float = 0.0005,
@@ -96,10 +96,25 @@ class BaseMMdetection:
         """
         work_dir_path = get_work_dir_path(self.cfg)
         checkpoint = torch.load(self.cfg["weight"])
+
         checkpoint['meta']['epoch'] = 0
         checkpoint['meta']['iter'] = 0
+        del checkpoint['optimizer']
         torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pth'))
         self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pth')
+
+    def _check_valid_epoch(self):
+        """
+        Check if the end_epoch is valid.
+        """
+        checkpoint = torch.load(self.cfg["weight"])
+        assert self.cfg['end_epoch'] > checkpoint['meta']['epoch'], \
+            'The end_epoch must be larger than the checkpoint epoch'
+
+    def update_config_var(self, var_dict: dict):
+        assert isinstance(var_dict, dict)
+        update_python_file(self.cfg['cfg_file'], os.path.join(get_work_dir_path(self.cfg), 'cfg.py'), var_dict)
+        self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.py')
 
     def train(self):
         system = platform.system()
@@ -117,8 +132,13 @@ class BaseMMdetection:
             command = f'{dist_train_sh} {self.cfg["cfg_file"]} 1 --work-dir {get_work_dir_path(self.cfg)}'
 
             if self.cfg['weight'] is not None:
-                assert os.path.exists(self.cfg['weight']), "The weight file does not exist."
-                self._reset_epoch_and_iter()
+                assert check_path(self.cfg['weight']), "The weight file does not exist."
+
+                if self.cfg['resume_training']:
+                    self._check_valid_epoch()
+                else:
+                    self._reset_epoch_and_iter()
+
                 command += f' --resume {self.cfg["weight"]}'
 
             proc = subprocess.Popen(command, shell=True, env={**os.environ, **env_vars},
@@ -149,4 +169,5 @@ class BaseMMdetection:
     def _load_model(self):
         self.model = DetInferencer(model=self.cfg['cfg_file'],
                                    weights=self.cfg['weight'],
-                                   show_progress=False)
+                                   show_progress=False,
+                                   device=get_device(self.cfg['device']))

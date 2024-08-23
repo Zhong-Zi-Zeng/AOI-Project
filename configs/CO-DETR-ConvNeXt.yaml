@@ -1,12 +1,11 @@
-_base_: [ "./base/model/Mask2Former/r50.yaml", # model
-          "./base/evaluation/instance_segmentation.yaml", # task
+_base_: [ "./base/model/CO-DETR/c101.yaml", # model
+          "./base/evaluation/object_detection.yaml", # task
           "./base/dataset.yaml", # dataset
           "./base/hyp.yaml" # hyperparameter
 ]
 
-
 # ===========Dataset===========
-coco_root: null
+coco_root: ./data/WC-133
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
@@ -23,14 +22,13 @@ fliplr: 0.5  # image flip left-right (probability), range 0-1
 # ===========Hyperparameter===========
 optimizer: "AdamW" # Adam、AdamW、SGD
 weight: null
-end_epoch: 50
+end_epoch: 25
 warmup_epoch: 3
-initial_lr: 0.000005 # Initial learning rate
-lr: 0.0002 # The learning rate after warmup
-minimum_lr: 0.0000005 # Minimum learning rate
+initial_lr: 0.00001 # Initial learning rate
+lr: 0.00001 # The learning rate after warmup
+minimum_lr: 0.000005 # Minimum learning rate
 batch_size: 1
-imgsz: [1600, 2400]
-num_queries: 10
+imgsz: [ 1600, 1600 ]
 save_period: 5
 eval_period: 5
 device: "0"

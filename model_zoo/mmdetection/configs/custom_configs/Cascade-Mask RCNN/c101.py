@@ -1,11 +1,14 @@
 _base_ = [
-    'custom_configs/Mask2Former/r50_coco_panoptic.py',
-    '_base_/datasets/coco_panoptic.py',
+    '_base_/models/cascade-mask-rcnn_r50_fpn.py',
+    '_base_/datasets/coco_instance.py',
+    '_base_/schedules/schedule_2x.py',
     '_base_/default_runtime.py'
 ]
+custom_imports = dict(
+    imports=['mmpretrain.models'], allow_failed_imports=False)
 
 # ==========Dataset setting==========
-data_root = ' '
+data_root = " "
 classes = ()
 
 # ==========Training setting==========
@@ -13,14 +16,13 @@ batch_size = 12
 epochs = 50
 width = 1024
 height = 600
-num_classes = 80
+num_classes = 32
 lr = 0.001
 start_factor = 0.3
 minimum_lr = 0
 warmup_begin = 0
 warmup_end = 3
 nms_threshold = 0.7
-num_queries = 10
 check_interval = 1
 eval_interval = 1
 optimizer = 'SGD'
@@ -97,82 +99,84 @@ test_pipeline = [
 ]
 
 # ==========train_cfg==========
-train_cfg = dict(_delete_=True, type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=eval_interval)
-
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=epochs, val_interval=eval_interval)
 
 # ==========model==========
-batch_augments = [
-    dict(
-        type='BatchFixedSizePad',
-        size=(1024, 1024),
-        img_pad_value=0,
-        pad_mask=True,
-        mask_pad_value=0,
-        pad_seg=False)
-]
-
-data_preprocessor = dict(
-    type='DetDataPreprocessor',
-    mean=[123.675, 116.28, 103.53],
-    std=[58.395, 57.12, 57.375],
-    bgr_to_rgb=True,
-    pad_size_divisor=32,
-    pad_mask=True,
-    mask_pad_value=0,
-    pad_seg=False,
-    batch_augments=batch_augments)
 model = dict(
+    # Backbone
     backbone=dict(
-        depth=101,
-        init_cfg=dict(type='Pretrained',
-                      checkpoint='torchvision://resnet101')),
-    data_preprocessor=data_preprocessor,
-    panoptic_head=dict(
-        num_things_classes=num_classes,
-        num_stuff_classes=0,
-        num_queries=num_queries,
-        loss_cls=dict(class_weight=[1.0] * num_classes + [0.1])),
-    panoptic_fusion_head=dict(
-        num_things_classes=num_classes,
-        num_stuff_classes=0),
-    test_cfg=dict(panoptic_on=False, iou_thr=nms_threshold, max_per_image=num_queries),
+        _delete_=True,
+        type='mmpretrain.ConvNeXt',
+        arch='small',
+        out_indices=[0, 1, 2, 3],
+        drop_path_rate=0.6,
+        layer_scale_init_value=1.0,
+        gap_before_final_norm=False,
+        init_cfg=dict(
+            type='Pretrained', checkpoint='https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth',  # noqa,
+            prefix='backbone.')),
+    # Neck
+    neck=dict(in_channels=[96, 192, 384, 768]),
+    # Head
+    roi_head=dict(
+        type='CascadeRoIHead',
+        bbox_head=[
+            dict(
+                type='Shared2FCBBoxHead',
+                num_classes=num_classes,
+            ),
+            dict(
+                type='Shared2FCBBoxHead',
+                num_classes=num_classes,
+            ),
+            dict(
+                type='Shared2FCBBoxHead',
+                num_classes=num_classes,
+            )
+        ],
+        mask_head=dict(
+            type='FCNMaskHead',
+            num_classes=num_classes
+        )
+    ),
+
+    # ==========test_cfg==========
+    test_cfg=dict(
+        rcnn=dict(nms=dict(type='nms', iou_threshold=nms_threshold))
+    )
 )
 
 # ==========dataloader==========
-dataset_type = 'CocoDataset'
 train_dataloader = dict(
     batch_size=batch_size,
     num_workers=2,
     dataset=dict(
-        type=dataset_type,
+        pipeline=train_pipeline,
         data_root=data_root,
-        ann_file='annotations/instances_train.json',
-        data_prefix=dict(img='train/'),
         metainfo=dict(classes=classes),
-        pipeline=train_pipeline))
+    )
+)
 
 val_dataloader = dict(
     batch_size=1,
     num_workers=2,
     dataset=dict(
-        type=dataset_type,
+        pipeline=test_pipeline,
         data_root=data_root,
-        ann_file='annotations/instances_val.json',
-        data_prefix=dict(img='val/'),
         metainfo=dict(classes=classes),
-        pipeline=test_pipeline))
+    ),
+)
+
 test_dataloader = val_dataloader
 
 val_evaluator = dict(
-    _delete_=True,
     type='CocoMetric',
     ann_file=data_root + '/annotations/instances_val.json',
-    metric=['bbox', 'segm'],
-    format_only=False,
+    metric=['bbox', 'segm']
 )
 test_evaluator = val_evaluator
 
-# ==========Hook==========
+# checkpoint
 default_hooks = dict(
     checkpoint=dict(type='CheckpointHook', interval=check_interval),
 )

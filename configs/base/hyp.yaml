@@ -10,4 +10,5 @@ batch_size: 16
 imgsz: [640, 640] # H, W
 save_period: 50
 eval_period: 25 # -1 means close
+resume_training: True # If True, loads both the model weights and optimizer status, else only model weights
 device: '0' # cuda device, i.e. 0 or 0,1,2,3 or cpu

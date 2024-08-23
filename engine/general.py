@@ -34,6 +34,15 @@ def get_gpu_count():
         return 0
 
 
+def get_device(device: str):
+    if device == 'cpu':
+        return device
+    elif device.isdigit():
+        return f'cuda:{device}'
+    else:
+        raise Exception(f'--device {device} not found')
+
+
 def get_os_type():
     os_type = platform.system()
     return os_type
@@ -68,9 +77,9 @@ def check_gpu_available(cfg: dict):
         raise Exception(f'--device {cfg["device"]} not found, available devices is {gpus - 1}')
 
 
-def get_device(device: Union[str: int]) -> torch.device:
-    device = torch.device(int(device) if device.isdigit() and device != 'cpu' else device)
-    return device
+# def get_device(device: Union[str: int]) -> torch.device:
+#     device = torch.device(int(device) if device.isdigit() and device != 'cpu' else device)
+#     return device
 
 
 def get_class_names_and_colors(cfg: dict) -> Tuple[list[str], list[list]]:

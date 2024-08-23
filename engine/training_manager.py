@@ -2,8 +2,6 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.getcwd()))
-import subprocess
-import shutil
 import platform
 from threading import Thread
 
@@ -17,7 +15,6 @@ from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_c
 class TrainingManager:
     def __init__(self):
         self.training_thread = None
-        self.tensorboard_proc = None
         self.final_config = None
 
         os_name = platform.system()
@@ -37,11 +34,6 @@ class TrainingManager:
         train_func()
 
         # ========= After Training =========
-        # stop tensorboard
-        if self.tensorboard_proc:
-            self.tensorboard_proc.terminate()
-            self.tensorboard_proc = None
-
         copy_logfile_to_work_dir(self.final_config)
         self._clear_redis_key()
         clear_cache()
@@ -58,16 +50,9 @@ class TrainingManager:
     def _clear_redis_key(self):
         self.r.flushdb()
 
-    def _open_tensorboard(self):
-        self.tensorboard_proc = subprocess.Popen(['tensorboard',
-                                                  '--logdir', get_work_dir_path(self.final_config),
-                                                  '--host', '0.0.0.0',
-                                                  '--port', '1000'])
-
     def start_training(self, train_func, final_config):
         # ========= Before Training =========
         self.final_config = final_config
-        self._open_tensorboard()
         self._clear_redis_key()
         clear_cache()
 

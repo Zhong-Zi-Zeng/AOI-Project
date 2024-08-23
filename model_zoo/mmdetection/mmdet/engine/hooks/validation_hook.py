@@ -30,27 +30,15 @@ class ValidationHook(Hook):
         if (runner.epoch + 1) % self.final_config['eval_period'] == 0:
             print("Evaluate:")
 
-            # Validation loss
-            # bar = tqdm(runner.val_dataloader)
-            # val_loss = {}
-            #
-            # for data in bar:
-            #     outputs = runner.model.train_step(data, runner.optim_wrapper)
-            #     for key, value in outputs.items():
-            #         if key not in val_loss:
-            #             val_loss[key] = []
-            #         val_loss[key].append(value)
-            #
-            # for key, value in val_loss.items():
-            #     value = torch.stack(value).mean()
-            #     self.tb_writer.add_scalar('Val/' + key, value.item(), runner.epoch)
-
             # Save last epoch
             last_weight_path = os.path.join(runner.work_dir, "last.pt")
             torch.save(runner.model.state_dict(), last_weight_path)
 
             # Evaluate
             self.final_config.update({'weight': last_weight_path})
+
+            # Avoid device conflict during DDP training
+            self.final_config.update({'device': '0'})
             evaluator = Evaluator.build_by_config(cfg=self.final_config)
             recall_and_fpr_for_all = evaluator.eval()
             tags = ["metrics/Recall(image)", "metrics/FPR(image)", "metrics/Recall(defect)", "metrics/FPR(defect)"]

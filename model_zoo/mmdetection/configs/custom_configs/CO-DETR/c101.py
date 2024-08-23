@@ -5,7 +5,7 @@ _base_ = [
 ]
 
 custom_imports = dict(
-    imports=['projects.CO-DETR.codetr'], allow_failed_imports=False)
+    imports=['projects.CO-DETR.codetr', 'mmpretrain.models'], allow_failed_imports=False)
 
 # ==========Dataset setting==========
 data_root = " "
@@ -81,28 +81,20 @@ model = dict(
         pad_mask=False,
         batch_augments=batch_augments),
     backbone=dict(
-        type='SwinTransformer',
-        pretrain_img_size=384,
-        embed_dims=192,
-        depths=[2, 2, 18, 2],
-        num_heads=[6, 12, 24, 48],
-        window_size=12,
-        mlp_ratio=4,
-        qkv_bias=True,
-        qk_scale=None,
-        drop_rate=0.,
-        attn_drop_rate=0.,
-        drop_path_rate=0.3,
-        patch_norm=True,
-        out_indices=(0, 1, 2, 3),
-        # Please only add indices that would be used
-        # in FPN, otherwise some parameter will not be used
-        with_cp=False,
-        convert_weights=True,
-        init_cfg=dict(type='Pretrained', checkpoint='https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_large_patch4_window12_384_22k.pth')),
+        type='mmpretrain.ConvNeXt',
+        arch='small',
+        out_indices=[0, 1, 2, 3],
+        drop_path_rate=0.6,
+        layer_scale_init_value=1.0,
+        gap_before_final_norm=False,
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth',
+            # noqa,
+            prefix='backbone.')),
     neck=dict(
         type='ChannelMapper',
-        in_channels=[192, 384, 768, 1536],
+        in_channels=[96, 192, 384, 768],
         kernel_size=1,
         out_channels=256,
         act_cfg=None,
@@ -110,7 +102,7 @@ model = dict(
         num_outs=5),
     query_head=dict(
         type='CoDINOHead',
-        num_query=900,
+        num_query=100,
         num_classes=num_classes,
         in_channels=2048,
         as_two_stage=True,
@@ -125,11 +117,11 @@ model = dict(
             num_feature_levels=5,
             encoder=dict(
                 type='DetrTransformerEncoder',
-                num_layers=6,
+                num_layers=4,
                 # number of layers that use checkpoint.
                 # The maximum value for the setting is num_layers.
                 # FairScale must be installed for it to work.
-                with_cp=6,
+                with_cp=4,
                 transformerlayers=dict(
                     type='BaseTransformerLayer',
                     attn_cfgs=dict(
@@ -142,7 +134,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
             decoder=dict(
                 type='DinoTransformerDecoder',
-                num_layers=6,
+                num_layers=4,
                 return_intermediate=True,
                 transformerlayers=dict(
                     type='DetrTransformerDecoderLayer',

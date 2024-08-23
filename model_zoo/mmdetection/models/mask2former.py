@@ -24,9 +24,15 @@ class Mask2Former(BaseMMdetection, BaseInstanceModel):
             clip_grad=dict(max_norm=0.1, norm_type=2),
             paramwise_cfg=dict(custom_keys={'backbone': dict(lr_mult=0.1)})
         )
+
         transforms = self._build_augmentation()
         BaseMMdetection.__init__(self, cfg, optimizer, transforms)
         BaseInstanceModel.__init__(self, cfg)
+
+        variables = {
+            "num_queries": self.cfg['num_queries']
+        }
+        self.update_config_var(var_dict=variables)
 
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
