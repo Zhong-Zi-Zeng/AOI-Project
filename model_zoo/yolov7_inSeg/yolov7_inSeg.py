@@ -80,6 +80,27 @@ class Yolov7inSeg(BaseInstanceModel):
         self.cfg['cfg_file'] = os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml')
         save_yaml(os.path.join(get_work_dir_path(self.cfg), 'cfg.yaml'), cfg_file)
 
+    def _check_valid_epoch(self):
+        """
+        Check if the end_epoch is valid.
+        """
+        checkpoint = torch.load(self.cfg["weight"])
+        assert self.cfg['end_epoch'] > checkpoint['epoch'], \
+            'The end_epoch must be larger than the checkpoint epoch'
+
+    def _reset_epoch_and_iter(self):
+        """
+            Because mmdet could not reset epoch and iter during resume training,
+            so we reset them here.
+        """
+        work_dir_path = get_work_dir_path(self.cfg)
+        checkpoint = torch.load(self.cfg["weight"])
+
+        checkpoint['epoch'] = 0
+        checkpoint['optimizer'] = None
+        torch.save(checkpoint, os.path.join(work_dir_path, 'pretrained_weight.pt'))
+        self.cfg["weight"] = os.path.join(work_dir_path, 'pretrained_weight.pt')
+
     def _load_model(self):
         # Load model
         self.device = select_device(self.cfg['device'])
@@ -187,21 +208,31 @@ class Yolov7inSeg(BaseInstanceModel):
                 "rle_list": rle_list}
 
     def train(self):
-        subprocess.run(['python',
-                        os.path.join(get_model_path(self.cfg), 'segment', 'train.py'),
-                        '--data', self.cfg['data_file'],
-                        '--cfg', self.cfg['cfg_file'],
-                        '--hyp', self.cfg['hyp_file'],
-                        '--batch-size', str(self.cfg['batch_size']),
-                        '--weights', self.cfg['weight'] if check_path(self.cfg['weight']) else " ",
-                        '--epochs', str(self.cfg['end_epoch']),
-                        '--project', get_work_dir_path(self.cfg),
-                        '--optimizer', self.cfg['optimizer'],
-                        '--imgsz', str(self.cfg['imgsz'][0]),
-                        '--device', self.cfg['device'],
-                        '--save-period', str(self.cfg['save_period']),
-                        '--eval_period', str(self.cfg['eval_period']),
-                        '--exist-ok',
-                        '--cos-lr'
-                        ]
-                       )
+        command = ['python',
+                   os.path.join(get_model_path(self.cfg), 'segment', 'train.py'),
+                   '--data', self.cfg['data_file'],
+                   '--cfg', self.cfg['cfg_file'],
+                   '--hyp', self.cfg['hyp_file'],
+                   '--batch-size', str(self.cfg['batch_size']),
+                   '--epochs', str(self.cfg['end_epoch']),
+                   '--project', get_work_dir_path(self.cfg),
+                   '--optimizer', self.cfg['optimizer'],
+                   '--imgsz', str(self.cfg['imgsz'][0]),
+                   '--device', self.cfg['device'],
+                   '--save-period', str(self.cfg['save_period']),
+                   '--eval_period', str(self.cfg['eval_period']),
+                   '--exist-ok',
+                   '--cos-lr'
+                   ]
+        if self.cfg['weight'] is not None:
+            assert check_path(self.cfg['weight']), "The weight file does not exist."
+
+            if self.cfg['resume_training']:
+                self._check_valid_epoch()
+            else:
+                self._reset_epoch_and_iter()
+
+            command.append('--weights')
+            command.append(self.cfg['weight'])
+
+        subprocess.run(command)
