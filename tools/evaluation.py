@@ -224,7 +224,7 @@ class Evaluator:
 
         return result
 
-    def eval(self) -> list:
+    def eval(self, return_detail=False) -> list | tuple:
         # Generate detected json
         if self.detected_json is None:
             self._generate_det()
@@ -355,6 +355,8 @@ class Evaluator:
 
         console.print(table)
 
+        if return_detail:
+            return result, fpr_image_name, undetected_image_name
         return result
 
 

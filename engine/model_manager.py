@@ -15,7 +15,7 @@ class ModelManager:
                          task: str,
                          work_dir_name: str = None) -> dict:
 
-        assert task in ['train', 'predict']
+        assert task in ['train', 'predict', 'eval']
 
         builder = Builder(yaml_dict=config, task=task, work_dir_name=work_dir_name)
         final_config = builder.build_config()

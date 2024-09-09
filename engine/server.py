@@ -9,11 +9,14 @@ import glob
 import base64
 from pathlib import Path
 
+import numpy as np
 from flask_socketio import SocketIO, emit
 from flask import Flask, request, jsonify
 
 from engine.general import (get_works_dir_path, load_yaml, get_gpu_count,
                             allowed_file, convert_image_to_numpy, save_yaml)
+
+from tools.evaluation import Evaluator
 from model_manager import ModelManager
 from training_manager import TrainingManager
 
@@ -288,6 +291,63 @@ def predict():
 
     return jsonify(data), 200
 
+
+# =======================================
+# ==============For Evaluate=============
+# =======================================
+@APP.route('/evaluate', methods=['POST'])
+def evaluate():
+    """
+    給定config後執行evaluate，並返回Confidence threshold 0.3 ~ 0.9的評估結果
+
+    Returns:
+        {
+            0.3: {
+                "recall_for_image" (float): 檢出率,
+                "fpr_for_image" (float): 過殺率,
+                "recall_for_defect" (float): 檢出數,
+                "fpr_for_defect" (float): 過殺數,
+                "fpr_image_name" (List[str]): 過殺圖片名稱
+                "undetected_image_name" (List[str]): 未檢出圖片名稱
+            }
+            ...
+        }
+
+    """
+    if 'final_config' not in request.form:
+        return jsonify({"message": "final_config is required"}), 400
+
+    final_config = request.form.get('final_config')
+    final_config = json.loads(final_config)
+
+    work_dir_name = request.form.get('work_dir_name')
+
+    model_manager.initialize_model(final_config, task='eval', work_dir_name=work_dir_name)
+    model = model_manager.get_model()
+
+    # Evaluation
+    confidences = np.arange(0.3, 1.0, 0.1)
+    detected_json = None
+    result = {}
+
+    for idx, conf in enumerate(confidences):
+        final_config['conf_thres'] = conf
+        evaluator = Evaluator(model=model, cfg=final_config, detected_json=detected_json)
+        recall_and_fpr_for_all, fpr_image_name, undetected_image_name = evaluator.eval(return_detail=True)
+
+        result[conf] = {
+            'recall_for_image': recall_and_fpr_for_all[0],
+            'fpr_for_image': recall_and_fpr_for_all[1],
+            'recall_for_defect': int(recall_and_fpr_for_all[2]),
+            'fpr_for_defect': int(recall_and_fpr_for_all[3]),
+            'fpr_image_name': fpr_image_name,
+            'undetected_image_name': undetected_image_name
+        }
+
+        if idx == 0:
+            detected_json = evaluator.detected_json
+
+    return jsonify(result), 200
 
 # =======================================
 # =============Websocket=============
