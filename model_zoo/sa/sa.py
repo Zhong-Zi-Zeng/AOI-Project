@@ -77,7 +77,6 @@ class SA(BaseSemanticModel):
                         '--cfg', self.cfg['cfg_file'],
                         '--work_dir', get_work_dir_path(self.cfg)])
 
-    # TODO: 完成sa的predict部分
     def _predict(self,
                  source: Union[str | np.ndarray[np.uint8]],
                  conf_thres: float = 0.25,
@@ -155,16 +154,7 @@ class SA(BaseSemanticModel):
                 class_list.append(1)
                 score_list.append(1)
 
-                # Draw bounding box
-                text = f'{self.class_names[1]}'
-                self.plot_one_box_mask(image=original_image,
-                                       xywh_bbox=[x, y, w, h],
-                                       polygon=polygon,
-                                       text=text,
-                                       color=self.class_color[1])
-
             return {
-                'result_image': original_image,
                 'class_list': class_list,
                 'score_list': score_list,
                 'bbox_list': bbox_list

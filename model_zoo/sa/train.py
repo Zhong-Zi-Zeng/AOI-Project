@@ -1,9 +1,16 @@
+import os
+import sys
+from datetime import datetime
+
+sys.path.append(os.path.join(os.getcwd()))
+
+import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torch import nn
-import torch
-import cv2
+
+from engine.general import (save_json, TEMP_DIR, ROOT, load_json)
 
 
 def train_one_epoch(model: torch.nn.Module,
@@ -12,7 +19,10 @@ def train_one_epoch(model: torch.nn.Module,
                     end_epoch: int,
                     optimizer: torch.optim.Optimizer,
                     loss_function,
-                    tb_writer):
+                    tb_writer,
+                    remaining_time_hook,
+                    check_stop_training_hook,
+                    record_training_loss_hook):
     model.train()
     pbar = tqdm(train_dataloader)
     for b, batch in enumerate(pbar):
@@ -54,11 +64,16 @@ def train_one_epoch(model: torch.nn.Module,
         optimizer.step()
         learning_rates = [param_group['lr'] for param_group in optimizer.param_groups][0]
 
-        step = b + len(train_dataloader) * epoch
-        tb_writer.add_scalar('training loss', loss.item() * tr_image.size(0), step)
+        iter = b + len(train_dataloader) * epoch
+        tb_writer.add_scalar('training loss', loss.item() * tr_image.size(0), iter)
 
         pbar.set_description(
-            f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item() * tr_image.size(0):.7f} | Learning rate:{learning_rates:.7f}")
+            f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item():.7f} | Learning rate:{learning_rates:.7f}")
+
+        # Update hooks
+        remaining_time_hook.update(iter=iter)
+        check_stop_training_hook.update(model=model)
+        record_training_loss_hook.update(iter=iter, loss=loss.item())
 
         # if epoch > 50:
         #     tr_image = tr_image.permute(0, 2, 3, 1).cpu().numpy()

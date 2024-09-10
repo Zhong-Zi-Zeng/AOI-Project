@@ -17,6 +17,8 @@ import yaml
 import monai
 import argparse
 
+from hooks import RecordTrainingLossHook, RemainingTimeHook, CheckStopTrainingHook
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("")
 
@@ -77,7 +79,7 @@ def main(args, config: dict):
 
     # load pretrained weight
     start_epoch = 0
-    if os.path.isfile(config['weight']):
+    if config['weight'] is not None:
         logger.info('Loading pretrained weight from {}'.format(config['weight']))
         ckpt = torch.load(config['weight'])
         start_epoch = ckpt['epoch']
@@ -120,6 +122,12 @@ def main(args, config: dict):
                                             reduction='mean',
                                             squared_pred=True)
 
+    # Init hooks
+    max_iter = (config['end_epoch'] - start_epoch) * len(train_dataloader)
+    remaining_time_hook = RemainingTimeHook(max_iter)
+    check_stop_training_hook = CheckStopTrainingHook(str(work_dir_path))
+    record_training_loss_hook = RecordTrainingLossHook()
+
     logger.info(colorstr('Start training'))
     for epoch in range(start_epoch, config['end_epoch']):
         # Training
@@ -129,8 +137,10 @@ def main(args, config: dict):
                         end_epoch=config['end_epoch'],
                         optimizer=optimizer,
                         loss_function=loss_function,
-                        tb_writer=tb_writer)
-
+                        tb_writer=tb_writer,
+                        remaining_time_hook=remaining_time_hook,
+                        check_stop_training_hook=check_stop_training_hook,
+                        record_training_loss_hook=record_training_loss_hook)
         # Update scheduler
         cosine_scheduler.step()
 
