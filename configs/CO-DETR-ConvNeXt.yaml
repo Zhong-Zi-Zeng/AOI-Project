@@ -5,7 +5,7 @@ _base_: [ "./base/model/CO-DETR/c101.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: ./data/WC-133
+coco_root: null
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
