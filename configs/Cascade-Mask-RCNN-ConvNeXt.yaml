@@ -6,7 +6,7 @@ _base_: [ "./base/model/Cascade-Mask RCNN/c101.yaml", # model
 
 
 # ===========Dataset===========
-coco_root: ./data/WC-100
+coco_root: null
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1

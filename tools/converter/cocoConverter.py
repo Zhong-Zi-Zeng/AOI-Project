@@ -53,7 +53,7 @@ class cocoConverter(BaseConverter):
             # image
             image_name = Path(image_file).stem
             shutil.copy(image_file,
-                        os.path.join(self.output_dir, self.dataset_type + '2017', image_name + '.jpg'))
+                        os.path.join(self.output_dir, self.dataset_type, image_name + '.jpg'))
 
             # 依照image file去找對應的json檔，如果沒有找到就跳過
             json_file = image_file.replace(Path(image_file).suffix, '.json')
@@ -85,7 +85,7 @@ class cocoConverter(BaseConverter):
                 })
                 anns_count += 1
 
-        with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '2017.json'),
+        with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '.json'),
                   'w') as file:
             json.dump({'images': images,
                        'annotations': anns,
@@ -135,7 +135,7 @@ class cocoConverter(BaseConverter):
 
                 # image
                 image_name = f"patch_{processed_image_count}_{i}"
-                image_patch.save(os.path.join(self.output_dir, self.dataset_type + '2017', image_name + '.jpg'))
+                image_patch.save(os.path.join(self.output_dir, self.dataset_type, image_name + '.jpg'))
 
                 # Label
                 images.append({
@@ -160,7 +160,7 @@ class cocoConverter(BaseConverter):
                         anns_count += 1
                 img_id += 1
 
-        with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '2017.json'),
+        with open(os.path.join(self.output_dir, 'annotations', 'instances_' + self.dataset_type + '.json'),
                   'w') as file:
             json.dump({'images': images,
                        'annotations': anns,
