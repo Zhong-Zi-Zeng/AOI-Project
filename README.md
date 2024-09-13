@@ -46,7 +46,7 @@
     ```
 4. **Clone專案:**
     ```bash
-    git clone https://github.com/Zhong-Zi-Zeng/AOI-Project.git
+    git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
     cd AOI-Project    
     ```
 5. **cuda安裝:**
@@ -127,7 +127,7 @@
     ```
 4. Clone專案:
    ```bash
-   git clone https://github.com/Zhong-Zi-Zeng/AOI-Project.git
+   git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
    cd AOI-Project    
    ```
 5. 安裝docker
@@ -207,7 +207,7 @@
 
 3. Clone專案:
     ```bash
-    git clone https://github.com/Zhong-Zi-Zeng/AOI-Project.git
+    git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
     cd AOI-Project    
     ```
 4. 執行docker環境:
@@ -271,7 +271,7 @@
     ```
 7. Clone專案:
     ```bash
-    git clone https://github.com/Zhong-Zi-Zeng/AOI-Project.git
+    git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
     cd AOI-Project    
     ```
 8. 執行docker環境:
