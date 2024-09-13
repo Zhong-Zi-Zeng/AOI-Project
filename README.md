@@ -2,22 +2,20 @@
 
 ## 目錄
 
-- [AOI-Project](#AOI-Project)
+- [AOI-Project](#aoi-project)
     - [目錄](#目錄)
     - [環境安裝](#環境安裝)
-        - [Anaconda安裝](#Anaconda安裝)
-        - [Docker](#Docker)
-            - [Windows WSL](#Windows WSL)
-            - [Windows Docker Desktop](#Windows Docker Desktop)
-            - [Ubuntu](#Ubuntu)
-    - [快速開始(Windows WSL)](#快速開始(Windows WSL))
+        - [Anaconda安裝](#anaconda安裝)
+        - [Docker安裝](#docker安裝)
+            - [Windows-WSL](#windows-wsl)
+            - [Windows-Docker-Desktop](#windows-docker-desktop)
+            - [Ubuntu](#ubuntu)
+    - [快速開始Windows-WSL](#快速開始windows-wsl)
     - [參數檔細節](#參數檔細節)
     - [常見問題解決](#常見問題解決)
 
 ## 環境安裝
-
-### Anaconda 安裝
-
+### Anaconda安裝
 <details>
 <summary>使用Anaconda建立單機版環境</summary>  
 
@@ -28,18 +26,18 @@
 > - **NumPy 版本:** 1.23.0
 > - **PIP 版本:** 23.3.1
 
-1. **下載Visual studio 2019 並安裝c++相關套件:
-   ** [Visual studio 2019](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=community&rel=16&utm_medium=microsoft&utm_campaign=download+from+relnotes&utm_content=vs2019ga+button)
+1. **下載Visual studio 2019 並安裝c++相關套件**:
+   [Visual studio 2019](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=community&rel=16&utm_medium=microsoft&utm_campaign=download+from+relnotes&utm_content=vs2019ga+button)
 2. **下載Redis**: [Redis](https://github.com/MicrosoftArchive/redis/releases)
     * 請下載**Redis-x64-3.0.504.msi**
-      ![img_1.png](img_1.png)
+      ![/assets/img_1.png](/assets/img_1.png)
     * 安裝完成後，會出現在**C:\Program Files\Redis**中
     * 使用 **工作管理員權限開啟CMD視窗**，然後使用cd指令進入到該資料夾底下，並執行以下命令:
       ```bash
       redis-server.exe
       ``` 
     * 如果成功的話會看到以下畫面 **(請保持開啟)**
-      ![img_2.png](img_2.png)
+      ![/assets/img_2.png](/assets/img_2.png)
 
 3. **創建虛擬環境:**
    ```bash
@@ -96,9 +94,9 @@
 
 </details>
 
-### Docker 安裝
+### Docker安裝
 
-#### Windows WSL
+#### Windows-WSL
 
 <details>
 <summary>使用Windows WSL建立單機版環境</summary>
@@ -109,29 +107,30 @@
     wsl --version
     ```
    成功的話會出現以下畫面
-   ![img_3.png](img_3.png)
+   
+   ![/assets/img_3.png](/assets/img_3.png)
 
-2. 輸入以下指令安裝Ubuntu-20.04版本
+3. 輸入以下指令安裝Ubuntu-20.04版本
     ```bash
     wsl --install -d Ubuntu-20.04
     ```
 
    成功的話會需要輸入使用者名稱與密碼
-   ![img_4.png](img_4.png)
+   ![/assets/img_4.png](/assets/img_4.png)
 
    輸入完成後會自動進入到wsl裡
-   ![img_6.png](img_6.png)
+   ![/assets/img_6.png](/assets/img_6.png)
 
    後續想要進到該環境的話，則可以輸入以下指令
     ```bash
     wsl -d Ubuntu-20.04
     ```
-3. Clone專案:
+4. Clone專案:
    ```bash
    git clone https://github.com/Zhong-Zi-Zeng/AOI-Project.git
    cd AOI-Project    
    ```
-4. 安裝docker
+5. 安裝docker
    ```bash
    curl -fsSL https://get.docker.com -o get-docker.sh
    ```
@@ -139,47 +138,45 @@
    ```bash
    sudo sh get-docker.sh
    ```
-5. 安裝docker-compose:
+6. 安裝docker-compose:
     ```bash
     sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     ```
-6. 賦予權限:
+7. 賦予權限:
     ```bash
     sudo chmod +x /usr/local/bin/docker-compose
     ```
-7. 啟動docker:
+8. 啟動docker:
    ```bash
    sudo service docker start
    ```
-8. 安裝NVIDIA Container Toolkit:
+9. 安裝NVIDIA Container Toolkit:
     ```bash
     distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
     && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
     && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
     ```
-
     ```bash
     sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
     ```
-
     ```bash
     sudo systemctl restart docker
     ```
-9. 確認docker-compose是否安裝成功:
+10. 確認docker-compose是否安裝成功:
 
-   ```bash
-   docker-compose --version
-   ```
+    ```bash
+    docker-compose --version
+    ```
 
-   如果安裝成功會顯示以下訊息:
-   ```bash
-   docker-compose version 1.29.2, build 5becea4c
-   ```
-10. 執行docker環境:
+    如果安裝成功會顯示以下訊息:
+    ```bash
+    docker-compose version 1.29.2, build 5becea4c
+    ```
+11. 執行docker環境:
     ``` bash
     sudo python3 ./main.py
     ```
-11. 新開一個Command視窗，並執行以下命令:
+12. 新開一個Command視窗，並執行以下命令:
     ```bash
     wsl -d Ubuntu-20.04
     ```
@@ -187,16 +184,14 @@
     ```bash
     sudo docker attach AOI
     ```
-12. 賦予檔案執行權限:
+13. 賦予檔案執行權限:
     ```bash
     chmod 777 -R .
     ```
 
 </details>
 
----
-
-#### Windows Docker Desktop
+#### Windows-Docker-Desktop
 
 <details>
 <summary>使用Windows Docker Desktop建立單機版環境</summary>
@@ -208,7 +203,7 @@
     docker -h 
     ```
    這邊會出現以下畫面，說明安裝成功
-   ![img_7.png](img_7.png)
+   ![/assets/img_7.png](/assets/img_7.png)
 
 3. Clone專案:
     ```bash
@@ -225,8 +220,6 @@
     ```
 
 </details>
-
----
 
 #### Ubuntu
 
@@ -292,7 +285,7 @@
 
 </details>
 
-## 快速開始(Windows WSL)
+## 快速開始Windows-WSL
 
 請先確認環境已安裝完成，再開始後續步驟
 
@@ -370,7 +363,7 @@ device: "0" # 指定使用的GPU設備，例如 0 或 0,1,2,3 或 cpu
     ```  
 2. 在運行docker環境後，發現redis的端口被占用:
 
-   ![img_8.png](img_8.png)
+   ![/assets/img_8.png](/assets/img_8.png)
 
    解決辦法: 清除佔用端口的進程
     1. 查詢占用端口的進程
@@ -393,13 +386,13 @@ device: "0" # 指定使用的GPU設備，例如 0 或 0,1,2,3 或 cpu
     ```bash
     netstat -ano | findstr :5000
     ```
-   ![img_9.png](img_9.png)
+   ![/assets/img_9.png](/assets/img_9.png)
 
     2. 查看是哪個程式正在佔用:
     ```bash
     tasklist /FI "PID eq 31972"
     ```
-   ![img_10.png](img_10.png)
+   ![/assets/img_10.png](/assets/img_10.png)
 
     3. 停止該進程:
     ```bash
