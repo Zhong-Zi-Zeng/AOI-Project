@@ -58,15 +58,19 @@ class CustomDataset(Dataset):
         self.img_ids = self._filter_image()
 
     def _filter_image(self) -> list[int]:
-        """Filter out images that didn't have label"""
-        # TODO: Now will filter out images that don't have any object and only have 'Pass' class
-        all_img_ids = self.coco.getImgIds(catIds=[1])
+        """Filter out images that didn't have any defect labels"""
+        all_img_ids = self.coco.getImgIds()
         result = []
+
         for img_id in all_img_ids:
             ann_ids = self.coco.getAnnIds(imgIds=[img_id])
             ann_info = self.coco.loadAnns(ids=ann_ids)
-            if len(ann_info):
-                result.append(img_id)
+
+            for ann in ann_info:
+                category_name = self.coco.loadCats(ann['category_id'])[0]['name']
+                if category_name != 'Pass' or category_name != 'pass':
+                    result.append(img_id)
+                    break
         return result
 
     def _process_annotation(self,
@@ -240,7 +244,8 @@ class CustomDataset(Dataset):
             self._process_annotation(ann, polygons, gt_mask, category_id)
         else:
             for ann in ann_info:
-                if ann['category_id'] != 1:
+                category_name = self.coco.loadCats(ann['category_id'])[0]['name']
+                if category_name == 'Pass' or category_name == 'pass':
                     continue
                 self._process_annotation(ann, polygons, gt_mask, category_id)
 

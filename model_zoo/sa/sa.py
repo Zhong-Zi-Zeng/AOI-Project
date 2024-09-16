@@ -150,7 +150,7 @@ class SA(BaseSemanticModel):
 
                 bbox_list.append(list(map(float, [x, y, w, h])))
 
-                # Because this is a segmentation model, so does not have score and class name
+                # Because this is SAM, so does not have score and class name
                 class_list.append(1)
                 score_list.append(1)
 

@@ -16,6 +16,7 @@ import cv2
 
 
 class BaseSemanticModel(BaseModel):
+    DEFAULT_KEY = {'class_list', 'score_list', 'bbox_list'}
     def __init__(self, cfg: dict):
         super().__init__(cfg)
 
@@ -45,9 +46,38 @@ class BaseSemanticModel(BaseModel):
         """
         pass
 
+    def _plot_bbox(self,
+                   source: Union[str | np.ndarray[np.uint8]],
+                   results: dict) -> np.ndarray[np.uint8]:
+        """
+        繪製模型預測結果
+        Args:
+            source: 照片路徑或是已讀取的照片
+            results: 預測結果
+        Returns:
+            繪製後的圖片
+        """
+        # Load image
+        if isinstance(source, str):
+            original_image = cv2.imread(source)
+        elif isinstance(source, np.ndarray):
+            original_image = source
+        else:
+            raise ValueError
+
+        for cls, bbox, conf in zip(results['class_list'], results['bbox_list'], results['score_list']):
+            # Draw bounding box and mask
+            text = f'{self.class_names[int(cls)]} {conf:.2f}'
+            self.plot_one_box_mask(image=original_image,
+                                   xywh_bbox=bbox,
+                                   text=text,
+                                   color=self.class_color[int(cls)])
+
+        return original_image
     def predict(self,
                 source: Union[str | np.ndarray[np.uint8]],
                 conf_thres: float = 0.25,
+                return_vis: bool = True,
                 *args: Any,
                 **kwargs: Any) -> dict:
 
@@ -121,9 +151,11 @@ class BaseSemanticModel(BaseModel):
         # If not use patch to predict
         else:
             result = self._predict(source, conf_thres, *args, **kwargs)
-        default_key = {'result_image', 'class_list', 'score_list', 'bbox_list'}
 
-        if set(result.keys()) == set(default_key):
+        if return_vis:
+            result['result_image'] = self._plot_bbox(source, result)
+
+        if self.DEFAULT_KEY.issubset(result.keys()):
             return result
         else:
             raise ValueError("You must return the same key with default keys.")
