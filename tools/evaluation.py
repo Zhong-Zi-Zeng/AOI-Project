@@ -7,9 +7,11 @@ sys.path.append(os.path.join(os.getcwd()))
 import numpy as np
 import pandas as pd
 import argparse
+import platform
 from typing import Optional, Tuple, List, Union, Dict
 from tqdm import tqdm
 
+import redis
 import torch
 from pycocotools.coco import COCO
 from torchvision.ops import nms
@@ -43,6 +45,8 @@ def get_args_parser():
     return parser
 
 
+
+
 class Evaluator:
     def __init__(self,
                  model: BaseInstanceModel,
@@ -53,6 +57,24 @@ class Evaluator:
         self.detected_json = detected_json
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val.json'))
+
+        os_name = platform.system()
+        if os_name == "Windows":
+            print("Running on Windows")
+            redis_host = '127.0.0.1'
+        elif os_name == "Linux":
+            print("Running on Linux")
+            redis_host = 'redis'
+        else:
+            print(f"Running on {os_name}")
+            redis_host = 'redis'
+
+        self.r = redis.Redis(host=redis_host, port=6379, db=0)
+        try:
+            self.r.ping()
+        except Exception as e:
+            print(f"{Fore.RED}Redis connection failed: {e}{Style.RESET_ALL}")
+            self.r = None
 
     @classmethod
     def build_by_config(cls, cfg: dict):
@@ -145,7 +167,10 @@ class Evaluator:
         img_id_list = self.coco_gt.getImgIds()
         detected_result = []
 
-        for img_id in tqdm(img_id_list):
+        for i, img_id in enumerate(tqdm(img_id_list)):
+            if self.r is not None:
+                self.r.set("progress", (i + 1) / len(img_id_list) * 100)
+
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]
             img_file = os.path.join(self.cfg['coco_root'], 'val', img_info['file_name'])
@@ -260,7 +285,7 @@ class Evaluator:
         undetected_image_name = []
         each_detect_score = {defect_category_id: [] for defect_category_id in defect_category_ids}
 
-        for img_id in all_defect_images:
+        for i, img_id in enumerate(all_defect_images):
             gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
             dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
 
