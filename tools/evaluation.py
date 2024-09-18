@@ -169,7 +169,9 @@ class Evaluator:
 
         for i, img_id in enumerate(tqdm(img_id_list)):
             if self.r is not None:
-                self.r.set("progress", (i + 1) / len(img_id_list) * 100)
+                self.r.set("eval_progress", (i + 1) / len(img_id_list) * 100)
+                if self.r.get("stop_eval"):
+                    sys.exit()
 
             # Load image
             img_info = self.coco_gt.loadImgs([img_id])[0]

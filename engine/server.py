@@ -19,6 +19,7 @@ from engine.general import (get_works_dir_path, load_yaml, get_gpu_count,
 from tools.evaluation import Evaluator
 from model_manager import ModelManager
 from training_manager import TrainingManager
+from status_manager import StatusManager
 
 APP = Flask(__name__)
 SOCKET_IO = SocketIO(APP)
@@ -135,7 +136,7 @@ def get_status():
             'loss': 從訓練開始到現在的training loss
         }
     """
-    status = training_manager.get_status()
+    status = status_manager.get_status()
 
     return jsonify(status), 200
 
@@ -325,29 +326,17 @@ def evaluate():
     model_manager.initialize_model(final_config, task='eval', work_dir_name=work_dir_name)
     model = model_manager.get_model()
 
-    # Evaluation
-    confidences = np.arange(0.3, 1.0, 0.1)
-    detected_json = None
-    result = {}
-
-    for idx, conf in enumerate(confidences):
-        final_config['conf_thres'] = conf
-        evaluator = Evaluator(model=model, cfg=final_config, detected_json=detected_json)
-        recall_and_fpr_for_all, fpr_image_name, undetected_image_name = evaluator.eval(return_detail=True)
-
-        result[conf] = {
-            'recall_for_image': recall_and_fpr_for_all[0],
-            'fpr_for_image': recall_and_fpr_for_all[1],
-            'recall_for_defect': int(recall_and_fpr_for_all[2]),
-            'fpr_for_defect': int(recall_and_fpr_for_all[3]),
-            'fpr_image_name': fpr_image_name,
-            'undetected_image_name': undetected_image_name
-        }
-
-        if idx == 0:
-            detected_json = evaluator.detected_json
+    result = training_manager.start_eval(model, final_config)
 
     return jsonify(result), 200
+
+
+@APP.route('/stop_eval', methods=['GET'])
+def stop_eval():
+    training_manager.stop_eval()
+
+    return jsonify({"message": "success"}), 200
+
 
 # =======================================
 # =============Websocket=============
@@ -358,12 +347,13 @@ def background_thread():
     """
     while True:
         time.sleep(1)
-        status = training_manager.get_status()
+        status = status_manager.get_status()
         SOCKET_IO.emit('status_update', status)
 
 
 if __name__ == '__main__':
     model_manager = ModelManager()
     training_manager = TrainingManager()
+    status_manager = StatusManager(training_manager)
     SOCKET_IO.start_background_task(target=background_thread)
     SOCKET_IO.run(APP, debug=False, host='0.0.0.0', port=5000)

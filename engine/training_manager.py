@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd()))
 import platform
+import json
 from threading import Thread
 
 import numpy as np
@@ -10,12 +11,12 @@ import redis
 
 from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_cache,
                             load_json, check_path, ROOT, TEMP_DIR)
+from tools.evaluation import Evaluator
 
 
 class TrainingManager:
     def __init__(self):
         self.training_thread = None
-        self.final_config = None
 
         os_name = platform.system()
         if os_name == "Windows":
@@ -29,51 +30,68 @@ class TrainingManager:
             redis_host = 'redis'
 
         self.r = redis.Redis(host=redis_host, port=6379, db=0)
+        self._clear_data()
 
-    def _train_wrapper(self, train_func):
+    def _train_wrapper(self, train_func, final_config):
         train_func()
 
         # ========= After Training =========
-        copy_logfile_to_work_dir(self.final_config)
-        self._clear_redis_key()
-        clear_cache()
+        copy_logfile_to_work_dir(final_config)
+        self._clear_data()
 
-    def _get_redis_value(self, key: str):
-        value = self.r.get(key)
-        if value is None:
-            return None
-        try:
-            return np.around(float(value), 2)
-        except ValueError:
-            return value.decode('utf-8')  # 如果不能轉換為float，就解碼為字串
-
-    def _clear_redis_key(self):
+    def _clear_data(self):
         self.r.flushdb()
+        clear_cache()
 
     def start_training(self, train_func, final_config):
         # ========= Before Training =========
-        self.final_config = final_config
-        self._clear_redis_key()
-        clear_cache()
+        self._clear_data()
 
-        self.training_thread = Thread(target=self._train_wrapper, args=(train_func,))
+        self.training_thread = Thread(target=self._train_wrapper, args=(train_func, final_config))
         self.training_thread.start()
 
-    def stop_training(self):
+    def start_eval(self, model, final_config):
+        self._clear_data()
+
+        final_config['conf_thres'] = 0.3
+        evaluator = Evaluator(model=model, cfg=final_config)
+        evaluator.eval()
+
+        detected_json = evaluator.detected_json
+        if detected_json is not None:
+            confidences = np.arange(0.3, 1.0, 0.1)
+            result = {}
+
+            for conf in confidences:
+                final_config['conf_thres'] = conf
+                evaluator = Evaluator(model=model, cfg=final_config, detected_json=detected_json)
+                recall_and_fpr_for_all, fpr_image_name, undetected_image_name = evaluator.eval(return_detail=True)
+
+                result[conf] = {
+                    'recall_for_image': recall_and_fpr_for_all[0],
+                    'fpr_for_image': recall_and_fpr_for_all[1],
+                    'recall_for_defect': int(recall_and_fpr_for_all[2]),
+                    'fpr_for_defect': int(recall_and_fpr_for_all[3]),
+                    'fpr_image_name': fpr_image_name,
+                    'undetected_image_name': undetected_image_name
+                }
+            return result
+        return None
+
+    def stop_training(self) -> None:
         self.r.set("stop_training", 1)
 
-    def get_status(self) -> dict:
-        status = {}
+    def stop_eval(self) -> None:
+        self.r.set("stop_eval", 1)
 
+    def update_status(self) -> None:
         if self.training_thread is not None and self.training_thread.is_alive():
-            status['status_msg'] = "Training in progress"
+            status_msg = "Training in progress"
         else:
-            status['status_msg'] = "No training in progress"
-
-        status['remaining_time'] = self._get_redis_value("remaining_time")
-        status['progress'] = self._get_redis_value("progress")
+            status_msg = "No training in progress"
+        self.r.set('status_msg', status_msg)
 
         loss_json_path = os.path.join(ROOT, TEMP_DIR, 'loss.json')
-        status['loss'] = load_json(loss_json_path) if check_path(loss_json_path) else None
-
-        return status
+        loss = load_json(loss_json_path) if check_path(loss_json_path) else None
+        loss_str = json.dumps(loss)
+        self.r.set('loss', loss_str)
