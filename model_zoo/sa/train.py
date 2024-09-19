@@ -65,7 +65,7 @@ def train_one_epoch(model: torch.nn.Module,
         learning_rates = [param_group['lr'] for param_group in optimizer.param_groups][0]
 
         iter = b + len(train_dataloader) * epoch
-        tb_writer.add_scalar('training loss', loss.item() * tr_image.size(0), iter)
+        tb_writer.add_scalar('training loss', loss.item(), iter)
 
         pbar.set_description(
             f"Epoch:{epoch}/{end_epoch - 1} | Loss:{loss.item():.7f} | Learning rate:{learning_rates:.7f}")

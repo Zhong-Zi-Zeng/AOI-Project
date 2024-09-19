@@ -68,7 +68,7 @@ class CustomDataset(Dataset):
 
             for ann in ann_info:
                 category_name = self.coco.loadCats(ann['category_id'])[0]['name']
-                if category_name != 'Pass' or category_name != 'pass':
+                if category_name != 'Pass' and category_name != 'pass':
                     result.append(img_id)
                     break
         return result
@@ -314,7 +314,7 @@ if __name__ == "__main__":
                                   **create_augmentation(hyp=config))
 
     train_dataloader = DataLoader(train_dataset,
-                                  batch_size=4,
+                                  batch_size=1,
                                   shuffle=False,
                                   num_workers=4,
                                   collate_fn=train_dataset.collate_fn)
