@@ -28,28 +28,18 @@
 
 1. **下載Visual studio 2019 並安裝c++相關套件**:
    [Visual studio 2019](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=community&rel=16&utm_medium=microsoft&utm_campaign=download+from+relnotes&utm_content=vs2019ga+button)
-2. **下載Redis**: [Redis](https://github.com/MicrosoftArchive/redis/releases)
-    * 請下載**Redis-x64-3.0.504.msi**
-      ![/assets/img_1.png](/assets/img_1.png)
-    * 安裝完成後，會出現在**C:\Program Files\Redis**中
-    * 使用 **工作管理員權限開啟CMD視窗**，然後使用cd指令進入到該資料夾底下，並執行以下命令:
-      ```bash
-      redis-server.exe
-      ``` 
-    * 如果成功的話會看到以下畫面 **(請保持開啟)**
-      ![/assets/img_2.png](/assets/img_2.png)
 
-3. **創建虛擬環境:**
+2. **創建虛擬環境:**
    ```bash
     conda create --name "AOI" python==3.8
     conda activate AOI
     ```
-4. **Clone專案:**
+3. **Clone專案:**
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd model-zoo
     ```
-5. **cuda安裝:**
+4. **cuda安裝:**
     ```bash
     conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
     ```
@@ -128,7 +118,7 @@
 4. Clone專案:
    ```bash
    git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-   cd AOI-Project    
+   cd model-zoo 
    ```
 5. 安裝docker
    ```bash
@@ -208,7 +198,7 @@
 3. Clone專案:
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd model-zoo  
     ```
 4. 執行docker環境:
     ``` bash
@@ -272,7 +262,7 @@
 7. Clone專案:
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd modle-zoo
     ```
 8. 執行docker環境:
     ``` bash
