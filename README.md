@@ -15,7 +15,9 @@
     - [常見問題解決](#常見問題解決)
 
 ## 環境安裝
+
 ### Anaconda安裝
+
 <details>
 <summary>使用Anaconda建立單機版環境</summary>  
 
@@ -28,28 +30,18 @@
 
 1. **下載Visual studio 2019 並安裝c++相關套件**:
    [Visual studio 2019](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=community&rel=16&utm_medium=microsoft&utm_campaign=download+from+relnotes&utm_content=vs2019ga+button)
-2. **下載Redis**: [Redis](https://github.com/MicrosoftArchive/redis/releases)
-    * 請下載**Redis-x64-3.0.504.msi**
-      ![/assets/img_1.png](/assets/img_1.png)
-    * 安裝完成後，會出現在**C:\Program Files\Redis**中
-    * 使用 **工作管理員權限開啟CMD視窗**，然後使用cd指令進入到該資料夾底下，並執行以下命令:
-      ```bash
-      redis-server.exe
-      ``` 
-    * 如果成功的話會看到以下畫面 **(請保持開啟)**
-      ![/assets/img_2.png](/assets/img_2.png)
 
-3. **創建虛擬環境:**
+2. **創建虛擬環境:**
    ```bash
     conda create --name "AOI" python==3.8
     conda activate AOI
     ```
-4. **Clone專案:**
+3. **Clone專案:**
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd model-zoo
     ```
-5. **cuda安裝:**
+4. **cuda安裝:**
     ```bash
     conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
     ```
@@ -107,7 +99,7 @@
     wsl --version
     ```
    成功的話會出現以下畫面
-   
+
    ![/assets/img_3.png](/assets/img_3.png)
 
 3. 輸入以下指令安裝Ubuntu-20.04版本
@@ -128,7 +120,7 @@
 4. Clone專案:
    ```bash
    git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-   cd AOI-Project    
+   cd model-zoo 
    ```
 5. 安裝docker
    ```bash
@@ -208,7 +200,7 @@
 3. Clone專案:
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd model-zoo  
     ```
 4. 執行docker環境:
     ``` bash
@@ -272,7 +264,7 @@
 7. Clone專案:
     ```bash
     git clone http://ntustcgalgit.synology.me:8000/foxlink_aoi/model-zoo.git
-    cd AOI-Project    
+    cd modle-zoo
     ```
 8. 執行docker環境:
     ``` bash
@@ -351,6 +343,13 @@ device: "0" # 指定使用的GPU設備，例如 0 或 0,1,2,3 或 cpu
 ```
 
 ## 常見問題解決
+
+1. 在使用Anaconda安裝方式，執行`pip install -r requirements.txt`，出現以下錯誤:
+
+   ![/assets/messageImage_1727075300205.jpg](/assets/messageImage_1727075300205.jpg)
+   
+    解決辦法: 確認有無安裝Visual studio且安裝c++相關套件。如果還是無法成功執行，請安裝Visual studio Build Tools 
+
 
 1. 運行Docker環境時，出現以下錯誤:
     ```bash
