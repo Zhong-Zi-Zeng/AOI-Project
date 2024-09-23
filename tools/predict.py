@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.join(os.getcwd()))
 from engine.builder import Builder
-from engine.general import get_work_dir_path
+from engine.general import get_work_dir_path, is_image
 from tqdm import tqdm
 from pathlib import Path
 import argparse
@@ -37,9 +37,12 @@ def get_args_parser():
 def run():
     if os.path.isdir(args.source):
         file_list = os.listdir(args.source)
-        source = [os.path.join(args.source, item) for item in file_list]
+        source = [os.path.join(args.source, item) for item in file_list if is_image(item)]
     elif os.path.isfile(args.source):
-        source = [args.source]
+        if is_image(args.source):
+            source = [args.source]
+        else:
+            ValueError("The source file {} is not an image.".format(args.source))
     else:
         ValueError("Cannot find the source file {}".format(args.source))
 

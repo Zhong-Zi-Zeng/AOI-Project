@@ -34,6 +34,10 @@ def get_gpu_count():
         return 0
 
 
+def is_image(filename: str) -> bool:
+    return filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp'))
+
+
 def get_device(device: str):
     if device == 'cpu':
         return device
