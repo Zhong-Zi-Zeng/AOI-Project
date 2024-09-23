@@ -15,7 +15,9 @@
     - [常見問題解決](#常見問題解決)
 
 ## 環境安裝
+
 ### Anaconda安裝
+
 <details>
 <summary>使用Anaconda建立單機版環境</summary>  
 
@@ -97,7 +99,7 @@
     wsl --version
     ```
    成功的話會出現以下畫面
-   
+
    ![/assets/img_3.png](/assets/img_3.png)
 
 3. 輸入以下指令安裝Ubuntu-20.04版本
@@ -341,6 +343,13 @@ device: "0" # 指定使用的GPU設備，例如 0 或 0,1,2,3 或 cpu
 ```
 
 ## 常見問題解決
+
+1. 在使用Anaconda安裝方式，執行`pip install -r requirements.txt`，出現以下錯誤:
+
+   ![/assets/messageImage_1727075300205.jpg](/assets/messageImage_1727075300205.jpg)
+   
+    解決辦法: 確認有無安裝Visual studio且安裝c++相關套件。如果還是無法成功執行，請安裝Visual studio Build Tools 
+
 
 1. 運行Docker環境時，出現以下錯誤:
     ```bash
