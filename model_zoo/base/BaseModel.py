@@ -24,6 +24,7 @@ class BaseModel(ABC):
         """
             檢查weight路徑是否存在
         """
+        assert weight_path is not None, "Please specify the weight path."
         assert check_path(weight_path), f"Can not find the weight. " \
                                         f"Please check the path."
 
