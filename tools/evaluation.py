@@ -95,6 +95,7 @@ class Evaluator:
         # Get all image IDs and category IDs
         all_image_ids = coco.getImgIds()
         all_category_ids = coco.getCatIds()
+        all_pass_images_ids = []
 
         # Get all category names
         category_names = [coco.loadCats(cat_id)[0]['name'] for cat_id in all_category_ids]
@@ -109,22 +110,21 @@ class Evaluator:
             defect_category_ids = [cat_id for cat_id in all_category_ids if cat_id != pass_category_id]
 
             # Get image IDs that only contain the 'Pass' class
-            pass_images_id = []
             for img_id in coco.getImgIds(catIds=[pass_category_id]):
                 annIds = coco.getAnnIds(imgIds=[img_id])
                 anns = coco.loadAnns(annIds)
                 if all(ann['category_id'] == pass_category_id for ann in anns):
-                    pass_images_id.append(img_id)
+                    all_pass_images_ids.append(img_id)
 
             # Remove image IDs that only contain the 'Pass' class
-            all_defect_image_ids = list(set(all_image_ids) - set(pass_images_id))
+            all_defect_image_ids = list(set(all_image_ids) - set(all_pass_images_ids))
             all_defect_image_ids.sort()
         else:
             all_defect_image_ids = all_image_ids
             pass_category_id = None
             defect_category_ids = all_category_ids
 
-        return all_defect_image_ids, pass_category_id, defect_category_ids
+        return all_image_ids, all_defect_image_ids, all_pass_images_ids, pass_category_id, defect_category_ids
 
     @staticmethod
     def get_iou(dt_bbox: Union[list | np.ndarray],
@@ -261,7 +261,8 @@ class Evaluator:
         print('=' * 40)
 
         # Get all defect image ids
-        all_defect_images, pass_category_id, defect_category_ids = self.remove_pass_images(self.coco_gt)
+        all_image_ids, all_defect_images, all_pass_images_ids, pass_category_id, defect_category_ids = \
+            self.remove_pass_images(self.coco_gt)
 
         # Number of defects
         all_category_ids = self.coco_gt.getCatIds()
@@ -278,7 +279,7 @@ class Evaluator:
         # Load detection result
         coco_dt = self.coco_gt.loadRes(dt_result)
 
-        # Calculate the number of detections and false positives for each image
+        # Calculate the recall rate and false positive rate
         nf_recall_img = 0
         nf_fpr_img = 0
         nf_recall_ann = 0
@@ -287,6 +288,7 @@ class Evaluator:
         undetected_image_name = []
         each_detect_score = {defect_category_id: [] for defect_category_id in defect_category_ids}
 
+        # For each defected image
         for i, img_id in enumerate(all_defect_images):
             gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
             dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
@@ -329,9 +331,19 @@ class Evaluator:
             for cls_id, score in zip(class_id, dt_score):
                 each_detect_score[cls_id].append(score)
 
+        # For each pass image
+        for i, img_id in enumerate(all_pass_images_ids):
+            dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
+            defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+
+            nf_fpr_img += 1 if len(defected_dt_bboxes) > 0 else 0
+            nf_fpr_ann += len(defected_dt_bboxes)
+            if len(defected_dt_bboxes) > 0:
+                fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+
         result = [
-            round((nf_recall_img / len(all_defect_images)) * 100, 2),  # 檢出率 (圖片)
-            round((nf_fpr_img / len(all_defect_images)) * 100, 2),  # 過殺率 (圖片)
+            round((nf_recall_img / len(all_image_ids)) * 100, 2),  # 檢出率 (圖片)
+            round((nf_fpr_img / len(all_image_ids)) * 100, 2),  # 過殺率 (圖片)
             nf_recall_ann,  # 檢出數 (瑕疵)
             nf_fpr_ann,  # 過殺數 (瑕疵)
         ]
