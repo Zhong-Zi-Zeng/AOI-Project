@@ -309,7 +309,7 @@ class Evaluator:
 
             # ==========To detected all classes recall and fpr==========
             # Calculate the recall
-            nf_recall = np.sum(np.any(dt_gt_iou != 0, axis=1))
+            nf_recall = np.any(dt_gt_iou, axis=0).sum()
             if nf_recall < len(defected_gt_bboxes):
                 undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
             nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
