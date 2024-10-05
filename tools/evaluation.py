@@ -286,7 +286,7 @@ class Evaluator:
         nf_fpr_ann = 0
         fpr_image_name = []
         undetected_image_name = []
-        each_detect_score = {defect_category_id: [] for defect_category_id in defect_category_ids}
+        each_detect_score = {defect_category_id: 0 for defect_category_id in defect_category_ids}
 
         # For each defected image
         for i, img_id in enumerate(all_defect_images):
@@ -298,7 +298,10 @@ class Evaluator:
             defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
 
             # Check if there is any prediction
-            if len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
+            if len(defected_dt_bboxes) == 0 and len(defected_gt_bboxes) != 0:
+                undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+                continue
+            elif len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
                 continue
 
             # Calculate iou
@@ -325,11 +328,10 @@ class Evaluator:
 
             # ==========To calculate each class recall and average confidence==========
             gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != pass_category_id])
-            defected_dt_score = np.array([dt['score'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+
             class_id = gt_class_id[np.sum(dt_gt_iou, axis=0) != 0]
-            dt_score = defected_dt_score[np.any(dt_gt_iou > 0, axis=1)]
-            for cls_id, score in zip(class_id, dt_score):
-                each_detect_score[cls_id].append(score)
+            for cls_id in class_id:
+                each_detect_score[cls_id] += 1
 
         # For each pass image
         for i, img_id in enumerate(all_pass_images_ids):
@@ -366,18 +368,15 @@ class Evaluator:
         table.add_column("Category")
         table.add_column("Total", justify='center', style="cyan", no_wrap=True)
         table.add_column("Recall", justify='center', style="cyan", no_wrap=True)
-        table.add_column("Avg confidence", justify='center', style="cyan", no_wrap=True)
         table.add_column("Recall rate", justify='center', style="cyan", no_wrap=True)
 
-        for cls_id, scores in each_detect_score.items():
+        for cls_id, recall in each_detect_score.items():
             cat_name = all_category_names[cls_id]
             total = len(self.coco_gt.getAnnIds(catIds=[cls_id]))
-            avg_confidence = f"{np.mean(scores):.3f}" if scores else "-"
-            recall = len(scores)
             recall_rate = f"{recall / total:.3f}" if total > 0 else "-"
 
             table.add_row(
-                cat_name, str(total), str(recall), avg_confidence, recall_rate
+                cat_name, str(total), str(recall), recall_rate
             )
 
         console.print(table)
