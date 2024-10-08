@@ -35,8 +35,10 @@ def generate_docker_compose(gpu_count, os_type):
         compose_template = file.read()
 
     # Check need use which image
-    image = "miislab/aoi_cuda11.8:windows" if os_type == "Windows" or "WSL" \
-        else "miislab/aoi_cuda11.8:ubuntu"
+    if os_type == "Windows" or os_type == "WSL":
+        image = "miislab/aoi_cuda11.8:windows"
+    else:
+        image = "miislab/aoi_cuda11.8:ubuntu"
 
     # If user uses WSL, replace mount path "C:/" to "/mnt/c/" or replace "D:" to "/mnt/d/"
     if os_type == "WSL":
