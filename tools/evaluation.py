@@ -20,7 +20,7 @@ from rich.console import Console
 from rich.table import Table
 
 from engine.general import (get_work_dir_path, save_json, load_json, xywh_to_xyxy)
-from engine.timer import TIMER
+from engine.redis_manager import RedisManager
 from engine.builder import Builder
 from model_zoo import BaseInstanceModel
 
@@ -58,20 +58,9 @@ class Evaluator:
 
         self.coco_gt = COCO(os.path.join(cfg["coco_root"], 'annotations', 'instances_val.json'))
 
-        os_name = platform.system()
-        if os_name == "Windows":
-            print("Running on Windows")
-            redis_host = '127.0.0.1'
-        elif os_name == "Linux":
-            print("Running on Linux")
-            redis_host = 'redis'
-        else:
-            print(f"Running on {os_name}")
-            redis_host = 'redis'
-
-        self.r = redis.Redis(host=redis_host, port=6379, db=0)
+        self.redis = RedisManager()
         try:
-            self.r.ping()
+            self.redis.ping()
         except Exception as e:
             print(f"{Fore.RED}Redis connection failed: {e}{Style.RESET_ALL}")
             self.r = None
@@ -168,9 +157,10 @@ class Evaluator:
         detected_result = []
 
         for i, img_id in enumerate(tqdm(img_id_list)):
-            if self.r is not None:
-                self.r.set("eval_progress", (i + 1) / len(img_id_list) * 100)
-                if self.r.get("stop_eval"):
+            if self.redis is not None:
+                device_id = int(self.cfg['device'])
+                self.redis.set_value(f"GPU:{device_id}_eval_progress", (i + 1) / len(img_id_list) * 100)
+                if self.redis.get_value(f"GPU:{device_id}_stop_eval"):
                     sys.exit()
 
             # Load image

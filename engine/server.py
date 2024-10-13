@@ -141,9 +141,15 @@ def get_status():
     return jsonify(status), 200
 
 
-@APP.route('/stop_training', methods=['GET'])
+@APP.route('/stop_training', methods=['POST'])
 def stop_training():
-    training_manager.stop_training()
+    data = request.get_json()
+
+    if data.get("device_id") is None:
+        return jsonify({"message": "device_id is required"}), 400
+
+    device_id = int(data.get("device_id"))
+    training_manager.stop_training(device_id)
 
     return jsonify({"message": "success"}), 200
 
@@ -331,9 +337,15 @@ def evaluate():
     return jsonify(result), 200
 
 
-@APP.route('/stop_eval', methods=['GET'])
+@APP.route('/stop_eval', methods=['POST'])
 def stop_eval():
-    training_manager.stop_eval()
+    data = request.get_json()
+
+    if data.get("device_id") is None:
+        return jsonify({"message": "device_id is required"}), 400
+
+    device_id = int(data.get("device_id"))
+    training_manager.stop_eval(device_id)
 
     return jsonify({"message": "success"}), 200
 

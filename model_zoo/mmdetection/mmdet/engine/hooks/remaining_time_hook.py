@@ -1,10 +1,13 @@
 import time
-import platform
-from typing import Optional, Union
+import os
+from typing import Optional
 
-import redis
 from mmengine.hooks import Hook
 from mmdet.registry import HOOKS
+
+from engine.redis_manager import RedisManager
+from engine.general import load_yaml
+
 
 @HOOKS.register_module()
 class RemainingTimeHook(Hook):
@@ -12,18 +15,7 @@ class RemainingTimeHook(Hook):
         self.start_time = None
         self.iter_times = []
 
-        os_name = platform.system()
-        if os_name == "Windows":
-            print("Running on Windows")
-            redis_host = '127.0.0.1'
-        elif os_name == "Linux":
-            print("Running on Linux")
-            redis_host = 'redis'
-        else:
-            print(f"Running on {os_name}")
-            redis_host = 'redis'
-
-        self.r = redis.Redis(host=redis_host, port=6379, db=0)
+        self.redis = RedisManager()
 
     def before_train(self, runner) -> None:
         self.start_time = time.time()
@@ -34,6 +26,9 @@ class RemainingTimeHook(Hook):
                          batch_idx: int,
                          data_batch=None,
                          outputs: Optional[dict] = None) -> None:
+        if not hasattr(self, "final_config"):
+            setattr(self, "final_config",
+                    load_yaml(os.path.join(runner.work_dir.replace(" ", ""), 'final_config.yaml')))
 
         iter_time = time.time() - self.start_time
         self.iter_times.append(iter_time)
@@ -46,7 +41,8 @@ class RemainingTimeHook(Hook):
         remaining_time = avg_iter_time * remaining_iters
         progress = ((runner.iter + 1) / total_iters) * 100
 
-        self.r.set("remaining_time", remaining_time / 60)
-        self.r.set("progress", progress)
+        device_id = int(self.final_config['device'])
+        self.redis.set_value(f"GPU:{device_id}_remaining_time", remaining_time / 60)
+        self.redis.set_value(f"GPU:{device_id}_progress", progress)
 
         self.start_time = time.time()

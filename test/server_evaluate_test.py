@@ -15,13 +15,13 @@ def evaluate():
 
     # Step 2:
     # =========  選擇其中一個模型 =========
-    model_name = 'Cascade-Mask-RCNN_wc_500'
+    model_name = 'CO-DETR_wc_1500'
     final_config = model_dict[model_name]['final_config']
     weight_list = model_dict[model_name]['weight_list']
 
     # Step 3:
     # =========  更改weight和dataset =========
-    final_config['weight'] = weight_list[-1]
+    final_config['weight'] = weight_list[0]
     final_config['coco_root'] = "./data/WC-100"
 
     json_data = {

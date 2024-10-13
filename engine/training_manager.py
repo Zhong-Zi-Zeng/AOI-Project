@@ -7,51 +7,47 @@ import json
 from threading import Thread
 
 import numpy as np
-import redis
 
+from engine.redis_manager import RedisManager
 from engine.general import (get_work_dir_path, copy_logfile_to_work_dir, clear_cache,
-                            load_json, check_path, ROOT, TEMP_DIR)
+                            load_json, check_path, ROOT, TEMP_DIR, get_gpu_count)
 from tools.evaluation import Evaluator
 
 
 class TrainingManager:
     def __init__(self):
-        self.training_thread = None
+        self.training_thread_dict = {f"GPU:{device_id}": None for device_id in range(get_gpu_count())}
 
-        os_name = platform.system()
-        if os_name == "Windows":
-            print("Running on Windows")
-            redis_host = '127.0.0.1'
-        elif os_name == "Linux":
-            print("Running on Linux")
-            redis_host = 'redis'
-        else:
-            print(f"Running on {os_name}")
-            redis_host = 'redis'
+        self.redis = RedisManager()
+        self._clear_status()
 
-        self.r = redis.Redis(host=redis_host, port=6379, db=0)
-        self._clear_data()
-
-    def _train_wrapper(self, train_func, final_config):
+    def _train_wrapper(self, train_func, final_config, device_id):
         train_func()
 
         # ========= After Training =========
         copy_logfile_to_work_dir(final_config)
-        self._clear_data()
+        self._clear_status(device_id)
 
-    def _clear_data(self):
-        self.r.flushdb()
-        clear_cache()
+    def _clear_status(self, device_id=None):
+        if device_id is None:
+            self.redis.clear()
+            return
+
+        for key in self.redis.DEFAULT_KEYS:
+            self.redis.delete_key(f"GPU:{device_id}_{key}")
 
     def start_training(self, train_func, final_config):
         # ========= Before Training =========
-        self._clear_data()
+        device_id = int(final_config['device'])
+        self._clear_status(device_id)
 
-        self.training_thread = Thread(target=self._train_wrapper, args=(train_func, final_config))
-        self.training_thread.start()
+        self.training_thread_dict[f"GPU:{device_id}"] = Thread(target=self._train_wrapper,
+                                                               args=(train_func, final_config, device_id))
+        self.training_thread_dict[f"GPU:{device_id}"].start()
 
     def start_eval(self, model, final_config):
-        self._clear_data()
+        device_id = int(final_config['device'])
+        self._clear_status(device_id)
 
         final_config['conf_thres'] = 0.3
         evaluator = Evaluator(model=model, cfg=final_config)
@@ -78,20 +74,19 @@ class TrainingManager:
             return result
         return None
 
-    def stop_training(self) -> None:
-        self.r.set("stop_training", 1)
+    def stop_training(self, device_id: int) -> None:
+        self.redis.set_value(f"GPU:{device_id}_stop_training", 1)
 
-    def stop_eval(self) -> None:
-        self.r.set("stop_eval", 1)
+    def stop_eval(self, device_id: int) -> None:
+        self.redis.set_value(f"GPU:{device_id}_stop_eval", 1)
 
     def update_status(self) -> None:
-        if self.training_thread is not None and self.training_thread.is_alive():
-            status_msg = "Training in progress"
-        else:
-            status_msg = "No training in progress"
-        self.r.set('status_msg', status_msg)
+        for device_id in range(get_gpu_count()):
+            training_thread = self.training_thread_dict[f"GPU:{device_id}"]
+            if training_thread is not None and training_thread.is_alive():
+                status_msg = f"GPU:{device_id} Training in progress"
+            else:
+                status_msg = f"GPU:{device_id} No training in progress"
 
-        loss_json_path = os.path.join(ROOT, TEMP_DIR, 'loss.json')
-        loss = load_json(loss_json_path) if check_path(loss_json_path) else None
-        loss_str = json.dumps(loss)
-        self.r.set('loss', loss_str)
+            self.redis.set_value(f"GPU:{device_id}_status_msg", status_msg)
+
