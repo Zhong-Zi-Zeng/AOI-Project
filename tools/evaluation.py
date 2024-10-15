@@ -63,7 +63,7 @@ class Evaluator:
             self.redis.ping()
         except Exception as e:
             print(f"{Fore.RED}Redis connection failed: {e}{Style.RESET_ALL}")
-            self.r = None
+            self.redis = None
 
     @classmethod
     def build_by_config(cls, cfg: dict):
