@@ -15,6 +15,8 @@ import torch
 
 @HOOKS.register_module()
 class ValidationHook(Hook):
+    priority = 'VERY_LOW'
+
     def after_train_epoch(self, runner) -> None:
         if not hasattr(self, "tb_writer"):
             setattr(self, "tb_writer", SummaryWriter(log_dir=os.path.join(runner.work_dir, 'log')))
