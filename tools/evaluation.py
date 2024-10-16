@@ -260,15 +260,6 @@ class Evaluator:
         all_defects = sum([len(self.coco_gt.getAnnIds(catIds=[cat_id]))
                            for cat_id in all_category_ids if cat_id != pass_category_id])
 
-        # Filter detection result
-        dt_result = self._filter_result(score_threshold=self.cfg["conf_thres"])
-        if len(dt_result) == 0:
-            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
-            return [0] * 4
-
-        # Load detection result
-        coco_dt = self.coco_gt.loadRes(dt_result)
-
         # Calculate the recall rate and false positive rate
         nf_recall_img = 0
         nf_fpr_img = 0
@@ -278,60 +269,68 @@ class Evaluator:
         undetected_image_name = []
         each_detect_score = {defect_category_id: 0 for defect_category_id in defect_category_ids}
 
-        # For each defected image
-        for i, img_id in enumerate(all_defect_images):
-            gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
-            dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
+        # Filter detection result
+        dt_result = self._filter_result(score_threshold=self.cfg["conf_thres"])
+        if len(dt_result) == 0:
+            print(Fore.RED + 'Can not detect anything! All of the values are zero.' + Fore.WHITE)
+        else:
+            # Load detection result
+            coco_dt = self.coco_gt.loadRes(dt_result)
 
-            # Extract predictions that are classified as defect and ground truth is also defect
-            defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] != pass_category_id])
-            defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+            # For each defected image
+            for i, img_id in enumerate(all_defect_images):
+                gt_ann = self.coco_gt.loadAnns(self.coco_gt.getAnnIds(imgIds=[img_id]))
+                dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
 
-            # Check if there is any prediction
-            if len(defected_dt_bboxes) == 0 and len(defected_gt_bboxes) != 0:
-                undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
-                continue
-            elif len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
-                continue
+                # Extract predictions that are classified as defect and ground truth is also defect
+                defected_gt_bboxes = np.array([gt['bbox'] for gt in gt_ann if gt['category_id'] != pass_category_id])
+                defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
 
-            # Calculate iou
-            dt_gt_iou = self.get_iou(defected_dt_bboxes, defected_gt_bboxes)
+                # Check if there is any prediction
+                if len(defected_dt_bboxes) == 0 and len(defected_gt_bboxes) != 0:
+                    undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+                    continue
+                elif len(defected_dt_bboxes) == 0 or len(defected_gt_bboxes) == 0:
+                    continue
 
-            # Filter iou
-            dt_gt_iou[dt_gt_iou < self.cfg["iou_thres"]] = 0
+                # Calculate iou
+                dt_gt_iou = self.get_iou(defected_dt_bboxes, defected_gt_bboxes)
 
-            # ==========To detected all classes recall and fpr==========
-            # Calculate the recall
-            nf_recall = np.any(dt_gt_iou, axis=0).sum()
-            if nf_recall < len(defected_gt_bboxes):
-                undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
-            nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
-            nf_recall_ann += nf_recall
-            nf_recall_img += 1 if nf_recall > 0 else 0
+                # Filter iou
+                dt_gt_iou[dt_gt_iou < self.cfg["iou_thres"]] = 0
 
-            # Calculate the fpr
-            nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
-            nf_fpr_ann += nf_fpr
-            if nf_fpr > 0:
-                nf_fpr_img += 1
-                fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+                # ==========To detected all classes recall and fpr==========
+                # Calculate the recall
+                nf_recall = np.any(dt_gt_iou, axis=0).sum()
+                if nf_recall < len(defected_gt_bboxes):
+                    undetected_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+                nf_recall = nf_recall if nf_recall < len(defected_gt_bboxes) else len(defected_gt_bboxes)
+                nf_recall_ann += nf_recall
+                nf_recall_img += 1 if nf_recall > 0 else 0
 
-            # ==========To calculate each class recall and average confidence==========
-            gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != pass_category_id])
+                # Calculate the fpr
+                nf_fpr = np.sum(~np.any(dt_gt_iou != 0, axis=1))
+                nf_fpr_ann += nf_fpr
+                if nf_fpr > 0:
+                    nf_fpr_img += 1
+                    fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
 
-            class_id = gt_class_id[np.sum(dt_gt_iou, axis=0) != 0]
-            for cls_id in class_id:
-                each_detect_score[cls_id] += 1
+                # ==========To calculate each class recall and average confidence==========
+                gt_class_id = np.array([gt['category_id'] for gt in gt_ann if gt['category_id'] != pass_category_id])
 
-        # For each pass image
-        for i, img_id in enumerate(all_pass_images_ids):
-            dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
-            defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+                class_id = gt_class_id[np.sum(dt_gt_iou, axis=0) != 0]
+                for cls_id in class_id:
+                    each_detect_score[cls_id] += 1
 
-            nf_fpr_img += 1 if len(defected_dt_bboxes) > 0 else 0
-            nf_fpr_ann += len(defected_dt_bboxes)
-            if len(defected_dt_bboxes) > 0:
-                fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
+            # For each pass image
+            for i, img_id in enumerate(all_pass_images_ids):
+                dt_ann = coco_dt.loadAnns(coco_dt.getAnnIds(imgIds=[img_id]))
+                defected_dt_bboxes = np.array([dt['bbox'] for dt in dt_ann if dt['category_id'] != pass_category_id])
+
+                nf_fpr_img += 1 if len(defected_dt_bboxes) > 0 else 0
+                nf_fpr_ann += len(defected_dt_bboxes)
+                if len(defected_dt_bboxes) > 0:
+                    fpr_image_name.append(self.coco_gt.loadImgs(ids=[img_id])[0]['file_name'])
 
         result = [
             round((nf_recall_img / len(all_image_ids)) * 100, 2),  # 檢出率 (圖片)
