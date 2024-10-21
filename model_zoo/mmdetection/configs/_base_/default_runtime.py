@@ -8,9 +8,10 @@ default_hooks = dict(
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='DetVisualizationHook'),
     validation=dict(type='ValidationHook'),
-    remainingtime=dict(type='RemainingTimeHook'),
-    checkstoptraining=dict(type='CheckStopTrainingHook'),
-    recordtrainingloss=dict(type='RecordTrainingLossHook'),
+    remaining_time=dict(type='RemainingTimeHook'),
+    check_stop_training=dict(type='CheckStopTrainingHook'),
+    record_training_loss=dict(type='RecordTrainingLossHook'),
+    check_each_layer_status=dict(type='CheckEachLayerStatus'),
 )
 
 env_cfg = dict(

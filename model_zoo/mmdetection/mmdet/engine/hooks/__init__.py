@@ -13,11 +13,12 @@ from .validation_hook import ValidationHook
 from .remaining_time_hook import RemainingTimeHook
 from .check_stop_training import CheckStopTrainingHook
 from .record_training_loss import RecordTrainingLossHook
+from .check_each_layer_status import CheckEachLayerStatus
 
 __all__ = [
     'YOLOXModeSwitchHook', 'SyncNormHook', 'CheckInvalidLossHook',
     'SetEpochInfoHook', 'MemoryProfilerHook', 'DetVisualizationHook',
     'NumClassCheckHook', 'MeanTeacherHook', 'trigger_visualization_hook',
     'PipelineSwitchHook', 'TrackVisualizationHook', 'ValidationHook', 'RemainingTimeHook',
-    'CheckStopTrainingHook', 'RecordTrainingLossHook'
+    'CheckStopTrainingHook', 'RecordTrainingLossHook', 'CheckEachLayerStatus'
 ]

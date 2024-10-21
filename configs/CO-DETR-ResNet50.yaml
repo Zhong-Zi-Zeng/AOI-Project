@@ -5,7 +5,7 @@ _base_: [ "./base/model/CO-DETR/r50.yaml", # model
 ]
 
 # ===========Dataset===========
-coco_root: ./data/WC-10
+coco_root: null
 
 # ===========Augmentation===========
 hsv_h: 0.15  # image HSV-Hue augmentation (fraction), range 0-1
@@ -28,8 +28,8 @@ initial_lr: 0.00005 # Initial learning rate
 lr: 0.0002 # The learning rate after warmup
 minimum_lr: 0.000005 # Minimum learning rate
 batch_size: 1
-imgsz: [ 600, 600 ]
-save_period: 1
-eval_period: 1
+imgsz: [ 1600, 1600 ]
+save_period: 5
+eval_period: 5
 device: "0"
 
