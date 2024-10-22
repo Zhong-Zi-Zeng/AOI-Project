@@ -18,13 +18,13 @@ def predict():
 
     # Step 2:
     # ========= 選擇其中一個模型 =========
-    model_name = list(model_dict.keys())[0]
+    model_name = 'CO-DETR_wc_1500'
 
     final_config = model_dict[model_name]['final_config']
     weight_list = model_dict[model_name]['weight_list']
 
-    final_config['weight'] = weight_list[-1]
-    final_config['device'] = "1"
+    final_config['weight'] = weight_list[0]
+    final_config['device'] = "0"
 
     # Step 3:
     # ========= 初始化模型 (如果後續沒有要改變模型或是weight，則不需要呼叫) =========
@@ -38,7 +38,11 @@ def predict():
     img_bytes = BytesIO(buffer.tobytes())
 
     image_data = {'image': ('image.jpg', img_bytes, 'image/jpeg')}
-    response = requests.post(URL + 'predict', files=image_data)
+    json_data = {
+        "device_id": "0",
+    }
+    form_data = {'json': json.dumps(json_data)}
+    response = requests.post(URL + 'predict', files=image_data, data=form_data)
 
     # Step 5:
     # ========= 解析預測結果 =========
@@ -55,8 +59,8 @@ def predict():
     print("BBox List:", data['bbox_list'])
     print("RLE List:", data['rle_list'])
 
-    # cv2.imshow("Result Image", img)
-    # cv2.waitKey(0)
+    cv2.imshow("Result Image", img)
+    cv2.waitKey(0)
 
 
 if __name__ == '__main__':

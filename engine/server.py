@@ -195,7 +195,7 @@ def train():
     work_dir_name = request.form.get('work_dir_name')
 
     final_config = model_manager.initialize_model(config, task='train', work_dir_name=work_dir_name)
-    model = model_manager.get_model()
+    model = model_manager.get_model(int(final_config['device']))
 
     # Training
     training_manager.start_training(model.train, final_config)
@@ -254,6 +254,19 @@ def initialize_model():
     return jsonify({"message": "success"}), 200
 
 
+@APP.route('/release_model', methods=['POST'])
+def release_model():
+    data = request.get_json()
+
+    if data.get("device_id") is None:
+        return jsonify({"message": "device_id is required"}), 400
+
+    device_id = int(data.get("device_id"))
+    model_manager.release_model(device_id)
+
+    return jsonify({"message": "success"}), 200
+
+
 @APP.route('/predict', methods=['POST'])
 def predict():
     """
@@ -272,6 +285,12 @@ def predict():
     if 'image' not in request.files:
         return jsonify({"error": "No image part"}), 400
 
+    # 檢查是否包含device_id
+    json_data = json.loads(request.form['json'])
+    if json_data.get("device_id") is None:
+        return jsonify({"message": "device_id is required"}), 400
+    device_id = int(json_data.get("device_id"))
+
     # 取出image
     image_file = request.files['image']
     if allowed_file(image_file.filename):
@@ -280,7 +299,7 @@ def predict():
         return jsonify({"error": "Unsupported image type"}), 400
 
     # 確認是否已經初始化model
-    model = model_manager.get_model()
+    model = model_manager.get_model(device_id)
     if model is None:
         return jsonify({"error": "Model is not initialized. Please call /initialize_model first."}), 400
 
@@ -330,7 +349,7 @@ def evaluate():
     work_dir_name = request.form.get('work_dir_name')
 
     model_manager.initialize_model(final_config, task='eval', work_dir_name=work_dir_name)
-    model = model_manager.get_model()
+    model = model_manager.get_model(int(final_config['device']))
 
     result = training_manager.start_eval(model, final_config)
 
