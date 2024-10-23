@@ -253,7 +253,7 @@ def get_work_dir_path(cfg: dict) -> str:
         返回目前work_dir的路徑
     """
     if not os.path.exists(os.path.join(os.getcwd(), 'work_dirs', cfg['work_dir_name'])):
-        os.mkdir(os.path.join(os.getcwd(), 'work_dirs', cfg['work_dir_name']))
+        os.makedirs(os.path.join(os.getcwd(), 'work_dirs', cfg['work_dir_name']))
     work_dir_path = os.path.join(os.getcwd(), 'work_dirs', cfg['work_dir_name'])
     return work_dir_path
 

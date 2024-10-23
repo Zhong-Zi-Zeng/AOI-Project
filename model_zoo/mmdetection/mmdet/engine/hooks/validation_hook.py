@@ -23,19 +23,16 @@ class ValidationHook(Hook):
             setattr(self, "final_config",
                     load_yaml(os.path.join(runner.work_dir.replace(" ", ""), 'final_config.yaml')))
 
-        model = runner.model
-        model.eval()
-
         # Evaluate recall and FPR
         if (runner.epoch + 1) % self.final_config['eval_period'] == 0:
             print("Evaluate:")
 
             # Save last epoch
-            last_weight_path = os.path.join(runner.work_dir, "last.pt")
-            torch.save(runner.model.state_dict(), last_weight_path)
+            last_weight_path = os.path.join(runner.work_dir, f"epoch_{runner.epoch+1}.pth")
 
             # Evaluate
             self.final_config.update({'weight': last_weight_path})
+            self.final_config.update({'conf_thres': 0.3})
 
             # Avoid device conflict during DDP training
             self.final_config.update({'device': '0'})
