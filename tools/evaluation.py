@@ -100,7 +100,7 @@ class Evaluator:
         # Get all category names
         category_names = [coco.loadCats(cat_id)[0]['name'] for cat_id in all_category_ids]
 
-        if 'Pass' or 'pass' in category_names:
+        if 'Pass' in category_names or 'pass' in category_names:
             pass_category_name = 'Pass' if 'Pass' in category_names else 'pass'
 
             # Get the category ID for the 'Pass' class
