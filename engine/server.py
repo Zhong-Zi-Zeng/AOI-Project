@@ -220,6 +220,9 @@ def get_model_list():
     train_dir_path = os.path.join(get_works_dir_path(), "train")
     model_dict = {}
 
+    if not os.path.exists(train_dir_path):
+        return jsonify(model_dict), 200
+
     # 檢查每個 model 資料夾
     for model_name in os.listdir(train_dir_path):
         model_work_dir_path = os.path.join(train_dir_path, model_name)
