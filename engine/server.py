@@ -112,6 +112,9 @@ def get_template():
     custom_config_dict = {}
 
     for work_dir_name in os.listdir(CUSTOM_DIR):
+        custom_config_path = os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml")
+        if not os.path.exists(custom_config_path):
+            continue
         custom_config_dict.setdefault(work_dir_name, {'config': None})
         custom_config_dict[work_dir_name]['config'] = load_yaml(
             os.path.join(CUSTOM_DIR, work_dir_name, "final_config.yaml"))
@@ -215,20 +218,31 @@ def get_model_list():
         }
     """
     train_dir_path = os.path.join(get_works_dir_path(), "train")
-    model_dict = {model_name: {'weight_list': [], 'final_config': None}
-                  for model_name in os.listdir(train_dir_path)}
+    model_dict = {}
 
-    for model_name in model_dict:
-        # 取出每個model可用的weight
+    # 檢查每個 model 資料夾
+    for model_name in os.listdir(train_dir_path):
         model_work_dir_path = os.path.join(train_dir_path, model_name)
-        model_dict[model_name]['weight_list'] = glob.glob(os.path.join(model_work_dir_path, '**', '*.pth'),
-                                                          recursive=True) + \
-                                                glob.glob(os.path.join(model_work_dir_path, '**', '*.pt'),
-                                                          recursive=True)
 
-        # 取出final_config.yaml的所有設定值
-        model_dict[model_name]['final_config'] = load_yaml(
-            os.path.join(train_dir_path, model_name, "final_config.yaml"))
+        # 檢查 final_config.yaml 是否存在
+        final_config_path = os.path.join(model_work_dir_path, "final_config.yaml")
+        if not os.path.exists(final_config_path):
+            print(f"Model '{model_name}' skipped: final_config.yaml not found.")
+            continue
+
+        # 搜尋 weight 檔案
+        weight_list = glob.glob(os.path.join(model_work_dir_path, '**', '*.pth'), recursive=True) + \
+                      glob.glob(os.path.join(model_work_dir_path, '**', '*.pt'), recursive=True)
+
+        if len(weight_list) == 0:
+            print(f"Model '{model_name}' skipped: No weight file found.")
+            continue
+
+        # 如果 final_config.yaml 和 weight 都存在，加入 model_dict
+        model_dict[model_name] = {
+            'weight_list': weight_list,
+            'final_config': load_yaml(final_config_path)
+        }
 
     return jsonify(model_dict), 200
 
